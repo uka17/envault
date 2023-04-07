@@ -1,0 +1,33 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Peon API",
+        "description": "API for Peon application",
+        "version": "1.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/swagger": {
+            "get": {
+                "description": "",
+                "parameters": [],
+                "responses": {}
+            }
+        },
+        "/": {
+            "get": {
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    }
+}

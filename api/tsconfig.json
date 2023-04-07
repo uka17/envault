@@ -5,6 +5,7 @@
     "module": "commonjs",
     "sourceMap": true,
     "esModuleInterop": true, //Allows us to compile ES6 modules to CommonJS modules
-    "forceConsistentCasingInFileNames": true //When set to true, enables case sensitive file naming
+    "forceConsistentCasingInFileNames": true, //When set to true, enables case sensitive file naming
+    "resolveJsonModule": true /* Enable importing .json files */,
   }
 }
