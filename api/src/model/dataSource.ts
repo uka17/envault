@@ -3,7 +3,7 @@ import { User } from "./User";
 import dotenv from "dotenv";
 dotenv.config();
 
-export const appDataSource = new DataSource({
+const appDataSource = new DataSource({
   type: "postgres",
   url: process.env.DB,
   database: "custodian",
@@ -11,3 +11,5 @@ export const appDataSource = new DataSource({
   synchronize: true,
   logging: false,
 });
+
+export default appDataSource;

@@ -13,7 +13,7 @@ import { User } from "../model/User";
 export default function (
   app: express.Application,
   logger: Logger,
-  appDataSource: DataSource
+  AppDataSource: DataSource
 ) {
   //Put all routes here
   //...

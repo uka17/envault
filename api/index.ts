@@ -3,11 +3,14 @@ import express, { Express, Request, Response } from "express";
 import session from "express-session";
 import cors from "cors";
 import dotenv from "dotenv";
-import { appDataSource } from "./src/model/dataSource";
+import appDataSource from "./src/model/dataSource";
 import config from "./src/config/config";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./src/swagger/swagger.json";
 import index from "./src/route/index";
+import passport from "passport";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 import { Logger, LogLevel } from "./src/lib/logger";
