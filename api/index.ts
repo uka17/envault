@@ -50,10 +50,12 @@ appDataSource
     //Attach routes to app
 
     app.use(`/api/${config.version}`, router);
-  })
-  .catch((error) => logger.error(error));
 
-//Start app
-app.listen(config.port, () => {
-  logger.info(`Service is live on ${config.port}.`);
-});
+    //Start app
+    app.listen(config.port, () => {
+      logger.info(`API ${config.version} is live on ${config.port}.`);
+    });
+  })
+  .catch((error) => {
+    logger.error(error);
+  });

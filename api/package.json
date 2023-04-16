@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "node src/swagger/swagger.js",
-    "init": "npx ts-node scripts/init.ts"
+    "init": "npx ts-node scripts/init.ts",
+    "docker": "docker build --tag api:latest ."
   },
   "author": "",
   "license": "ISC",

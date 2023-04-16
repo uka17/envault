@@ -44,10 +44,14 @@ dataSource_1.default
     (0, user_1.default)(router, logger, translations, dataSource_1.default);
     //Attach routes to app
     app.use(`/api/${config_1.default.version}`, router);
+    //Start app
+    app.listen(config_1.default.port, () => {
+        logger.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
+        console.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
+    });
 })
-    .catch((error) => logger.error(error));
-//Start app
-app.listen(config_1.default.port, () => {
-    logger.info(`Service is live on ${config_1.default.port}.`);
+    .catch((error) => {
+    logger.error(error);
+    console.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
 });
 //# sourceMappingURL=index.js.map
