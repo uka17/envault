@@ -5,6 +5,7 @@ export default [
     textTranslations: {
       email_required: "Email is required",
       name_required: "Name is required",
+      name_alphanumeric: "Name should contain only letters and numerals",
       password_required: "Password is required",
       incorrect_password_or_email: "Password or email is incorrect",
       email_format_incorrect: "Incorrect email format",

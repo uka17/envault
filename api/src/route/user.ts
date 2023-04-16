@@ -29,8 +29,17 @@ export default function (
 
   const userRepository = appDataSource.getRepository(User);
 
-  /** Create new user */
   app.post("/users", async (req: express.Request, res: express.Response) => {
+    // #swagger.summary = 'Register new user'
+    /*  #swagger.parameters['body'] = {
+            in: 'body',
+            description: 'User',
+            schema: {
+                $email: 'john@mail.com',
+                $password: 'secret@123',
+                $name: 'Jhon Doe',
+            }
+    } */
     try {
       const { email, password, name } = req.body;
 
@@ -41,11 +50,16 @@ export default function (
           .json({ error: translations.getText("email_required") });
       }
 
-      //TODO should be alphanumeric
       if (!name) {
         return res
           .status(422)
           .json({ error: translations.getText("name_required") });
+      }
+
+      if (!name.match(config.nameRegExp)) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("name_alphanumeric") });
       }
 
       if (!email.match(config.emailRegExp)) {
@@ -100,52 +114,72 @@ export default function (
 
   // Log in as an existing user
   app.post(
-    //TODO try-catch
     "/users/login",
     passport.authenticate("local", { session: false }),
     (req: express.Request, res: express.Response) => {
-      const user = req.user as User;
+      // #swagger.summary = 'Login user'
+      /*  #swagger.parameters['body'] = {
+            in: 'body',
+            description: 'User',
+            schema: {
+                $email: 'john@mail.com',
+                $password: 'secret@123',
+            }
+      } */
+      try {
+        const { email, password, name } = req.body;
+        const user = req.user as User;
 
-      if (!user) {
-        return res
-          .status(500)
-          .json({ error: translations.getText("incorrect_token") });
+        if (!user) {
+          return res
+            .status(500)
+            .json({ error: translations.getText("incorrect_token") });
+        }
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + config.JWTMaxAge);
+        const token = jwt.sign(
+          {
+            email: user.email,
+            id: user.id,
+            exp: Math.round(expirationDate.getTime() / 1000),
+          },
+          process.env.JWT_SECRET
+        );
+        return res.json({ token: token });
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
       }
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + config.JWTMaxAge);
-      const token = jwt.sign(
-        {
-          email: user.email,
-          id: user.id,
-          exp: Math.round(expirationDate.getTime() / 1000),
-        },
-        process.env.JWT_SECRET
-      );
-      return res.json({ token: token });
     }
   );
 
   // Get a protected resource with current user
   app.get(
-    //TODO try-catch
     "/users/whoami",
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
-      //TODO check if payload exists
-      const id = (req.user as User).id;
+      // #swagger.summary = 'Fetch currently current user'
+      try {
+        const id = (req.user as User).id;
 
-      const user = await userRepository.findOneBy({
-        id: id,
-      });
+        const user = await userRepository.findOneBy({
+          id: id,
+        });
 
-      if (!user) {
-        return res
-          .status(401)
-          .json({ error: translations.getText("incorrect_token") });
-      } else {
-        const result = Object.assign({}, user);
-        delete result.password;
-        return res.status(200).json(result);
+        if (!user) {
+          return res
+            .status(401)
+            .json({ error: translations.getText("incorrect_token") });
+        } else {
+          const result = Object.assign({}, user);
+          delete result.password;
+          return res.status(200).json(result);
+        }
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
       }
     }
   );

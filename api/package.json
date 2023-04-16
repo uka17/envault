@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "swagger": "node src/swagger/swagger.js"
+    "swagger": "node src/swagger/swagger.js",
+    "init": "npx ts-node scripts/init.ts"
   },
   "author": "",
   "license": "ISC",

@@ -12,6 +12,7 @@ exports.default = {
     },
     version: "v1.0",
     passwordRegExp: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
+    nameRegExp: /^[a-z0-9]+$/i,
     emailRegExp: /.+@.+\..+/i,
     JWTMaxAge: 60, //days
 };

@@ -1,5 +1,4 @@
 import express from "express";
-import labels from "../../scripts/texts";
 import { Logger } from "../lib/logger";
 import { DataSource } from "typeorm";
 import Translations from "../lib/Translations";
@@ -18,7 +17,8 @@ export default function (
   appDataSource: DataSource
 ) {
   app.get("/", async (req: express.Request, res: express.Response) => {
-    res.send("Boilerplate is online. TypeORM, Passport, Express.js");
+    // #swagger.summary = 'Check if api is online'
+    res.send("API is online. TypeORM, Passport, Express.js");
   });
   //Default error handlers
   app.use(function (

@@ -11,17 +11,19 @@ import appDataSource from "./src/model/dataSource";
 import config from "./src/config/config";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./src/swagger/swagger.json";
-import index from "./src/route/index";
+import health from "./src/route/health";
 import user from "./src/route/user";
 import passportConfig from "./src/config/passport";
 import Translations from "./src/lib/Translations";
 
 import { Logger, LogLevel } from "./src/lib/logger";
-const logger = Logger.getInstance(true, config.logLevel as LogLevel);
+const logger = Logger.getInstance(
+  process.env.ENV != "PROD",
+  config.logLevel as LogLevel
+);
 
 const app: Express = express();
 
-//TODO separate PROD and DEBUG runs with "const isProduction = process.env.NODE_ENV === 'production'";
 app.use(cors(config.cors));
 app.use(session(config.session));
 app.use(bodyParser.json());
@@ -30,8 +32,6 @@ app.use(bodyParser.json());
 if (!process.env.JWT_SECRET) throw "JWT_SECRET is empty or nor found";
 
 //Swagger
-//TODO bring more clarity and details to swagger
-//TODO swagger shows paths like "ver/users"
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 //Init datasourse and configure all routes
@@ -45,7 +45,7 @@ appDataSource
     passportConfig(appDataSource, translations);
     //Configure all routes
     const router = express.Router();
-    index(router, logger, translations, appDataSource);
+    health(router, logger, translations, appDataSource);
     user(router, logger, translations, appDataSource);
     //Attach routes to app
 
