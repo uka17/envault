@@ -1,0 +1,152 @@
+import express from "express";
+import passport from "passport";
+import jwt from "jsonwebtoken";
+import { Logger } from "../lib/logger";
+import { DataSource } from "typeorm";
+import { User } from "../model/User";
+import Translations from "../lib/Translations";
+import bcrypt from "bcryptjs";
+import config from "../config/config";
+
+import dotenv from "dotenv";
+dotenv.config();
+
+/**
+ * User routes
+ * @param app Express instance
+ * @param logger Logger instance
+ * @param translations Translations instance
+ * @param appDataSource Database connection instance
+ */
+export default function (
+  app: express.Router,
+  logger: Logger,
+  translations: Translations,
+  appDataSource: DataSource
+) {
+  //Put all routes here
+  //...
+
+  const userRepository = appDataSource.getRepository(User);
+
+  /** Create new user */
+  app.post("/users", async (req: express.Request, res: express.Response) => {
+    try {
+      const { email, password, name } = req.body;
+
+      //Standart checks for password and username
+      if (!email) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("email_required") });
+      }
+
+      //TODO should be alphanumeric
+      if (!name) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("name_required") });
+      }
+
+      if (!email.match(config.emailRegExp)) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("email_format_incorrect") });
+      }
+
+      if (!password) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("password_required") });
+      }
+
+      if (!password.match(config.passwordRegExp)) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("password_format_incorrect") });
+      }
+
+      // Check if the user already exists
+      const user = await userRepository.findOneBy({
+        email: email,
+      });
+
+      if (user) {
+        return res
+          .status(422)
+          .json({ error: translations.getText("user_already_exists") });
+      }
+
+      // Hash the password
+      const hash = bcrypt.hashSync(password);
+
+      // Create a new user
+      const newUser = new User();
+      newUser.name = name;
+      newUser.email = email;
+      newUser.password = hash;
+      await appDataSource.manager.save(newUser);
+
+      const result = Object.assign({}, newUser);
+      delete result.password;
+
+      return res.status(201).json(result);
+    } catch (e: unknown) {
+      /* istanbul ignore next */
+      logger.error(e as object);
+      res.status(500).send({ error: translations.getText("error_500") });
+    }
+  });
+
+  // Log in as an existing user
+  app.post(
+    //TODO try-catch
+    "/users/login",
+    passport.authenticate("local", { session: false }),
+    (req: express.Request, res: express.Response) => {
+      const user = req.user as User;
+
+      if (!user) {
+        return res
+          .status(500)
+          .json({ error: translations.getText("incorrect_token") });
+      }
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + config.JWTMaxAge);
+      const token = jwt.sign(
+        {
+          email: user.email,
+          id: user.id,
+          exp: Math.round(expirationDate.getTime() / 1000),
+        },
+        process.env.JWT_SECRET
+      );
+      return res.json({ token: token });
+    }
+  );
+
+  // Get a protected resource with current user
+  app.get(
+    //TODO try-catch
+    "/users/whoami",
+    passport.authenticate("jwt", { session: false }),
+    async (req: express.Request, res: express.Response) => {
+      //TODO check if payload exists
+      const id = (req.user as User).id;
+
+      const user = await userRepository.findOneBy({
+        id: id,
+      });
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ error: translations.getText("incorrect_token") });
+      } else {
+        const result = Object.assign({}, user);
+        delete result.password;
+        return res.status(200).json(result);
+      }
+    }
+  );
+}

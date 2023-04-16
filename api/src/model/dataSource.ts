@@ -1,13 +1,16 @@
-import { DataSource } from "typeorm";
-import { User } from "./User";
 import dotenv from "dotenv";
 dotenv.config();
+import { DataSource } from "typeorm";
+import { User } from "./User";
+import { Language } from "./Language";
+import { TextLanguage } from "./TextLanguage";
+import { Text } from "./Text";
 
 const appDataSource = new DataSource({
   type: "postgres",
   url: process.env.DB,
   database: "custodian",
-  entities: [User],
+  entities: [User, Language, Text, TextLanguage],
   synchronize: true,
   logging: false,
 });
