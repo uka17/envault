@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -20,6 +20,10 @@ import { Logger, LogLevel } from "./src/lib/logger";
 const logger = Logger.getInstance(
   process.env.ENV != "PROD",
   config.logLevel as LogLevel
+);
+
+logger.info(
+  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
 
 const app: Express = express();

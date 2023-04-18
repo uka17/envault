@@ -17,6 +17,7 @@ const appDataSource = new typeorm_1.DataSource({
     entities: [User_1.User, Language_1.Language, Text_1.Text, TextLanguage_1.TextLanguage],
     synchronize: true,
     logging: false,
+    connectTimeoutMS: 10000,
 });
 exports.default = appDataSource;
 //# sourceMappingURL=dataSource.js.map

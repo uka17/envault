@@ -20,6 +20,7 @@ const passport_1 = __importDefault(require("./src/config/passport"));
 const Translations_1 = __importDefault(require("./src/lib/Translations"));
 const logger_1 = require("./src/lib/logger");
 const logger = logger_1.Logger.getInstance(process.env.ENV != "PROD", config_1.default.logLevel);
+logger.info(`Initializing API (version=${config_1.default.version}, port=${config_1.default.port}, ENV=${process.env.ENV}, logLevel=${config_1.default.logLevel})...`);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)(config_1.default.cors));
 app.use((0, express_session_1.default)(config_1.default.session));
@@ -47,11 +48,9 @@ dataSource_1.default
     //Start app
     app.listen(config_1.default.port, () => {
         logger.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
-        console.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
     });
 })
     .catch((error) => {
     logger.error(error);
-    console.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
 });
 //# sourceMappingURL=index.js.map

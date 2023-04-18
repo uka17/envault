@@ -13,6 +13,7 @@ const appDataSource = new DataSource({
   entities: [User, Language, Text, TextLanguage],
   synchronize: true,
   logging: false,
+  connectTimeoutMS: 10000,
 });
 
 export default appDataSource;

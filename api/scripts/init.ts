@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import appDataSource from "../src/model/dataSource";
-import texts from "./texts";
+import texts from "./data/texts";
 import { Text } from "../src/model/Text";
 import { Language } from "../src/model/Language";
 import { TextLanguage } from "../src/model/TextLanguage";
