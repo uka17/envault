@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "node src/swagger/swagger.js",
-    "init": "npx ts-node scripts/init.ts",
+    "text": "npx ts-node scripts/init.ts",
     "docker": "docker build --tag api:latest ."
   },
   "author": "",
@@ -39,6 +39,7 @@
   "devDependencies": {
     "chalk": "^4.1.2",
     "cors": "^2.8.5",
+    "express-list-routes": "^1.1.5",
     "express-session": "^1.17.3",
     "swagger-autogen": "^2.23.1",
     "swagger-ui-express": "^4.6.2",

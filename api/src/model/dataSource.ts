@@ -5,12 +5,13 @@ import { User } from "./User";
 import { Language } from "./Language";
 import { TextLanguage } from "./TextLanguage";
 import { Text } from "./Text";
+import { Stash } from "./Stash";
 
 const appDataSource = new DataSource({
   type: "postgres",
   url: process.env.DB,
   database: "custodian",
-  entities: [User, Language, Text, TextLanguage],
+  entities: [User, Language, Text, TextLanguage, Stash],
   synchronize: true,
   logging: false,
   connectTimeoutMS: 10000,

@@ -115,8 +115,11 @@ export default function (
   // Log in as an existing user
   app.post(
     "/users/login",
-    passport.authenticate("local", { session: false }),
-    (req: express.Request, res: express.Response) => {
+    (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Login user'
       /*  #swagger.parameters['body'] = {
             in: 'body',
@@ -127,25 +130,41 @@ export default function (
             }
       } */
       try {
-        const { email, password, name } = req.body;
-        const user = req.user as User;
+        // In fact route returns result of callback
+        return passport.authenticate(
+          "local",
+          { session: false },
+          async (err: Error, passportUser: User) => {
+            if (err) {
+              /* istanbul ignore next */
+              logger.error(err as object);
+              /* istanbul ignore next */
+              res
+                .status(500)
+                .send({ error: translations.getText("error_500") });
+            }
 
-        if (!user) {
-          return res
-            .status(500)
-            .json({ error: translations.getText("incorrect_token") });
-        }
-        const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + config.JWTMaxAge);
-        const token = jwt.sign(
-          {
-            email: user.email,
-            id: user.id,
-            exp: Math.round(expirationDate.getTime() / 1000),
-          },
-          process.env.JWT_SECRET
-        );
-        return res.json({ token: token });
+            if (passportUser) {
+              const expirationDate = new Date();
+              expirationDate.setDate(
+                expirationDate.getDate() + config.JWTMaxAge
+              );
+              const token = jwt.sign(
+                {
+                  email: passportUser.email,
+                  id: passportUser.id,
+                  exp: Math.round(expirationDate.getTime() / 1000),
+                },
+                process.env.JWT_SECRET
+              );
+              return res.json({ token: token });
+            }
+
+            return res.status(400).json({
+              error: translations.getText("incorrect_password_or_email"),
+            });
+          }
+        )(req, res, next);
       } catch (e: unknown) {
         /* istanbul ignore next */
         logger.error(e as object);
@@ -174,7 +193,7 @@ export default function (
         } else {
           const result = Object.assign({}, user);
           delete result.password;
-          return res.status(200).json(result);
+          res.status(200).json(result);
         }
       } catch (e: unknown) {
         /* istanbul ignore next */

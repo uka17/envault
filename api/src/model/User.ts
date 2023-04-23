@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Stash } from "./Stash";
 
 @Entity()
 export class User {
@@ -13,4 +14,7 @@ export class User {
 
   @Column("text")
   name: string;
+
+  @OneToMany(() => Stash, (stash) => stash.user)
+  stash: Stash[];
 }

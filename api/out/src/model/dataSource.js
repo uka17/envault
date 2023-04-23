@@ -10,11 +10,12 @@ const User_1 = require("./User");
 const Language_1 = require("./Language");
 const TextLanguage_1 = require("./TextLanguage");
 const Text_1 = require("./Text");
+const Stash_1 = require("./Stash");
 const appDataSource = new typeorm_1.DataSource({
     type: "postgres",
     url: process.env.DB,
     database: "custodian",
-    entities: [User_1.User, Language_1.Language, Text_1.Text, TextLanguage_1.TextLanguage],
+    entities: [User_1.User, Language_1.Language, Text_1.Text, TextLanguage_1.TextLanguage, Stash_1.Stash],
     synchronize: true,
     logging: false,
     connectTimeoutMS: 10000,

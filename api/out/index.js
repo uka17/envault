@@ -16,8 +16,10 @@ const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_json_1 = __importDefault(require("./src/swagger/swagger.json"));
 const health_1 = __importDefault(require("./src/route/health"));
 const user_1 = __importDefault(require("./src/route/user"));
+const stash_1 = __importDefault(require("./src/route/stash"));
 const passport_1 = __importDefault(require("./src/config/passport"));
 const Translations_1 = __importDefault(require("./src/lib/Translations"));
+const expressListRoutes = require("express-list-routes");
 const logger_1 = require("./src/lib/logger");
 const logger = logger_1.Logger.getInstance(process.env.ENV != "PROD", config_1.default.logLevel);
 logger.info(`Initializing API (version=${config_1.default.version}, port=${config_1.default.port}, ENV=${process.env.ENV}, logLevel=${config_1.default.logLevel})...`);
@@ -43,11 +45,13 @@ dataSource_1.default
     const router = express_1.default.Router();
     (0, health_1.default)(router, logger, translations, dataSource_1.default);
     (0, user_1.default)(router, logger, translations, dataSource_1.default);
+    (0, stash_1.default)(router, logger, translations, dataSource_1.default);
     //Attach routes to app
     app.use(`/api/${config_1.default.version}`, router);
     //Start app
     app.listen(config_1.default.port, () => {
         logger.info(`API ${config_1.default.version} is live on ${config_1.default.port}.`);
+        //expressListRoutes(app);
     });
 })
     .catch((error) => {

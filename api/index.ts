@@ -13,8 +13,10 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./src/swagger/swagger.json";
 import health from "./src/route/health";
 import user from "./src/route/user";
+import stash from "./src/route/stash";
 import passportConfig from "./src/config/passport";
 import Translations from "./src/lib/Translations";
+const expressListRoutes = require("express-list-routes");
 
 import { Logger, LogLevel } from "./src/lib/logger";
 const logger = Logger.getInstance(
@@ -51,6 +53,7 @@ appDataSource
     const router = express.Router();
     health(router, logger, translations, appDataSource);
     user(router, logger, translations, appDataSource);
+    stash(router, logger, translations, appDataSource);
     //Attach routes to app
 
     app.use(`/api/${config.version}`, router);
@@ -58,6 +61,7 @@ appDataSource
     //Start app
     app.listen(config.port, () => {
       logger.info(`API ${config.version} is live on ${config.port}.`);
+      //expressListRoutes(app);
     });
   })
   .catch((error) => {
