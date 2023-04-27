@@ -1,12 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
-import { TextLanguage } from "./TextLanguage";
+import { Base } from "./Base";
 import { User } from "./User";
 
 @Entity()
-export class Stash {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Stash extends Base {
   @Column("text")
   to: string;
 
@@ -15,4 +12,7 @@ export class Stash {
 
   @ManyToOne(() => User, (user) => user.id)
   user: User;
+
+  @Column("timestamptz")
+  send_at: Date;
 }

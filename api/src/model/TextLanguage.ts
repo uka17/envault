@@ -1,12 +1,10 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
 import { Language } from "./Language";
 import { Text } from "./Text";
+import { Base } from "./Base";
 
 @Entity()
-export class TextLanguage {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class TextLanguage extends Base {
   @ManyToOne(() => Text, (text) => text.id)
   text: Text;
 

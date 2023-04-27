@@ -99,6 +99,8 @@ export default function (
       newUser.name = name;
       newUser.email = email;
       newUser.password = hash;
+      newUser.created_by = email;
+      newUser.modified_by = email;
       await appDataSource.manager.save(newUser);
 
       const result = Object.assign({}, newUser);

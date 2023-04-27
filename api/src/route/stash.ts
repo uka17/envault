@@ -1,12 +1,11 @@
 import express from "express";
 import passport from "passport";
-import jwt from "jsonwebtoken";
 import { Logger } from "../lib/logger";
 import { DataSource } from "typeorm";
 import { User } from "../model/User";
 import { Stash } from "../model/Stash";
 import Translations from "../lib/Translations";
-import bcrypt from "bcryptjs";
+import * as CryptoJS from "crypto-js";
 import config from "../config/config";
 
 import dotenv from "dotenv";
@@ -42,17 +41,22 @@ export default function (
             }
       } */
       try {
-        const { body, to } = req.body;
+        const { body, to, send_at } = req.body;
         if (!to.match(config.emailRegExp)) {
           return res
             .status(422)
             .json({ error: translations.getText("email_format_incorrect") });
         }
         // Create a new user
+        const user = req.user as User;
         const newStash = new Stash();
-        newStash.body = body;
+        //TODO remove after client side encryption is in place
+        newStash.body = CryptoJS.AES.encrypt(body, "secret").toString();
         newStash.to = to;
-        newStash.user = req.user as User;
+        newStash.user = user;
+        newStash.send_at = send_at;
+        newStash.created_by = user.email;
+        newStash.modified_by = user.email;
         await stashRepository.manager.save(newStash);
         delete newStash.user;
         return res.status(201).json(newStash);
@@ -70,7 +74,7 @@ export default function (
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Get list of stashes for curret user'
       try {
-        const id = (req.user as User).id;
+        const id = parseInt(req.params.id);
 
         if (!id) {
           return res
@@ -85,6 +89,149 @@ export default function (
             },
           });
 
+          res.status(200).json(result);
+        }
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
+      }
+    }
+  );
+
+  app.get(
+    "/stashes/:id",
+    passport.authenticate("jwt", { session: false }),
+    async (req: express.Request, res: express.Response) => {
+      // #swagger.summary = 'Get stash by id'
+      try {
+        const id = parseInt(req.params.id);
+
+        if (!id) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("id_required") });
+        } else {
+          const result = await stashRepository.findOne({
+            where: {
+              id: id,
+            },
+          });
+          if (!result) {
+            res.status(404).send();
+          } else {
+            res.status(200).json(result);
+          }
+        }
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
+      }
+    }
+  );
+  app.delete(
+    "/stashes/:id",
+    passport.authenticate("jwt", { session: false }),
+    async (req: express.Request, res: express.Response) => {
+      // #swagger.summary = 'Delete stash by id'
+      try {
+        const id = parseInt(req.params.id);
+
+        if (!id) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("id_required") });
+        } else {
+          const result = await stashRepository
+            .createQueryBuilder()
+            .delete()
+            .from(Stash)
+            .where("id = :id", { id: id })
+            .execute();
+          if (!result) {
+            res.status(404).send();
+          } else {
+            res.status(200).json(result);
+          }
+        }
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
+      }
+    }
+  );
+  app.post(
+    "/stashes/:id/decrypt/:key",
+    passport.authenticate("jwt", { session: false }),
+    async (req: express.Request, res: express.Response) => {
+      // #swagger.summary = 'Decrypt stash by id and provided key'
+      try {
+        const id = parseInt(req.params.id);
+        const key = req.params.key;
+
+        if (!id) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("id_required") });
+        }
+        if (!key) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("key_required") });
+        }
+        let stash = await stashRepository.findOne({
+          where: {
+            id: id,
+          },
+        });
+        if (!stash) {
+          res.status(404).send();
+        } else {
+          const stashDecryptedBody = CryptoJS.AES.decrypt(stash.body, key);
+          res.status(200).json(stashDecryptedBody.toString(CryptoJS.enc.Utf8));
+        }
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
+      }
+    }
+  );
+
+  app.post(
+    "/stashes/:id/snooze/:days",
+    passport.authenticate("jwt", { session: false }),
+    async (req: express.Request, res: express.Response) => {
+      // #swagger.summary = 'Snooze stash by id fro N days'
+      try {
+        const id = parseInt(req.params.id);
+        const days = parseInt(req.params.days);
+
+        if (!id) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("id_required") });
+        }
+
+        if (!days) {
+          return res
+            .status(400)
+            .json({ error: translations.getText("days_required") });
+        }
+
+        let stash = await stashRepository.findOne({
+          where: {
+            id: id,
+          },
+        });
+        if (!stash) {
+          res.status(404).send();
+        } else {
+          stash.send_at = new Date(stash.send_at);
+          stash.send_at.setDate(stash.send_at.getDate() + days);
+          const result = await stashRepository.manager.save(stash);
           res.status(200).json(result);
         }
       } catch (e: unknown) {

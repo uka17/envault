@@ -1,11 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 import { TextLanguage } from "./TextLanguage";
+import { Base } from "./Base";
 
 @Entity()
-export class Language {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Language extends Base {
   @Column("text")
   language: string;
 

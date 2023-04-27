@@ -5,6 +5,7 @@ import { Text } from "../src/model/Text";
 import { Language } from "../src/model/Language";
 import { TextLanguage } from "../src/model/TextLanguage";
 import chalk from "chalk";
+import { validateLocaleAndSetLanguage } from "typescript";
 
 appDataSource
   .initialize()
@@ -40,7 +41,6 @@ appDataSource
         let text = await textRepository.findOneBy({
           text: textCode,
         });
-
         if (!text) {
           console.log(`Text '${textCode}' does not exists, creating...`);
           text = new Text();
@@ -51,8 +51,12 @@ appDataSource
 
         //Check if text already exists and create if needed
         let translation = await textLanguageRepository.findOneBy({
-          text: text,
-          language: language,
+          text: {
+            id: text.id,
+          },
+          language: {
+            id: language.id,
+          },
         });
         if (!translation) {
           translation = new TextLanguage();
@@ -63,7 +67,7 @@ appDataSource
 
           console.log(
             chalk.green(
-              `Created '${textTranslation}' transaltion for text '${translation.text.text} and language '${translation.language.language}'`
+              `Created '${textTranslation}' transaltion for text '${translation.text.text}' and language '${translation.language.language}'`
             )
           );
         } else {
