@@ -37,8 +37,11 @@ function main() {
 function sendEmail() {
   let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
   let apiKey = apiInstance.authentications["apiKey"];
-  apiKey.apiKey =
-    "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";
+  if (process.env.MAILAPI) {
+    apiKey.apiKey = process.env.MAILAPI;
+  } else {
+    throw new Error("No API key for mail service was found");
+  }
 
   let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
