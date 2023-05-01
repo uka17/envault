@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program (nodemon)",
+      "name": "Launch Server",
       //"runtimeExecutable": "nodemon",
       "program": "${workspaceFolder}/out/server/index.js",
       "console": "integratedTerminal",
