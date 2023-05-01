@@ -1,17 +1,22 @@
 import "reflect-metadata";
 import dotenv from "dotenv";
+import SendMail from "./src/lib/SendMail";
 dotenv.config();
 
 import appDataSource from "../api/src/model/dataSource";
 import config from "./src/config/config";
 import chalk from "chalk";
-const SibApiV3Sdk = require("sib-api-v3-typescript");
 
 import { Logger, LogLevel } from "../api/src/lib/logger";
 const logger = Logger.getInstance(
   process.env.ENV != "PROD",
   config.logLevel as LogLevel
 );
+if (process.env.MAILAPI) {
+  var sendMail = new SendMail(config.sendFrom, process.env.MAILAPI, logger);
+} else {
+  throw new Error("No API key for mail service was found");
+}
 
 logger.info(`Initializing Server (logLevel=${config.logLevel})...`);
 
@@ -19,7 +24,11 @@ logger.info(`Initializing Server (logLevel=${config.logLevel})...`);
 appDataSource
   .initialize()
   .then(async () => {
-    sendEmail();
+    sendMail.send(
+      { name: "Kolyan", email: "ukaoneseven@gmail.com" },
+      "test",
+      "<b>Fuck off</b>"
+    );
     /*
     setInterval(function () {
       return main();
@@ -32,32 +41,4 @@ appDataSource
 
 function main() {
   logger.info(chalk.yellow(new Date()));
-}
-
-function sendEmail() {
-  let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-  let apiKey = apiInstance.authentications["apiKey"];
-  if (process.env.MAILAPI) {
-    apiKey.apiKey = process.env.MAILAPI;
-  } else {
-    throw new Error("No API key for mail service was found");
-  }
-
-  let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-
-  sendSmtpEmail.subject = "My test email";
-  sendSmtpEmail.htmlContent =
-    "<html><body><h1>This is my first transactional email {{params.parameter}}</h1></body></html>";
-  sendSmtpEmail.sender = { "name": "John Doe", "email": "example@example.com" };
-  sendSmtpEmail.to = [{ "email": "ukaoneseven@gmail.com", "name": "Jane Doe" }];
-  apiInstance.sendTransacEmail(sendSmtpEmail).then(
-    function (data) {
-      console.log(
-        "API called successfully. Returned data: " + JSON.stringify(data)
-      );
-    },
-    function (error) {
-      console.error(error);
-    }
-  );
 }
