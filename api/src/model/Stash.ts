@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Entity, Column, IsNull, ManyToOne } from "typeorm";
 import { Base } from "./Base";
 import { User } from "./User";
 
@@ -9,6 +9,19 @@ export class Stash extends Base {
 
   @Column("text")
   body: string;
+
+  @Column({
+    type: "boolean",
+    nullable: true,
+  })
+  is_sent: boolean;
+
+  @Column({
+    type: "text",
+    unique: true,
+    nullable: true,
+  })
+  key: string;
 
   @ManyToOne(() => User, (user) => user.id)
   user: User;

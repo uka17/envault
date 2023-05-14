@@ -7,6 +7,8 @@ import { Stash } from "../model/Stash";
 import Translations from "../lib/Translations";
 import * as CryptoJS from "crypto-js";
 import config from "../config/config";
+import { customAlphabet } from "nanoid";
+const nanoid = customAlphabet("1234567890abcdef", 32);
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -24,7 +26,6 @@ export default function (
   translations: Translations,
   appDataSource: DataSource
 ) {
-  const userRepository = appDataSource.getRepository(User);
   const stashRepository = appDataSource.getRepository(Stash);
 
   app.post(
@@ -50,8 +51,10 @@ export default function (
         // Create a new user
         const user = req.user as User;
         const newStash = new Stash();
+
         //TODO remove after client side encryption is in place
         newStash.body = CryptoJS.AES.encrypt(body, "secret").toString();
+        newStash.key = nanoid();
         newStash.to = to;
         newStash.user = user;
         newStash.send_at = send_at;
@@ -74,7 +77,7 @@ export default function (
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Get list of stashes for curret user'
       try {
-        const id = parseInt(req.params.id);
+        const id = (req.user as User).id;
 
         if (!id) {
           return res

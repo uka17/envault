@@ -3,7 +3,10 @@ import dotenv from "dotenv";
 import SendMail from "./src/lib/SendMail";
 dotenv.config();
 
+import { LessThan } from "typeorm";
 import appDataSource from "../api/src/model/dataSource";
+import { Stash } from "../api/src/model/Stash";
+const stashRepository = appDataSource.getRepository(Stash);
 import config from "./src/config/config";
 import chalk from "chalk";
 
@@ -20,7 +23,7 @@ if (process.env.MAILAPI) {
 
 logger.info(`Initializing Server (logLevel=${config.logLevel})...`);
 
-//Init datasourse and configure all routes
+//Init data source and configure all routes
 appDataSource
   .initialize()
   .then(async () => {
@@ -38,7 +41,11 @@ appDataSource
   .catch((error) => {
     logger.error(error);
   });
-
-function main() {
-  logger.info(chalk.yellow(new Date()));
+/*
+async function main() {
+  const result = await stashRepository.find({
+    where: { send_at: LessThan(new Date(Date.now())) },
+  });
+  console.log(chalk.yellow(result));
 }
+*/
