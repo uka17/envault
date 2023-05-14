@@ -7,12 +7,22 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Launch API",
+      //"runtimeExecutable": "nodemon",
+      "program": "${workspaceFolder}/out/api/index.js",
+      "console": "integratedTerminal",
+      "preLaunchTask": "tsc: build",
+      "outFiles": ["${workspaceFolder}/out/api/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Launch Server",
       //"runtimeExecutable": "nodemon",
       "program": "${workspaceFolder}/out/server/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/**/*.js"]
-    }
+      "outFiles": ["${workspaceFolder}/out/server/**/*.js"]
+    }    
   ]
 }

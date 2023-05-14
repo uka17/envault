@@ -11,7 +11,7 @@ const doc = {
   schemes: ["http"],
 };
 
-const routeFolder = "./src/route";
+const routeFolder = "./api/src/route";
 const fileList = [];
 
 fs.readdir(routeFolder, (err, files) => {

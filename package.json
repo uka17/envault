@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "swagger": "node src/swagger/swagger.js",
-    "text": "npx ts-node scripts/init.ts",
-    "docker": "docker build --tag api:latest ."
+    "swagger": "node api/src/swagger/swagger.js",
+    "text": "npx ts-node api/scripts/init.ts",
+    "dockerapi": "docker build --tag api:latest . -f Dockerfiles/api",
+    "build": "npx tsc",
+    "start": "npx tsc && node out/server/index.js"    
   },
   "author": "",
   "license": "ISC",
@@ -45,6 +47,17 @@
     "nanoid": "^3.3.6",
     "swagger-autogen": "^2.23.1",
     "swagger-ui-express": "^4.6.2",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "@sendinblue/client": "^3.3.1",
+    "@types/node": "^18.15.11",
+    "dotenv": "^16.0.3",
+    "pg": "^8.10.0",
+    "reflect-metadata": "^0.1.13",
+    "sib-api-v3-typescript": "^2.2.2",
+    "typeorm": "^0.3.14",
+    "typescript": "^5.0.3",
+    "winston": "^3.8.2",
+    "winston-transport": "^4.5.0"
   }
+  
 }

@@ -10,5 +10,5 @@ COPY . .
 #Generate swagger content
 RUN npm run swagger
 RUN npx tsc
-CMD node out/index.js
+CMD node out/api/index.js
 
