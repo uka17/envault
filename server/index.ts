@@ -27,25 +27,25 @@ logger.info(`Initializing Server (logLevel=${config.logLevel})...`);
 appDataSource
   .initialize()
   .then(async () => {
+    /*
     sendMail.send(
       { name: "Kolyan", email: "ukaoneseven@gmail.com" },
       "test",
       "<b>Fuck off</b>"
     );
-    /*
+    */
+
     setInterval(function () {
       return main();
     }, config.runInterval);
-    */
   })
   .catch((error) => {
     logger.error(error);
   });
-/*
+
 async function main() {
   const result = await stashRepository.find({
     where: { send_at: LessThan(new Date(Date.now())) },
   });
-  console.log(chalk.yellow(result));
+  console.log(chalk.yellow(result[0].body));
 }
-*/

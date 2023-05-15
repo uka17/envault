@@ -8,6 +8,7 @@
     "swagger": "node api/src/swagger/swagger.js",
     "text": "npx ts-node api/scripts/init.ts",
     "dockerapi": "docker build --tag api:latest . -f Dockerfiles/api",
+    "dockersrv": "docker build --tag server:latest . -f Dockerfiles/server",
     "build": "npx tsc",
     "start": "npx tsc && node out/server/index.js"    
   },
