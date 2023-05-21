@@ -7,5 +7,15 @@ WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install
 COPY . .  
-CMD node out/server/index.js
+RUN npx tsc
+
+FROM node:19-alpine
+WORKDIR /app
+ENV DB="postgres://postgres:postgres@172.18.0.2:5432/custodian"
+ENV JWT_SECRET="Rick Sanchez"
+ENV ENV="DEV"
+ENV MAILAPI="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"
+COPY --from=build app/node_modules ./node_modules/
+COPY --from=build app/out ./dist/
+CMD node dist/server/index.js
 
