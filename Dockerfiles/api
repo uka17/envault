@@ -10,9 +10,12 @@ RUN npx tsc
 
 FROM node:19-alpine
 WORKDIR /app
-ENV DB="postgres://postgres:postgres@172.18.0.2:5432/custodian"
-ENV JWT_SECRET="Rick Sanchez"
-ENV ENV="DEV"
+ARG DB
+ENV DB=$DB
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
+ARG ENV
+ENV ENV=$ENV
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
 CMD node dist/api/index.js

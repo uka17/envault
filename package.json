@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "node api/src/swagger/swagger.js",
     "text": "npx ts-node api/scripts/init.ts",
-    "dockerapi": "docker build --tag custodian-api:latest . -f Dockerfiles/api",
-    "dockersrv": "docker build --tag custodian-server:latest . -f Dockerfiles/server",
+    "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
+    "dockerserver": "npx ts-node Dockerfiles/dockerserver.ts",
     "build": "npx tsc",
     "start": "npx tsc && node out/server/index.js"    
   },
