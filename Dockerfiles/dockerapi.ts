@@ -4,7 +4,14 @@ import chalk from "chalk";
 dotenv.config();
 const { exec } = require("child_process");
 
-const com = `docker build --tag uka17/custodian-api:latest . -f Dockerfiles/api --build-arg JWT_SECRET="${process.env.JWT_SECRET}" --build-arg DB="${process.env.DB}" --build-arg ENV="${process.env.ENV}" && docker push uka17/custodian-api:latest`;
+const tag =
+  "689173142787.dkr.ecr.eu-north-1.amazonaws.com/custodian-api:latest";
+const host = "689173142787.dkr.ecr.eu-north-1.amazonaws.com";
+const username = "AWS";
+const region = "eu-north-1";
+const dockerfile = "Dockerfiles/api";
+
+const com = `aws ecr get-login-password --region ${region} | docker login --username ${username} --password-stdin ${host} && docker build --tag ${tag} . -f ${dockerfile} --build-arg JWT_SECRET="${process.env.JWT_SECRET}" --build-arg DB="${process.env.DB}" --build-arg ENV="${process.env.ENV}" && docker push ${tag}`;
 
 console.log(`Executing: ${chalk.green(com)}...`);
 
