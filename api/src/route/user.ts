@@ -29,9 +29,11 @@ export default function (
 
   const userRepository = appDataSource.getRepository(User);
 
-  app.post("/users", async (req: express.Request, res: express.Response) => {
-    // #swagger.summary = 'Register new user'
-    /*  #swagger.parameters['body'] = {
+  app.post(
+    "/api/v1/users",
+    async (req: express.Request, res: express.Response) => {
+      // #swagger.summary = 'Register new user'
+      /*  #swagger.parameters['body'] = {
             in: 'body',
             description: 'User',
             schema: {
@@ -40,83 +42,84 @@ export default function (
                 $name: 'Jhon Doe',
             }
     } */
-    try {
-      const { email, password, name } = req.body;
+      try {
+        const { email, password, name } = req.body;
 
-      //Standart checks for password and username
-      if (!email) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("email_required") });
+        //Standart checks for password and username
+        if (!email) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("email_required") });
+        }
+
+        if (!name) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("name_required") });
+        }
+
+        if (!name.match(config.nameRegExp)) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("name_alphanumeric") });
+        }
+
+        if (!email.match(config.emailRegExp)) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("email_format_incorrect") });
+        }
+
+        if (!password) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("password_required") });
+        }
+
+        if (!password.match(config.passwordRegExp)) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("password_format_incorrect") });
+        }
+
+        // Check if the user already exists
+        const user = await userRepository.findOneBy({
+          email: email,
+        });
+
+        if (user) {
+          return res
+            .status(422)
+            .json({ error: translations.getText("user_already_exists") });
+        }
+
+        // Hash the password
+        const hash = bcrypt.hashSync(password);
+
+        // Create a new user
+        const newUser = new User();
+        newUser.name = name;
+        newUser.email = email;
+        newUser.password = hash;
+        newUser.created_by = email;
+        newUser.modified_by = email;
+        await appDataSource.manager.save(newUser);
+
+        const result = Object.assign({}, newUser);
+        delete result.password;
+
+        return res.status(201).json(result);
+      } catch (e: unknown) {
+        /* istanbul ignore next */
+        logger.error(e as object);
+        res.status(500).send({ error: translations.getText("error_500") });
       }
-
-      if (!name) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("name_required") });
-      }
-
-      if (!name.match(config.nameRegExp)) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("name_alphanumeric") });
-      }
-
-      if (!email.match(config.emailRegExp)) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("email_format_incorrect") });
-      }
-
-      if (!password) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("password_required") });
-      }
-
-      if (!password.match(config.passwordRegExp)) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("password_format_incorrect") });
-      }
-
-      // Check if the user already exists
-      const user = await userRepository.findOneBy({
-        email: email,
-      });
-
-      if (user) {
-        return res
-          .status(422)
-          .json({ error: translations.getText("user_already_exists") });
-      }
-
-      // Hash the password
-      const hash = bcrypt.hashSync(password);
-
-      // Create a new user
-      const newUser = new User();
-      newUser.name = name;
-      newUser.email = email;
-      newUser.password = hash;
-      newUser.created_by = email;
-      newUser.modified_by = email;
-      await appDataSource.manager.save(newUser);
-
-      const result = Object.assign({}, newUser);
-      delete result.password;
-
-      return res.status(201).json(result);
-    } catch (e: unknown) {
-      /* istanbul ignore next */
-      logger.error(e as object);
-      res.status(500).send({ error: translations.getText("error_500") });
     }
-  });
+  );
 
   // Log in as an existing user
   app.post(
-    "/users/login",
+    "/api/users/login",
     (
       req: express.Request,
       res: express.Response,
@@ -177,7 +180,7 @@ export default function (
 
   // Get a protected resource with current user
   app.get(
-    "/users/whoami",
+    "/api/users/whoami",
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Fetch currently current user'

@@ -25,7 +25,7 @@ const logger = Logger.getInstance(
 );
 
 logger.info(
-  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, DB=${process.env.DB}, logLevel=${config.logLevel})...`
+  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
 
 const app: Express = express();
@@ -39,6 +39,12 @@ if (!process.env.JWT_SECRET) throw "JWT_SECRET is empty or nor found";
 
 //Swagger
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get("/", async (req: express.Request, res: express.Response) => {
+  // #swagger.summary = 'Check if api is online'
+  res.send(
+    "API is online (TypeORM, Passport, Express.js)<br/><a href='/swagger/'>Swagger doc</a>"
+  );
+});
 
 //Init data source and configure all routes
 appDataSource
@@ -56,12 +62,14 @@ appDataSource
     stash(router, logger, translations, appDataSource);
     //Attach routes to app
 
-    app.use(`/api/${config.version}`, router);
+    app.use("/", router);
 
     //Start app
     app.listen(config.port, () => {
       logger.info(
-        `API ${config.version} is live at: http://localhost:${config.port}/api/${config.version}`
+        `API is live at: http://${config.currentIp()}:${config.port}/api/${
+          config.version
+        }`
       );
       //expressListRoutes(app);
     });

@@ -5,7 +5,7 @@
     "description": "API for custodian application",
     "version": "1.0.0"
   },
-  "host": "localhost:8080",
+  "host": "192.168.2.102:9000",
   "basePath": "/",
   "schemes": [
     "http"
@@ -23,7 +23,18 @@
         }
       }
     },
-    "/stashes": {
+    "/health": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/stashes": {
       "post": {
         "summary": "Create new stash",
         "description": "",
@@ -80,7 +91,7 @@
         }
       }
     },
-    "/stashes/{id}": {
+    "/api/v1/stashes/{id}": {
       "get": {
         "summary": "Get stash by id",
         "description": "",
@@ -134,7 +145,7 @@
         }
       }
     },
-    "/stashes/{id}/decrypt/{key}": {
+    "/api/v1/stashes/{id}/decrypt/{key}": {
       "post": {
         "summary": "Decrypt stash by id and provided key",
         "description": "",
@@ -168,7 +179,7 @@
         }
       }
     },
-    "/stashes/{id}/snooze/{days}": {
+    "/api/v1/stashes/{id}/snooze/{days}": {
       "post": {
         "summary": "Snooze stash by id fro N days",
         "description": "",
@@ -202,7 +213,7 @@
         }
       }
     },
-    "/users": {
+    "/api/v1/users": {
       "post": {
         "summary": "Register new user",
         "description": "",
@@ -248,7 +259,7 @@
         }
       }
     },
-    "/users/login": {
+    "/api/users/login": {
       "post": {
         "summary": "Login user",
         "description": "",
@@ -289,7 +300,7 @@
         }
       }
     },
-    "/users/whoami": {
+    "/api/users/whoami": {
       "get": {
         "summary": "Fetch currently current user",
         "description": "",

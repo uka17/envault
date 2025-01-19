@@ -22,6 +22,10 @@ export default function (
       "API is online (TypeORM, Passport, Express.js)<br/><a href='/swagger/'>Swagger doc</a>"
     );
   });
+  //Health endpoint
+  app.get("/health", async (req: express.Request, res: express.Response) => {
+    res.status(200).send({ status: "OK" });
+  });
   //Default error handlers
   app.use(function (
     err: express.ErrorRequestHandler,

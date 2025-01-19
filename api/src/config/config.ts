@@ -1,6 +1,6 @@
 export default {
   port: 9000,
-  logLevel: "info",
+  logLevel: process.env.ENV == "DEV" ? "info" : "warn",
   cors: { origin: "http://localhost:8080" },
   session: {
     secret: "biteme",
@@ -13,4 +13,18 @@ export default {
   nameRegExp: /^[a-z0-9]+$/i,
   emailRegExp: /.+@.+\..+/i,
   JWTMaxAge: 60, //days
+  currentIp: () => {
+    const os = require("os");
+    const networkInterfaces = os.networkInterfaces();
+
+    for (const interfaceName in networkInterfaces) {
+      const interfaces = networkInterfaces[interfaceName];
+      for (const iface of interfaces) {
+        if (iface.family === "IPv4" && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+    return undefined;
+  },
 };

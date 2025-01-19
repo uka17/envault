@@ -1,13 +1,14 @@
-const swaggerAutogen = require("swagger-autogen")();
-const fs = require("fs");
-const chalk = require("chalk");
+import swaggerAutogen from "swagger-autogen";
+import fs from "fs";
+import chalk from "chalk";
+import config from "../config/config";
 
 const doc = {
   info: {
     title: "Custodian API",
     description: "API for custodian application",
   },
-  host: "localhost:8080",
+  host: `${config.currentIp()}:${config.port}`,
   schemes: ["http"],
 };
 

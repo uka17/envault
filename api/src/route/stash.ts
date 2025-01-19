@@ -29,7 +29,7 @@ export default function (
   const stashRepository = appDataSource.getRepository(Stash);
 
   app.post(
-    "/stashes",
+    `/api/v1/stashes`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Create new stash'
@@ -72,7 +72,7 @@ export default function (
   );
 
   app.get(
-    "/stashes",
+    `/api/v1/stashes`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Get list of stashes for curret user'
@@ -103,7 +103,7 @@ export default function (
   );
 
   app.get(
-    "/stashes/:id",
+    `/api/v1/stashes/:id`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Get stash by id'
@@ -134,7 +134,7 @@ export default function (
     }
   );
   app.delete(
-    "/stashes/:id",
+    `/api/v1/stashes/:id`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Delete stash by id'
@@ -166,7 +166,7 @@ export default function (
     }
   );
   app.post(
-    "/stashes/:id/decrypt/:key",
+    `/api/v1/stashes/:id/decrypt/:key`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Decrypt stash by id and provided key'
@@ -204,7 +204,7 @@ export default function (
   );
 
   app.post(
-    "/stashes/:id/snooze/:days",
+    `/api/v1/stashes/:id/snooze/:days`,
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Snooze stash by id fro N days'
