@@ -34,7 +34,7 @@ jobs:
         DB: ${{ secrets.DB_PROD }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}     
       run:
-        docker build --tag $IMAGE_TAG . -f $DOCKER_FILE --build-arg JWT_SECRET="$JWT_SECRET" --build-arg DB="$DB" --build-arg ENV="PROD"
+        docker build --tag $IMAGE_TAG . -f $DOCKER_FILE --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" --build-arg DB="${{ secrets.DB_PROD }}" --build-arg ENV="PROD"
         docker tag $IMAGE_TAG $ECR_REPOSITORY
         docker push $ECR_REPOSITORY
 
