@@ -1,3 +1,4 @@
+// DEPRECATED, using AWS ECS and ECR instead
 //Run docker build in this script in order to avoid expousing or ENV variables with keys
 import dotenv from "dotenv";
 import chalk from "chalk";

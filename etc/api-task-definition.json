@@ -15,20 +15,6 @@
               }
           ],
           "essential": true,
-          "environment": [
-              {
-                  "name": "ENV",
-                  "value": "DEV"
-              },
-              {
-                  "name": "JWT_SECRET",
-                  "value": "Rick Sanchez"
-              },
-              {
-                  "name": "DB",
-                  "value": "postgres://postgres:Bluefoxinabox7@custodian.crakqyso0o9f.eu-north-1.rds.amazonaws.com:5432/custodian"
-              }
-          ],
           "environmentFiles": [],
           "mountPoints": [],
           "volumesFrom": [],
