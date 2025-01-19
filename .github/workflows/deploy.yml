@@ -10,6 +10,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
     # 1. Checkout repo
@@ -35,7 +38,7 @@ jobs:
         docker build --tag $IMAGE_TAG -f $DOCKER_FILE \
           --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
           --build-arg DB="${{ secrets.PROD_DB }} " \
-          --build-arg ENV="PROD" .
+          --build-arg ENV="PROD " .
         docker tag $IMAGE_TAG $ECR_REPOSITORY
         docker push $ECR_REPOSITORY
 
