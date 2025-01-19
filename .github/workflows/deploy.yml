@@ -31,8 +31,6 @@ jobs:
         ECR_REPOSITORY: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest  # ECR repo name
         IMAGE_TAG: custodian-api:latest
         DOCKER_FILE: Dockerfiles/api
-        DB: ${{ secrets.DB_PROD }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}     
       run:
         docker build --tag $IMAGE_TAG . -f $DOCKER_FILE --build-arg JWT_SECRET="Rick Sanchez" --build-arg DB="postgres://postgres:Bluefoxinabox7@custodian.crakqyso0o9f.eu-north-1.rds.amazonaws.com:5432/custodian" --build-arg ENV="DEV"
         docker tag $IMAGE_TAG $ECR_REPOSITORY
