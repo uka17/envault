@@ -36,9 +36,9 @@ jobs:
         DOCKER_FILE: Dockerfiles/api
       run: |
         docker build --tag $IMAGE_TAG -f $DOCKER_FILE \
-          --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-          --build-arg DB="${{ secrets.PROD_DB }} " \
-          --build-arg ENV="PROD " .
+          --build-arg JWT_SECRET="postgres://postgres:Bluefoxinabox7@custodian.crakqyso0o9f.eu-north-1.rds.amazonaws.com:5432/custodian" \
+          --build-arg DB="Rick Sanchez" \
+          --build-arg ENV="PROD" .
         docker tag $IMAGE_TAG $ECR_REPOSITORY
         docker push $ECR_REPOSITORY
 
