@@ -80,7 +80,7 @@
           "name": "ecs.capability.task-eni"
       },
       {
-          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+          "name": "com.amazonaws.ecs.enableFaultInjection.docker-remote-api.1.29"
       }
   ],
   "placementConstraints": [],
@@ -99,6 +99,5 @@
   },
   "registeredAt": "2025-01-18T19:58:36.056Z",
   "registeredBy": "arn:aws:iam::713881789926:root",
-  "enableFaultInjection": false,
   "tags": []
 }
