@@ -19,7 +19,7 @@ export default function (
   app.get("/", async (req: express.Request, res: express.Response) => {
     // #swagger.summary = 'Check if api is online'
     res.send(
-      "API is online (TypeORM, Passport, Express.js)<br/><a href='/swagger/'>API Docs</a>"
+      "API is online (TypeORM, Passport, Express.js)<br/><a href='/swagger/'>Swagger docs</a>"
     );
   });
   //Default error handlers
