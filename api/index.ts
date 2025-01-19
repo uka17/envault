@@ -25,7 +25,7 @@ const logger = Logger.getInstance(
 );
 
 logger.info(
-  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
+  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, DB=${process.env.DB}, logLevel=${config.logLevel})...`
 );
 
 const app: Express = express();
@@ -40,7 +40,7 @@ if (!process.env.JWT_SECRET) throw "JWT_SECRET is empty or nor found";
 //Swagger
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-//Init datasourse and configure all routes
+//Init data source and configure all routes
 appDataSource
   .initialize()
   .then(async () => {
@@ -60,7 +60,9 @@ appDataSource
 
     //Start app
     app.listen(config.port, () => {
-      logger.info(`API ${config.version} is live on ${config.port}.`);
+      logger.info(
+        `API ${config.version} is live at: http://localhost:${config.port}/api/${config.version}`
+      );
       //expressListRoutes(app);
     });
   })

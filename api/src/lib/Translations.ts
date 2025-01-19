@@ -10,7 +10,7 @@ export default class Translations {
    *
    * @param languageCode Code of language (default is `en`) for which translations should be loaded
    */
-  public async loadTranslations(languageCode: string) {
+  public async loadTranslations(languageCode: string = "en"): Promise<void> {
     const translationsRepository = appDataSource.getRepository(TextLanguage);
     this.textLanguages = await translationsRepository.find({
       relations: {

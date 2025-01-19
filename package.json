@@ -10,7 +10,8 @@
     "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
     "dockerserver": "npx ts-node Dockerfiles/dockerserver.ts",
     "build": "npx tsc",
-    "start": "npx tsc && node out/server/index.js"    
+    "server": "npx tsc && node out/server/index.js",
+    "api": "npx tsc && node out/api/index.js"    
   },
   "author": "",
   "license": "ISC",

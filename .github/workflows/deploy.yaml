@@ -1,0 +1,42 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches:
+      - main  
+    #paths:
+    #  - my-folder/**      
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout repo
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Login to ECR
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # 3. Build and push Docker-image
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REPOSITORY: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest  # ECR repo name
+        IMAGE_TAG: custodian-api:latest
+        DOCKER_FILE: Dockerfiles/api
+      run: |
+        docker build --tag $IMAGE_TAG . -f $DOCKER_FILE --build-arg JWT_SECRET="Rick Sanchez" --build-arg DB="postgres://postgres:Bluefoxinabox7@custodian.crakqyso0o9f.eu-north-1.rds.amazonaws.com:5432/custodian" --build-arg ENV="DEV"
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REPOSITORY
+
+    # 4. Update ECS service
+    - name: Deploy to Amazon ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ./etc/api-task-definition.json  
+        service: custodian-api               
+        cluster: custodian-api
+        wait-for-service-stability: true

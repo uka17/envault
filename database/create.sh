@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 export PGPASSWORD=postgres
+#Bluefoxinabox7 - AWS password
 
 #Create initial docker containers (postgres), apply initial db structure to postgres
 echo "Create network..."

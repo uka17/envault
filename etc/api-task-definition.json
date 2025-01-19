@@ -1,0 +1,104 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:eu-north-1:713881789926:task-definition/custodian-api:1",
+  "containerDefinitions": [
+      {
+          "name": "custodian-api",
+          "image": "713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest",
+          "cpu": 0,
+          "portMappings": [
+              {
+                  "name": "custodian-api-9000-tcp",
+                  "containerPort": 9000,
+                  "hostPort": 9000,
+                  "protocol": "tcp",
+                  "appProtocol": "http"
+              }
+          ],
+          "essential": true,
+          "environment": [
+              {
+                  "name": "ENV",
+                  "value": "DEV"
+              },
+              {
+                  "name": "JWT_SECRET",
+                  "value": "Rick Sanchez"
+              },
+              {
+                  "name": "DB",
+                  "value": "postgres://postgres:Bluefoxinabox7@custodian.crakqyso0o9f.eu-north-1.rds.amazonaws.com:5432/custodian"
+              }
+          ],
+          "environmentFiles": [],
+          "mountPoints": [],
+          "volumesFrom": [],
+          "ulimits": [],
+          "logConfiguration": {
+              "logDriver": "awslogs",
+              "options": {
+                  "awslogs-group": "/ecs/custodian-api",
+                  "mode": "non-blocking",
+                  "awslogs-create-group": "true",
+                  "max-buffer-size": "25m",
+                  "awslogs-region": "eu-north-1",
+                  "awslogs-stream-prefix": "ecs"
+              },
+              "secretOptions": []
+          },
+          "systemControls": []
+      }
+  ],
+  "family": "custodian-api",
+  "executionRoleArn": "arn:aws:iam::713881789926:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 1,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+      {
+          "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+      },
+      {
+          "name": "ecs.capability.execution-role-awslogs"
+      },
+      {
+          "name": "com.amazonaws.ecs.capability.ecr-auth"
+      },
+      {
+          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+      },
+      {
+          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
+      },
+      {
+          "name": "ecs.capability.execution-role-ecr-pull"
+      },
+      {
+          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+      },
+      {
+          "name": "ecs.capability.task-eni"
+      },
+      {
+          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+      }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+      "EC2",
+      "FARGATE"
+  ],
+  "requiresCompatibilities": [
+      "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "runtimePlatform": {
+      "cpuArchitecture": "X86_64",
+      "operatingSystemFamily": "LINUX"
+  },
+  "registeredAt": "2025-01-18T19:58:36.056Z",
+  "registeredBy": "arn:aws:iam::713881789926:root",
+  "enableFaultInjection": false,
+  "tags": []
+}

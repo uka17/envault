@@ -49,7 +49,7 @@ appDataSource
           console.log(chalk.green(`Created text '${textCode}'`));
         }
 
-        //Check if text already exists and create if needed
+        //Check if translation already exists and create if needed
         let translation = await textLanguageRepository.findOneBy({
           text: {
             id: text.id,
