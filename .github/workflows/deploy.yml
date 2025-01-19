@@ -28,7 +28,7 @@ jobs:
     # 3. Build and push Docker-image
     - name: Build, tag, and push image to Amazon ECR
       env:
-        ECR_REPOSITORY: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest  # ECR repo name
+        ECR_REPOSITORY: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian  # ECR repo name
         IMAGE_TAG: custodian-api:latest
         DOCKER_FILE: Dockerfiles/api
       run: |
