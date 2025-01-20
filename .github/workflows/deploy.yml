@@ -29,8 +29,8 @@ jobs:
     - name: Generate image tag
       id: generate-tag
       run: |
-        echo "tag=custodian-api$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
-        echo "Generated tag: ${{ env.tag }}"        
+        echo "tag=custodian-api:$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+        echo "Generated tag: $tag"        
 
     # Build and push Docker-image
     - name: Build, tag, and push image to Amazon ECR
@@ -39,7 +39,7 @@ jobs:
         IMAGE_TAG: custodian-api:latest
         DOCKER_FILE: Dockerfiles/api
       run: |
-        docker build --tag $IMAGE_TAG . -f $DOCKER_FILE \
+        docker build --tag ${{ env.tag }} . -f $DOCKER_FILE \
         --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
         --build-arg DB="${{ secrets.PROD_DB }}" \
         --build-arg ENV="PROD"
