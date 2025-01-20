@@ -16,16 +16,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout repo
+    # Checkout repo
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Login to ECR
+    # Login to ECR
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1    
 
-    # 3. Build and push Docker-image
+    # Generate image tag
+    - name: Generate image tag
+      id: generate-tag
+      run: echo "tag=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV        
+
+    # Build and push Docker-image
     - name: Build, tag, and push image to Amazon ECR
       env:
         ECR_REPOSITORY: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest  # ECR repo name
@@ -36,10 +41,10 @@ jobs:
         --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
         --build-arg DB="${{ secrets.PROD_DB }}" \
         --build-arg ENV="PROD"
-        docker tag $IMAGE_TAG $ECR_REPOSITORY
+        docker tag $${{ env.tag }} $ECR_REPOSITORY
         docker push $ECR_REPOSITORY
 
-    # 4. Update ECS service
+    # Update ECS service
     - name: Deploy to Amazon ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1   
       with:         
