@@ -46,7 +46,7 @@ jobs:
         docker build --tag custodian-api:${{ env.tag }} . -f $DOCKER_FILE \
         --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
         --build-arg DB="${{ secrets.PROD_DB }}" \
-        --build-arg ENV="PROD"
+        --build-arg ENV="DEV"
         docker tag custodian-api:${{ env.tag }} $REPOSITORY_TAG:${{ env.tag }}
         docker push $REPOSITORY_TAG:${{ env.tag }}
 
