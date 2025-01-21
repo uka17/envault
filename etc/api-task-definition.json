@@ -23,7 +23,7 @@
             "timeout": 5,
             "retries": 3,
             "startPeriod": 60
-          }          
+          },          
           "essential": true,
           "environment": [
             {
