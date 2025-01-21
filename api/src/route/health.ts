@@ -24,7 +24,7 @@ export default function (
   });
   //Health endpoint
   app.get("/health", async (req: express.Request, res: express.Response) => {
-    res.status(200).send({ status: "OK" });
+    res.status(200).send();
   });
   //Default error handlers
   app.use(function (
