@@ -52,7 +52,8 @@ jobs:
 
     - name: Update Docker image tag in task definition
       run: |
-        jq '.containerDefinitions[0].image |= sub(":.*"; ":" + ${{ env.tag }})' ./etc/api-task-definition.json > ./etc/api-task-definition-updated.json
+        export NEW_TAG=${{ env.tag }}
+        jq '.containerDefinitions[0].image |= sub(":.*"; ":" + env.NEW_TAG)' ./etc/api-task-definition.json > ./etc/api-task-definition-updated.json
         mv ./etc/api-task-definition-updated.json ./etc/api-task-definition.json
 
     # Update ECS service
