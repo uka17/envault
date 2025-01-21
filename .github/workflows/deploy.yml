@@ -15,6 +15,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    concurrency:
+      group: ${{ github.ref }}
+      cancel-in-progress: true
+
     steps:
     # Checkout repo
     - name: Checkout code
@@ -45,6 +49,11 @@ jobs:
         --build-arg ENV="PROD"
         docker tag custodian-api:${{ env.tag }} $REPOSITORY_TAG:${{ env.tag }}
         docker push $REPOSITORY_TAG:${{ env.tag }}
+
+    - name: Update Docker image tag in task definition
+      run: |
+        jq '.containerDefinitions[0].image |= sub(":.*"; ":" + ${{ env.tag }})' ./etc/api-task-definition.json > ./etc/api-task-definition-updated.json
+        mv ./etc/api-task-definition-updated.json ./etc/api-task-definition.json
 
     # Update ECS service
     - name: Deploy to Amazon ECS
