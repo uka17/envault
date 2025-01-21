@@ -3,7 +3,7 @@
   "containerDefinitions": [
       {
           "name": "custodian-api",
-          "image": "713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest",
+          "image": "713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian-api:latest",
           "cpu": 0,
           "portMappings": [
               {
