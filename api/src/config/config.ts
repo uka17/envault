@@ -1,6 +1,7 @@
 export default {
   port: 9000,
-  logLevel: process.env.ENV == "DEV" ? "info" : "warn",
+  logLevel: process.env.LOG_LEVEL == "INFO" ? "info" : "warn",
+  showLogs: process.env.SHOW_LOGS == "TRUE" ? true : false,
   cors: { origin: "http://localhost:8080" },
   session: {
     secret: "biteme",
