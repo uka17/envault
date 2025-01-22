@@ -15,7 +15,6 @@
               }
           ],      
           "essential": true,
-          "enableExecuteCommand": true,
           "environment": [
             {
                 "name": "LOG_LEVEL",
