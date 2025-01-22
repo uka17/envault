@@ -46,6 +46,7 @@
       }
   ],
   "family": "custodian-api",
+  "taskRoleArn": "arn:aws:iam::713881789926:role/ecsTaskExecutionRole",
   "executionRoleArn": "arn:aws:iam::713881789926:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",
   "revision": 1,
