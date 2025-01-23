@@ -9,6 +9,7 @@ RUN npm run swagger
 RUN npx tsc
 
 FROM node:19-alpine
+RUN apk add --no-cache bash curl
 WORKDIR /app
 ARG DB
 ENV DB=$DB
