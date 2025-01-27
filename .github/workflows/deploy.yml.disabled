@@ -40,14 +40,14 @@ jobs:
     # Build and push Docker-image
     - name: Build, tag, and push image to Amazon ECR
       env:
-        REPOSITORY_TAG: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian-api
+        REPOSITORY_TAG: 713881789926.dkr.ecr.eu-north-1.amazonaws.com/envault-api
         DOCKER_FILE: Dockerfiles/api
       run: |
-        docker build --tag custodian-api:${{ env.tag }} . -f $DOCKER_FILE \
+        docker build --tag envault-api:${{ env.tag }} . -f $DOCKER_FILE \
         --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
         --build-arg DB="${{ secrets.PROD_DB }}" \
         --build-arg ENV="PROD"
-        docker tag custodian-api:${{ env.tag }} $REPOSITORY_TAG:${{ env.tag }}
+        docker tag envault-api:${{ env.tag }} $REPOSITORY_TAG:${{ env.tag }}
         docker push $REPOSITORY_TAG:${{ env.tag }}
 
     - name: Update Docker image tag in task definition
@@ -61,6 +61,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1   
       with:         
         task-definition: ./etc/api-task-definition.json  
-        service: custodian-api               
-        cluster: custodian-api
+        service: envault-api               
+        cluster: envault-api
         wait-for-service-stability: true

@@ -6,7 +6,7 @@ dotenv.config();
 const { exec } = require("child_process");
 
 const tag =
-  "689173142787.dkr.ecr.eu-north-1.amazonaws.com/custodian-server:latest";
+  "689173142787.dkr.ecr.eu-north-1.amazonaws.com/envault-server:latest";
 const host = "689173142787.dkr.ecr.eu-north-1.amazonaws.com";
 const username = "AWS";
 const region = "eu-north-1";

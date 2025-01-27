@@ -5,8 +5,8 @@ import chalk from "chalk";
 dotenv.config();
 const { exec } = require("child_process");
 
-const repo = "713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian:latest";
-const tag = "custodian-api:latest";
+const repo = "713881789926.dkr.ecr.eu-north-1.amazonaws.com/envault:latest";
+const tag = "envault-api:latest";
 const host = "713881789926.dkr.ecr.eu-north-1.amazonaws.com ";
 const username = "AWS";
 const region = "eu-north-1";

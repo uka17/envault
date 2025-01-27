@@ -10,7 +10,7 @@ import { Stash } from "./Stash";
 const appDataSource = new DataSource({
   type: "postgres",
   url: process.env.DB,
-  database: "custodian",
+  database: "envault",
   entities: [User, Language, Text, TextLanguage, Stash],
   synchronize: true,
   logging: false,

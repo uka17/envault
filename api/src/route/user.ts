@@ -119,7 +119,7 @@ export default function (
 
   // Log in as an existing user
   app.post(
-    "/api/users/login",
+    "/api/v1/users/login",
     (
       req: express.Request,
       res: express.Response,
@@ -180,7 +180,7 @@ export default function (
 
   // Get a protected resource with current user
   app.get(
-    "/api/users/whoami",
+    "/api/v1/users/whoami",
     passport.authenticate("jwt", { session: false }),
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Fetch currently current user'

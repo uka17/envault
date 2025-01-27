@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Custodian API",
-    "description": "API for custodian application",
+    "title": "Envault API",
+    "description": "API for envault application",
     "version": "1.0.0"
   },
   "host": "192.168.2.102:9000",

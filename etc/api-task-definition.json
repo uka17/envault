@@ -1,13 +1,13 @@
 {
-  "taskDefinitionArn": "arn:aws:ecs:eu-north-1:713881789926:task-definition/custodian-api:1",
+  "taskDefinitionArn": "arn:aws:ecs:eu-north-1:713881789926:task-definition/envault-api:1",
   "containerDefinitions": [
       {
-          "name": "custodian-api",
-          "image": "713881789926.dkr.ecr.eu-north-1.amazonaws.com/custodian-api:latest",
+          "name": "envault-api",
+          "image": "713881789926.dkr.ecr.eu-north-1.amazonaws.com/envault-api:latest",
           "cpu": 0,
           "portMappings": [
               {
-                  "name": "custodian-api-9000-tcp",
+                  "name": "envault-api-9000-tcp",
                   "containerPort": 9000,
                   "hostPort": 9000,
                   "protocol": "tcp",
@@ -42,7 +42,7 @@
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
-                  "awslogs-group": "/ecs/custodian-api",
+                  "awslogs-group": "/ecs/envault-api",
                   "mode": "non-blocking",
                   "awslogs-create-group": "true",
                   "max-buffer-size": "25m",
@@ -54,7 +54,7 @@
           "systemControls": []
       }
   ],
-  "family": "custodian-api",
+  "family": "envault-api",
   "taskRoleArn": "arn:aws:iam::713881789926:role/ecsTaskExecutionRole",
   "executionRoleArn": "arn:aws:iam::713881789926:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",

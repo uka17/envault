@@ -5,8 +5,8 @@ import config from "../config/config";
 
 const doc = {
   info: {
-    title: "Custodian API",
-    description: "API for custodian application",
+    title: "Envault API",
+    description: "API for envault application",
   },
   host: `${config.currentIp()}:${config.port}`,
   schemes: ["http"],

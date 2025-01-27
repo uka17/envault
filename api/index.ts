@@ -21,7 +21,7 @@ const expressListRoutes = require("express-list-routes");
 import { Logger, LogLevel } from "./src/lib/logger";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
-console.log("Custodian API");
+console.log("envault API");
 logger.info(
   `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
