@@ -14,6 +14,7 @@ import swaggerDocument from "./src/swagger/swagger.json";
 import health from "./src/route/health";
 import user from "./src/route/user";
 import stash from "./src/route/stash";
+import { User } from "./src/model/User";
 import passportConfig from "./src/config/passport";
 import Translations from "./src/lib/Translations";
 const expressListRoutes = require("express-list-routes");
@@ -63,13 +64,12 @@ appDataSource
     app.use("/", router);
 
     //Start app
-    app.listen(config.port, () => {
+    app.listen(config.port, async () => {
       logger.info(
-        `API is live at: http://${config.currentIp()}:${config.port}/api/${
-          config.version
-        }`
+        `API is live at: http://${config.currentIp()}:${config.port}/`
       );
-      //expressListRoutes(app);
+      let userCount = await appDataSource.getRepository(User).count();
+      logger.info(`Users: ${userCount} `);
     });
   })
   .catch((error) => {
