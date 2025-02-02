@@ -18,5 +18,5 @@ ARG MAILAPI
 ENV MAILAPI=$MAILAPI
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
-CMD node dist/server/index.js
+CMD node dist/service/index.js
 

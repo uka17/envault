@@ -8,9 +8,9 @@
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "text": "npx ts-node api/scripts/init.ts",
     "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
-    "dockerserver": "npx ts-node Dockerfiles/dockerserver.ts",
+    "dockerservice": "npx ts-node Dockerfiles/dockerservice.ts",
     "build": "npx tsc",
-    "server": "npx tsc && node out/server/index.js",
+    "service": "npx tsc && node out/service/index.js",
     "api": "npx tsc && node out/api/index.js"    
   },
   "author": "",

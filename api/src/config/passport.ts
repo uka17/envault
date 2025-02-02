@@ -57,7 +57,7 @@ export default function (
     new JwtStrategy(
       {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        secretOrKey: process.env.JWT_SECRET,
+        secretOrKey: process.env.API_JWT_SECRET,
       },
       async (payload, done) => {
         const user = await userRepository.findOneBy({

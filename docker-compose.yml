@@ -25,8 +25,12 @@ services:
       dockerfile: Dockerfiles/api
     container_name: envault-api
     environment:
-      DB: "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
-      JWT_SECRET: ${API_JWT_SECRET}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      API_JWT_SECRET: ${API_JWT_SECRET}
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
       LOG_LEVEL: ${LOG_LEVEL}      
@@ -37,7 +41,7 @@ services:
       envault_network:
         ipv4_address: ${API_HOST}
     ports:
-      - "${API_PORT}:${API_PORT}"       
+      - "${API_PORT}:${API_PORT}"         
 
 volumes:
   postgres_data:

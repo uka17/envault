@@ -15,13 +15,17 @@ const logger = Logger.getInstance(
   process.env.ENV != "PROD",
   config.logLevel as LogLevel
 );
-if (process.env.MAILAPI) {
-  var sendMail = new SendMail(config.sendFrom, process.env.MAILAPI, logger);
+if (process.env.SERVICE_MAILAPI) {
+  var sendMail = new SendMail(
+    config.sendFrom,
+    process.env.SERVICE_MAILAPI,
+    logger
+  );
 } else {
   throw new Error("No API key for mail service was found");
 }
 
-logger.info(`Initializing Server (logLevel=${config.logLevel})...`);
+logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
 //Init data source and configure all routes
 appDataSource

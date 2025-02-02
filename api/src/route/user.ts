@@ -160,7 +160,7 @@ export default function (
                   id: passportUser.id,
                   exp: Math.round(expirationDate.getTime() / 1000),
                 },
-                process.env.JWT_SECRET
+                process.env.API_JWT_SECRET
               );
               return res.json({ token: token });
             }

@@ -17,12 +17,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Server",
+      "name": "Launch service",
       //"runtimeExecutable": "nodemon",
-      "program": "${workspaceFolder}/out/server/index.js",
+      "program": "${workspaceFolder}/out/service/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/server/**/*.js"]
+      "outFiles": ["${workspaceFolder}/out/service/**/*.js"]
     }    
   ]
 }

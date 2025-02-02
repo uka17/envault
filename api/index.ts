@@ -48,7 +48,7 @@ app.use(session(config.session));
 app.use(bodyParser.json());
 
 //Basic checks
-if (!process.env.JWT_SECRET) throw "JWT_SECRET is empty or nor found";
+if (!process.env.API_JWT_SECRET) throw "JWT_SECRET is empty or nor found";
 
 //Swagger
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
