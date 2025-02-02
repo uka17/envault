@@ -8,14 +8,6 @@ RUN npx tsc
 
 FROM node:19-alpine
 WORKDIR /app
-ARG DB
-ENV DB=$DB
-ARG JWT_SECRET
-ENV JWT_SECRET=$JWT_SECRET
-ARG ENV
-ENV ENV=$ENV
-ARG MAILAPI
-ENV MAILAPI=$MAILAPI
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
 CMD node dist/service/index.js

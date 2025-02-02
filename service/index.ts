@@ -51,5 +51,5 @@ async function main() {
   const result = await stashRepository.find({
     where: { send_at: LessThan(new Date(Date.now())) },
   });
-  console.log(chalk.yellow(result[0].body));
+  console.log(chalk.yellow(result[0] ? result[0].body : "Was DB init?"));
 }

@@ -41,7 +41,29 @@ services:
       envault_network:
         ipv4_address: ${API_HOST}
     ports:
-      - "${API_PORT}:${API_PORT}"         
+      - "${API_PORT}:${API_PORT}"
+
+  service:
+    build:
+      context: .
+      dockerfile: Dockerfiles/service
+    container_name: envault-service
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      SERVICE_MAILAPI: ${SERVICE_MAILAPI}
+      ENV: ${ENV}
+      SHOW_LOGS: ${SHOW_LOGS}
+      LOG_LEVEL: ${LOG_LEVEL}      
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      envault_network:
+        ipv4_address: ${SERVICE_HOST}                
 
 volumes:
   postgres_data:
