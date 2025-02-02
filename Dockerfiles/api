@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM node:19-alpine as build
+FROM node:19-alpine AS build
 WORKDIR /app
-COPY ["package.json", "package-lock.json*", "./"]
+COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
 #Generate swagger content
@@ -11,14 +11,7 @@ RUN npx tsc
 FROM node:19-alpine
 RUN apk add --no-cache bash curl
 WORKDIR /app
-ARG DB
-ENV DB=$DB
-ARG JWT_SECRET
-ENV JWT_SECRET=$JWT_SECRET
-ARG ENV
-ENV ENV=$ENV
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
 CMD node dist/api/index.js
 EXPOSE 9000
-

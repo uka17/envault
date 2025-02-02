@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: envault-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      envault_network:
+        ipv4_address: ${DB_HOST}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h $DB_HOST -p $DB_PORT"]
+      interval: 5s
+      timeout: 3s
+      retries: 3        
+  
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfiles/api
+    container_name: envault-api
+    environment:
+      DB: "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+      JWT_SECRET: ${API_JWT_SECRET}
+      ENV: ${ENV}
+      SHOW_LOGS: ${SHOW_LOGS}
+      LOG_LEVEL: ${LOG_LEVEL}      
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      envault_network:
+        ipv4_address: ${API_HOST}
+    ports:
+      - "${API_PORT}:${API_PORT}"       
+
+volumes:
+  postgres_data:
+
+networks:
+  envault_network:
+    name: envault_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET}

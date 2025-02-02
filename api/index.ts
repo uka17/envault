@@ -20,12 +20,26 @@ import Translations from "./src/lib/Translations";
 const expressListRoutes = require("express-list-routes");
 
 import { Logger, LogLevel } from "./src/lib/logger";
+import chalk from "chalk";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
-console.log("envault API");
+// Welcome message
+
+console.log(chalk.yellowBright(config.logo));
+
+console.log("==========================================");
+console.log(
+  `Envault API. Logs: level=${chalk.yellowBright(
+    config.logLevel
+  )}, show=${chalk.yellowBright(config.showLogs)}`
+);
+console.log("==========================================" + "\n");
+
 logger.info(
   `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
+
+// Welcome message END
 
 const app: Express = express();
 
