@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import appDataSource from "./src/model/dataSource";
+import initDB from "./scripts/init";
 import config from "./src/config/config";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./src/swagger/swagger.json";
@@ -23,23 +24,12 @@ import { Logger, LogLevel } from "./src/lib/logger";
 import chalk from "chalk";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
-// Welcome message
-
-console.log(chalk.yellowBright(config.logo));
-
-console.log("==========================================");
-console.log(
-  `Envault API. Logs: level=${chalk.yellowBright(
-    config.logLevel
-  )}, show=${chalk.yellowBright(config.showLogs)}`
-);
-console.log("==========================================" + "\n");
+welcomeMessage();
+initDB(process.env.API_SILENT_INIT === "TRUE");
 
 logger.info(
   `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
-
-// Welcome message END
 
 const app: Express = express();
 
@@ -89,3 +79,17 @@ appDataSource
   .catch((error) => {
     logger.error(error);
   });
+
+/**
+ * Shows api welcome message with some parameters
+ */
+function welcomeMessage() {
+  console.log(chalk.yellowBright(config.logo));
+  console.log("==========================================");
+  console.log(
+    `Envault API. Logs: level=${chalk.yellowBright(
+      config.logLevel
+    )}, show=${chalk.yellowBright(config.showLogs)}`
+  );
+  console.log("==========================================" + "\n");
+}
