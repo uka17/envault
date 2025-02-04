@@ -21,4 +21,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/envault
-            git pull origin master 
+            git pull origin master
+
+            # Refresh images
+            docker pull uka17/envault-api:latest
+            docker pull uka17/envault-service:latest
+
+            # Restart services
+            docker-compose down
+            docker-compose up -d --remove-orphans          

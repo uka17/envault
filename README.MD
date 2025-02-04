@@ -19,3 +19,16 @@ Before you start using ECS Exec, make sure that you have completed these actions
 RUN apk add --no-cache bash curl
 ```
   
+## How to configure EC2
+
+1. Install docker and docker compose
+2. Add to GitHub secrets:
+   1. DOCKER_HUB_TOKEN
+   2. DOCKER_HUB_USERNAME
+   3. EC2_HOST
+   4. EC2_USER
+   5. EC2_SSH_KEY (private key)
+3. Add EC2 public key (generate it from private key) to `~/.ssh/authorized_keys`. This is required for GitHub to be able to access EC2 via ssh
+4. Generate new ssh key on EC2 and add public key to GitHub Deploy Keys. This is required for EC2 to clone the repo
+5. Clone repo
+6. Copy `.env` file to repo root
