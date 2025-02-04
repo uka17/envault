@@ -9,7 +9,8 @@ on:
       - master  
 
 jobs:
-  deploy:
+  build_and_push:
+    name: Build and Push Docker Images  
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +33,12 @@ jobs:
           docker push uka17/envault-api:latest
           docker push uka17/envault-service:latest
 
+  deploy:
+    name: Deploy containers to EC2
+    runs-on: ubuntu-latest
+    needs: build_and_push 
+
+    steps:
       - name: SSH into EC2 and Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
