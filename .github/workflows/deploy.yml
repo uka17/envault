@@ -27,6 +27,6 @@ jobs:
             docker pull uka17/envault-api:latest
             docker pull uka17/envault-service:latest
 
-            # Restart all services
+            # Restart services
             docker-compose down
             docker-compose up -d --remove-orphans          
