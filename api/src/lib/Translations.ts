@@ -1,17 +1,21 @@
+import { DataSource } from "typeorm";
 import { TextLanguage } from "../model/TextLanguage";
-import appDataSource from "../model/dataSource";
 
 export default class Translations {
   public textLanguages: TextLanguage[] = [];
+  private appDataSource: DataSource;
 
-  constructor() {}
+  constructor(appDataSource: DataSource) {
+    this.appDataSource = appDataSource;
+  }
 
   /**
    *
    * @param languageCode Code of language (default is `en`) for which translations should be loaded
    */
   public async loadTranslations(languageCode: string = "en"): Promise<void> {
-    const translationsRepository = appDataSource.getRepository(TextLanguage);
+    const translationsRepository =
+      this.appDataSource.getRepository(TextLanguage);
     this.textLanguages = await translationsRepository.find({
       relations: {
         text: true,

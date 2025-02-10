@@ -7,7 +7,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-import appDataSource from "./src/model/dataSource";
+import getAppDataSource from "./src/model/dataSource";
 import initDB from "./scripts/init";
 import config from "./src/config/config";
 import swaggerUi from "swagger-ui-express";
@@ -22,6 +22,7 @@ const expressListRoutes = require("express-list-routes");
 
 import { Logger, LogLevel } from "./src/lib/logger";
 import chalk from "chalk";
+import { DataSource } from "typeorm";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
 welcomeMessage();
@@ -50,11 +51,14 @@ app.get("/", async (req: express.Request, res: express.Response) => {
 });
 
 //Init data source and configure all routes
+const dbURL = config.dbURL;
+const appDataSource = getAppDataSource(dbURL);
+
 appDataSource
   .initialize()
   .then(async () => {
     //Get translations
-    const translations = new Translations();
+    const translations = new Translations(appDataSource);
     await translations.loadTranslations("en");
     //Configure passport policies
     passportConfig(appDataSource, translations);

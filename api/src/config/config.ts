@@ -1,4 +1,6 @@
 export default {
+  dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  testDbURL: `postgres://${process.env.TEST_DB_USER}:${process.env.TEST_DB_PASSWORD}@${process.env.TEST_DB_HOST}:${process.env.TEST_DB_PORT}/${process.env.TEST_DB_NAME}`,
   port: 9000,
   logLevel: process.env.LOG_LEVEL == "INFO" ? "info" : "warn",
   showLogs: process.env.SHOW_LOGS == "TRUE" ? true : false,

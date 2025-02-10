@@ -1,17 +1,22 @@
 import "reflect-metadata";
-import appDataSource from "../src/model/dataSource";
+import getAppDataSource from "../src/model/dataSource";
 import texts from "./data/texts";
 import { Text } from "../src/model/Text";
 import { Language } from "../src/model/Language";
 import { TextLanguage } from "../src/model/TextLanguage";
 import chalk from "chalk";
 import { validateLocaleAndSetLanguage } from "typescript";
+import config from "../src/config/config";
 
 /**
  * Initializes database (adds translations, creates tables, etc)
  * @param silent If true, will not print any logs
  */
 function initDB(silent: boolean = true) {
+  //Init data source and configure all routes
+  const dbURL = config.dbURL;
+  const appDataSource = getAppDataSource(dbURL);
+
   appDataSource
     .initialize()
     .then(async () => {

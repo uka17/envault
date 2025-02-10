@@ -4,9 +4,8 @@ import SendMail from "./src/lib/SendMail";
 dotenv.config();
 
 import { LessThan } from "typeorm";
-import appDataSource from "../api/src/model/dataSource";
+import getAppDataSource from "../api/src/model/dataSource";
 import { Stash } from "../api/src/model/Stash";
-const stashRepository = appDataSource.getRepository(Stash);
 import config from "./src/config/config";
 import chalk from "chalk";
 
@@ -28,6 +27,8 @@ if (process.env.SERVICE_MAILAPI) {
 logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
 //Init data source and configure all routes
+const dbURL = config.dbURL;
+const appDataSource = getAppDataSource(dbURL);
 appDataSource
   .initialize()
   .then(async () => {
@@ -48,6 +49,7 @@ appDataSource
   });
 
 async function main() {
+  const stashRepository = appDataSource.getRepository(Stash);
   const result = await stashRepository.find({
     where: { send_at: LessThan(new Date(Date.now())) },
   });
