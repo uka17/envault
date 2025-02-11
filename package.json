@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "api-test": "nyc --reporter=html --reporter=text ts-mocha './test/**/*test.ts'",
-    "api-mtest": "mocha -r ts-node/register --file api/test/setup.ts api/test/**/*.test.ts",
-    "apicoverage": "nyc report --reporter=text-lcov > ./coverage/lcov.info",
+    "test:api": "nyc --reporter=html --reporter=text --report-dir=api/coverage mocha -r ts-node/register --file api/test/setup.ts api/test/**/*.test.ts",
+    "mtest:api": "mocha -r ts-node/register --file api/test/setup.ts api/test/**/*.test.ts",
+    "coverage:api": "nyc report --reporter=text-lcov > ./api/coverage/lcov.info",
+
+    "test:service": "nyc --exclude=api --reporter=html --reporter=text --report-dir=service/coverage mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",
+    "mtest:service": "mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",    
+    "coverage:service": "nyc --exclude=api report --reporter=text-lcov > ./service/coverage/lcov.info",
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "text": "npx ts-node api/scripts/init.ts",
     "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
