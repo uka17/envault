@@ -59,6 +59,9 @@ jobs:
       - name: Generate coverage report
         run: npm run coverage:api
 
+      - name: Check coverage (lines:80/functions:80/branches:80)
+        run: npm run check-coverage:api        
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

@@ -6,7 +6,7 @@ import { Logger } from "../src/lib/logger";
 import express from "express";
 
 const dbURL = config.testDbURL;
-console.log(dbURL);
+
 globalThis.appDataSource = getAppDataSource(dbURL);
 globalThis.translations = null;
 
