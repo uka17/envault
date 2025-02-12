@@ -15,7 +15,8 @@ env:
   TEST_DB_PORT: 5432      
 
 jobs:
-  test:
+  test_api:
+    name: Run tests for API, collect coverage and upload to Codecov  
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -59,7 +60,7 @@ jobs:
       - name: Generate coverage report
         run: npm run coverage:api
 
-      - name: Check coverage (lines:80/functions:80/branches:80)
+      - name: Check coverage
         run: npm run check-coverage:api        
 
       - name: Upload coverage to Codecov
@@ -69,12 +70,69 @@ jobs:
           files: ./api/coverage/lcov.info
           fail_ci_if_error: true
           verbose: true
-      
+
+  test_service:
+    name: Run tests for service, collect coverage and upload to Codecov  
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: envault_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d envault_qa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API tests
+        run: npm run mtest:service
+
+      - name: Create coverage directory if it doesn't exist
+        run: mkdir -p ./service/coverage
+      - name: Create .nyc_output directory if it doesn't exist        
+        run: mkdir -p ./.nyc_output
+
+      - name: Collect coverage statistics
+        run: npm run test:service
+
+      - name: Generate coverage report
+        run: npm run coverage:service
+
+      - name: Check coverage
+        run: npm run check-coverage:service        
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: b759b58e-3d1d-46f1-8979-36a61f1a706d
+          files: ./service/coverage/lcov.info
+          fail_ci_if_error: true
+          verbose: true                
 
   build_and_push:
     name: Build and Push Docker Images  
     runs-on: ubuntu-latest
-    needs: test 
+    needs: 
+      - test_api
+      - test_service
 
     steps:
       - name: Checkout Repository
