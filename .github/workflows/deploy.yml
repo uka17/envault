@@ -33,12 +33,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./envault
 
       - name: Run API tests
         env:
@@ -47,11 +46,9 @@ jobs:
           TEST_DB_PASSWORD: testpassword
           TEST_DB_NAME: envault_qa
         run: npm run mtest:api
-        working-directory: ./envault
 
       - name: Generate coverage report
         run: npm run coverage:api
-        working-directory: ./envault
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
