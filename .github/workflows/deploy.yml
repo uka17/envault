@@ -59,11 +59,14 @@ jobs:
       - name: Generate coverage report
         run: npm run coverage:api
 
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./api/coverage/lcov.info
+          token: b759b58e-3d1d-46f1-8979-36a61f1a706d
+          files: ./api/coverage/lcov.info
+          fail_ci_if_error: true
+          verbose: true
+      
 
   build_and_push:
     name: Build and Push Docker Images  
