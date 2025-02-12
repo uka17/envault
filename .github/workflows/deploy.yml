@@ -7,6 +7,12 @@ on:
   pull_request:
     branches:
       - master  
+env:
+  TEST_DB_HOST: localhost
+  TEST_DB_USER: testuser
+  TEST_DB_PASSWORD: testpassword
+  TEST_DB_NAME: envault_qa
+  TEST_DB_PORT: 5432      
 
 jobs:
   test:
@@ -40,12 +46,6 @@ jobs:
         run: npm ci
 
       - name: Run API tests
-        env:
-          TEST_DB_HOST: localhost
-          TEST_DB_USER: testuser
-          TEST_DB_PASSWORD: testpassword
-          TEST_DB_NAME: envault_qa
-          TEST_DB_PORT: 5432
         run: npm run mtest:api
 
       - name: Create coverage directory if it doesn't exist
