@@ -48,6 +48,9 @@ jobs:
           TEST_DB_PORT: 5432
         run: npm run mtest:api
 
+      - name: Create coverage directory if it doesn't exist
+        run: mkdir -p ./api/coverage
+
       - name: Generate coverage report
         run: npm run coverage:api
 
