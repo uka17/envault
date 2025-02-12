@@ -50,6 +50,8 @@ jobs:
 
       - name: Create coverage directory if it doesn't exist
         run: mkdir -p ./api/coverage
+      - name: Create .nyc_output directory if it doesn't exist        
+        run: mkdir -p ./.nyc_output
 
       - name: Generate coverage report
         run: npm run coverage:api
