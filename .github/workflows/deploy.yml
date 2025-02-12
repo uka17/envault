@@ -53,6 +53,9 @@ jobs:
       - name: Create .nyc_output directory if it doesn't exist        
         run: mkdir -p ./.nyc_output
 
+      - name: Collect coverage statistics
+        run: npm run test:api
+
       - name: Generate coverage report
         run: npm run coverage:api
 
