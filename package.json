@@ -8,12 +8,10 @@
     "mtest:api": "mocha -r ts-node/register --file api/test/setup.ts api/test/**/*.test.ts",
     "coverage:api": "nyc report --reporter=text-lcov > ./api/coverage/lcov.info",
     "check-coverage:api": "nyc check-coverage --lines 15 --functions 15 --branches 15",
-    
     "test:service": "nyc --exclude=api --reporter=html --reporter=text --report-dir=service/coverage mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",
-    "mtest:service": "mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",    
+    "mtest:service": "mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",
     "coverage:service": "nyc --exclude=api report --reporter=text-lcov > ./service/coverage/lcov.info",
     "check-coverage:service": "nyc check-coverage --lines 15 --functions 15 --branches 15",
-    
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "text": "npx ts-node api/scripts/init.ts",
     "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
@@ -25,7 +23,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@sendinblue/client": "^3.3.1",
     "@types/bcrypt": "^5.0.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/body-parser": "^1.19.2",
@@ -55,7 +52,6 @@
     "passport-local": "^1.0.0",
     "pg": "^8.10.0",
     "reflect-metadata": "^0.1.13",
-    "sib-api-v3-typescript": "^2.2.2",
     "sinon": "^19.0.2",
     "sqlite3": "^5.1.7",
     "supertest": "^7.0.0",

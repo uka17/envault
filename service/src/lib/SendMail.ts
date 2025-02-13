@@ -1,4 +1,3 @@
-const SibApiV3Sdk = require("sib-api-v3-typescript");
 import { Logger } from "../../../lib/logger";
 
 export default class SendMail {
@@ -33,26 +32,7 @@ export default class SendMail {
     htmlContent: string
   ) {
     try {
-      let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-      let apiKey = apiInstance.authentications["apiKey"];
-      apiKey.apiKey = this.apiKey;
-
-      let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-      sendSmtpEmail.subject = subject;
-      sendSmtpEmail.htmlContent = htmlContent;
-      sendSmtpEmail.sender = this.sender;
-      sendSmtpEmail.to = [to];
-
-      apiInstance.sendTransacEmail(sendSmtpEmail).then(
-        (data) => {
-          this.logger.info(
-            "API called successfully. Returned data: " + JSON.stringify(data)
-          );
-        },
-        (error) => {
-          this.logger.error(error);
-        }
-      );
+      this.logger.info(`Sending email to ${to.email}...`);
     } catch (error) {
       this.logger.error(error);
     }
