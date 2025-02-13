@@ -4,7 +4,7 @@ import { Text } from "./Text";
 import { Base } from "./Base";
 
 @Entity()
-export class TextLanguage extends Base {
+export class Translation extends Base {
   @ManyToOne(() => Text, (text) => text.id)
   text: Text;
 

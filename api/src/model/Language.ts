@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
-import { TextLanguage } from "./TextLanguage";
+import { Translation } from "./Translation";
 import { Base } from "./Base";
 
 @Entity()
@@ -10,6 +10,6 @@ export class Language extends Base {
   @Column("text")
   code: string;
 
-  @OneToMany(() => TextLanguage, (translations) => translations.language)
-  translations: TextLanguage[];
+  @OneToMany(() => Translation, (translations) => translations.language)
+  translations: Translation[];
 }

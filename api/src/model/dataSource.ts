@@ -3,7 +3,7 @@ dotenv.config();
 import { DataSource } from "typeorm";
 import { User } from "./User";
 import { Language } from "./Language";
-import { TextLanguage } from "./TextLanguage";
+import { Translation } from "./Translation";
 import { Text } from "./Text";
 import { Stash } from "./Stash";
 
@@ -17,9 +17,9 @@ function getAppDataSource(dbURL: string): DataSource {
     type: "postgres",
     url: dbURL,
     database: process.env.DB_NAME,
-    entities: [User, Language, Text, TextLanguage, Stash],
+    entities: [User, Language, Text, Translation, Stash],
     synchronize: true,
-    logging: false,
+    logging: true,
     connectTimeoutMS: 10000,
   });
 }

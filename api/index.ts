@@ -25,8 +25,11 @@ import chalk from "chalk";
 import { DataSource } from "typeorm";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
+//Init data source
+const dbURL = config.dbURL;
+const appDataSource = getAppDataSource(dbURL);
+
 welcomeMessage();
-initDB(process.env.API_SILENT_INIT === "TRUE");
 
 logger.info(
   `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
@@ -50,9 +53,7 @@ app.get("/", async (req: express.Request, res: express.Response) => {
   );
 });
 
-//Init data source and configure all routes
-const dbURL = config.dbURL;
-const appDataSource = getAppDataSource(dbURL);
+//Configure all routes
 
 appDataSource
   .initialize()
@@ -67,9 +68,11 @@ appDataSource
     health(router, logger, translations, appDataSource);
     user(router, logger, translations, appDataSource);
     stash(router, logger, translations, appDataSource);
-    //Attach routes to app
 
+    //Attach routes to app
     app.use("/", router);
+
+    initDB(appDataSource, process.env.API_SILENT_INIT === "TRUE");
 
     //Start app
     app.listen(config.port, async () => {

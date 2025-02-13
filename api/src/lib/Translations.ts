@@ -1,8 +1,8 @@
 import { DataSource } from "typeorm";
-import { TextLanguage } from "../model/TextLanguage";
+import { Translation } from "../model/Translation";
 
 export default class Translations {
-  public textLanguages: TextLanguage[] = [];
+  public translations: Translation[] = [];
   private appDataSource: DataSource;
 
   constructor(appDataSource: DataSource) {
@@ -15,8 +15,8 @@ export default class Translations {
    */
   public async loadTranslations(languageCode: string = "en"): Promise<void> {
     const translationsRepository =
-      this.appDataSource.getRepository(TextLanguage);
-    this.textLanguages = await translationsRepository.find({
+      this.appDataSource.getRepository(Translation);
+    this.translations = await translationsRepository.find({
       relations: {
         text: true,
       },
@@ -33,7 +33,7 @@ export default class Translations {
    * @returns {string}
    */
   public getText(textCode: string): string {
-    const translation = this.textLanguages.find((e) => e.text.text == textCode);
+    const translation = this.translations.find((e) => e.text.text == textCode);
     return translation ? translation.translation : textCode;
   }
 }

@@ -13,6 +13,7 @@
     "mtest:service": "mocha -r ts-node/register --file service/test/setup.ts service/test/**/*.test.ts",    
     "coverage:service": "nyc --exclude=api report --reporter=text-lcov > ./service/coverage/lcov.info",
     "check-coverage:service": "nyc check-coverage --lines 15 --functions 15 --branches 15",
+    
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "text": "npx ts-node api/scripts/init.ts",
     "dockerapi": "npx ts-node Dockerfiles/dockerapi.ts",
