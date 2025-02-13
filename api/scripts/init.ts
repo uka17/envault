@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import texts from "./data/texts";
-import { Text } from "../src/model/Text";
-import { Language } from "../src/model/Language";
-import { Translation } from "../src/model/Translation";
+import { Text } from "../../model/Text";
+import { Language } from "../../model/Language";
+import { Translation } from "../../model/Translation";
 import chalk from "chalk";
 import config from "../src/config/config";
 import { DataSource } from "typeorm";

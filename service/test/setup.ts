@@ -1,8 +1,8 @@
-import Translations from "../../api/src/lib/Translations";
-import getAppDataSource from "../../api/src/model/dataSource";
+import Translations from "../../lib/Translations";
+import getAppDataSource from "../../model/dataSource";
 import config from "../src/config/config";
 import sinon from "sinon";
-import { Logger } from "../../api/src/lib/logger";
+import { Logger } from "../../lib/logger";
 import express from "express";
 
 const dbURL = config.testDbURL;

@@ -7,7 +7,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-import getAppDataSource from "./src/model/dataSource";
+import getAppDataSource from "../model/dataSource";
 import initDB from "./scripts/init";
 import config from "./src/config/config";
 import swaggerUi from "swagger-ui-express";
@@ -15,12 +15,12 @@ import swaggerDocument from "./src/swagger/swagger.json";
 import health from "./src/route/health";
 import user from "./src/route/user";
 import stash from "./src/route/stash";
-import { User } from "./src/model/User";
+import { User } from "../model/User";
 import passportConfig from "./src/config/passport";
-import Translations from "./src/lib/Translations";
+import Translations from "../lib/Translations";
 const expressListRoutes = require("express-list-routes");
 
-import { Logger, LogLevel } from "./src/lib/logger";
+import { Logger, LogLevel } from "../lib/logger";
 import chalk from "chalk";
 import { DataSource } from "typeorm";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);

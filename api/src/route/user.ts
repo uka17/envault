@@ -1,10 +1,10 @@
 import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import { Logger } from "../lib/logger";
+import { Logger } from "../../../lib/logger";
 import { DataSource } from "typeorm";
-import { User } from "../model/User";
-import Translations from "../lib/Translations";
+import { User } from "../../../model/User";
+import Translations from "../../../lib/Translations";
 import bcrypt from "bcryptjs";
 import config from "../config/config";
 

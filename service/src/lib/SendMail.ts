@@ -1,5 +1,5 @@
 const SibApiV3Sdk = require("sib-api-v3-typescript");
-import { Logger } from "../../../api/src/lib/logger";
+import { Logger } from "../../../lib/logger";
 
 export default class SendMail {
   private sender: { name: string; email: string };

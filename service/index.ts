@@ -4,12 +4,12 @@ import SendMail from "./src/lib/SendMail";
 dotenv.config();
 
 import { LessThan } from "typeorm";
-import getAppDataSource from "../api/src/model/dataSource";
-import { Stash } from "../api/src/model/Stash";
+import getAppDataSource from "../model/dataSource";
+import { Stash } from "../model/Stash";
 import config from "./src/config/config";
 import chalk from "chalk";
 
-import { Logger, LogLevel } from "../api/src/lib/logger";
+import { Logger, LogLevel } from "../lib/logger";
 const logger = Logger.getInstance(
   process.env.ENV != "PROD",
   config.logLevel as LogLevel
@@ -53,5 +53,7 @@ async function main() {
   const result = await stashRepository.find({
     where: { send_at: LessThan(new Date(Date.now())) },
   });
-  console.log(chalk.yellow(result[0] ? result[0].body : "Was DB init?"));
+  console.log(
+    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found.")
+  );
 }

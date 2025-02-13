@@ -1,10 +1,10 @@
 import express from "express";
 import passport from "passport";
-import { Logger } from "../lib/logger";
+import { Logger } from "../../../lib/logger";
 import { DataSource } from "typeorm";
-import { User } from "../model/User";
-import { Stash } from "../model/Stash";
-import Translations from "../lib/Translations";
+import { User } from "../../../model/User";
+import { Stash } from "../../../model/Stash";
+import Translations from "../../../lib/Translations";
 import * as CryptoJS from "crypto-js";
 import config from "../config/config";
 import { customAlphabet } from "nanoid";
