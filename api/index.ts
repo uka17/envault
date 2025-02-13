@@ -27,7 +27,8 @@ const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
 
 //Init data source
 const dbURL = config.dbURL;
-const appDataSource = getAppDataSource(dbURL);
+const showSQLLogs = config.showSQLLogs;
+const appDataSource = getAppDataSource(dbURL, showSQLLogs);
 
 welcomeMessage();
 

@@ -8,7 +8,7 @@ import config from "../src/config/config";
 import { DataSource } from "typeorm";
 
 /**
- * Initializes database (adds translations, creates tables, etc)
+ * Initializes database (adds translations, languages, etc.)
  * @param silent If true, will not print any logs
  * @param appDataSource Data source to use
  */
