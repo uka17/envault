@@ -23,6 +23,21 @@
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
       "outFiles": ["${workspaceFolder}/out/service/**/*.js"]
-    }    
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "-r",
+        "ts-node/register",
+        "--file",
+        "api/test/setup.ts",
+        "api/test/**/*.test.ts"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",        
+  }                       
   ]
 }

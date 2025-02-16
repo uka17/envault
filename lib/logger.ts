@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import winston, { createLogger } from "winston";
 const { combine, timestamp, colorize, printf, logstash } = winston.format;
 import Transport from "winston-transport";

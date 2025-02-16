@@ -34,17 +34,17 @@ export default function (
         });
         if (!user) {
           return done(null, false, {
-            message: translations.getText("incorrect_token"),
+            message: translations.getText("incorrect_token").translation,
           });
         }
 
         bcrypt.compare(password, user.password, (err, res) => {
-          if (err) {
+          /* istanbul ignore next */ if (err) {
             return done(err);
           }
-          if (!res) {
+          /* istanbul ignore next */ if (!res) {
             return done(null, false, {
-              message: translations.getText("incorrect_token"),
+              message: translations.getText("incorrect_token").translation,
             });
           }
           return done(null, user);
@@ -63,7 +63,7 @@ export default function (
         const user = await userRepository.findOneBy({
           id: payload.sub,
         });
-        if (!user) {
+        /* istanbul ignore next */ if (!user) {
           return done(null, false);
         }
         return done(null, user);

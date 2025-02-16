@@ -4,6 +4,7 @@ import config from "../src/config/config";
 import sinon from "sinon";
 import { Logger } from "../../lib/logger";
 import express from "express";
+import passportConfig from "../src/config/passport";
 
 const dbURL = config.testDbURL;
 
@@ -21,6 +22,8 @@ async function startApp() {
 
   globalThis.translations = new Translations(globalThis.appDataSource);
   await globalThis.translations.loadTranslations("en");
+
+  passportConfig(globalThis.appDataSource, globalThis.translations);
 }
 
 before(async () => {

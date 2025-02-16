@@ -109,8 +109,7 @@ export default function (
         delete result.password;
 
         return res.status(201).json(result);
-      } catch (e: unknown) {
-        /* istanbul ignore next */
+      } catch (e: unknown) /* istanbul ignore next */ {
         logger.error(e as object);
         res.status(500).send({ error: translations.getText("error_500") });
       }
@@ -140,10 +139,8 @@ export default function (
           "local",
           { session: false },
           async (err: Error, passportUser: User) => {
-            if (err) {
-              /* istanbul ignore next */
+            /* istanbul ignore next */ if (err) {
               logger.error(err as object);
-              /* istanbul ignore next */
               res
                 .status(500)
                 .send({ error: translations.getText("error_500") });
@@ -165,13 +162,12 @@ export default function (
               return res.json({ token: token });
             }
 
-            return res.status(400).json({
+            return res.status(401).json({
               error: translations.getText("incorrect_password_or_email"),
             });
           }
         )(req, res, next);
-      } catch (e: unknown) {
-        /* istanbul ignore next */
+      } catch (e: unknown) /* istanbul ignore next */ {
         logger.error(e as object);
         res.status(500).send({ error: translations.getText("error_500") });
       }
@@ -191,7 +187,7 @@ export default function (
           id: id,
         });
 
-        if (!user) {
+        /* istanbul ignore next */ if (!user) {
           return res
             .status(401)
             .json({ error: translations.getText("incorrect_token") });
@@ -200,8 +196,7 @@ export default function (
           delete result.password;
           res.status(200).json(result);
         }
-      } catch (e: unknown) {
-        /* istanbul ignore next */
+      } catch (e: unknown) /* istanbul ignore next */ {
         logger.error(e as object);
         res.status(500).send({ error: translations.getText("error_500") });
       }

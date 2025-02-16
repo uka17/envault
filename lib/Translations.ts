@@ -30,10 +30,13 @@ export default class Translations {
   /**
    * Returns translation for provided text code, and undefined otherwise
    * @param textCode Code of text entry
-   * @returns {string}
+   * @returns {{ translation: string, textCode: string }}
    */
-  public getText(textCode: string): string {
+  public getText(textCode: string): { translation: string; textCode: string } {
     const translation = this.translations.find((e) => e.text.text == textCode);
-    return translation ? translation.translation : textCode;
+    return {
+      translation: translation ? translation.translation : textCode,
+      textCode: textCode,
+    };
   }
 }
