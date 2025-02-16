@@ -12,7 +12,8 @@ env:
   TEST_DB_USER: testuser
   TEST_DB_PASSWORD: testpassword
   TEST_DB_NAME: envault_qa
-  TEST_DB_PORT: 5432      
+  TEST_DB_PORT: 5432
+  API_JWT_SECRET: test_secret      
 
 jobs:
   test_api:
