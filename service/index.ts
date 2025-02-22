@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import dotenv from "dotenv";
-import SendMail from "./src/lib/SendMail";
+import SendMail from "../lib/SendMail";
 dotenv.config();
 
 import { LessThan } from "typeorm";
@@ -8,21 +8,25 @@ import getAppDataSource from "../model/dataSource";
 import { Stash } from "../model/Stash";
 import config from "./src/config/config";
 import chalk from "chalk";
+import { fromEnv } from "@aws-sdk/credential-providers";
 
 import { Logger, LogLevel } from "../lib/logger";
 const logger = Logger.getInstance(
   process.env.ENV != "PROD",
   config.logLevel as LogLevel
 );
-if (process.env.SERVICE_MAILAPI) {
-  var sendMail = new SendMail(
-    config.sendFrom,
-    process.env.SERVICE_MAILAPI,
-    logger
-  );
-} else {
-  throw new Error("No API key for mail service was found");
-}
+
+const credentials = fromEnv();
+var sendMail = new SendMail(logger, credentials);
+const mailOptions = {
+  to: "ukaoneseven@gmail.com",
+  from: "ukaoneseven@gmail.com",
+  subject: "New stash",
+  html: "<h1>New stash</h1>",
+  text: "New stash",
+};
+
+sendMail.send(mailOptions);
 
 logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
@@ -39,9 +43,8 @@ appDataSource
       "<b>Fuck off</b>"
     );
     */
-
     setInterval(function () {
-      return main();
+      main();
     }, config.runInterval);
   })
   .catch((error) => {

@@ -62,5 +62,11 @@
     "typescript": "^5.0.3",
     "winston": "^3.8.2",
     "winston-transport": "^4.5.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.750.0",
+    "@aws-sdk/credential-providers": "^3.750.0",
+    "@types/nodemailer": "^6.4.17",
+    "nodemailer": "^6.10.0"
   }
 }

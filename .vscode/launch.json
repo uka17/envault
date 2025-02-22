@@ -22,7 +22,7 @@
       "program": "${workspaceFolder}/out/service/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/service/**/*.js"]
+      "outFiles": ["${workspaceFolder}/out/service/**/*.js", "${workspaceFolder}/out/**/*.js.map"]
     },
     {
       "type": "node",
