@@ -107,7 +107,7 @@ jobs:
         run: npm run mtest:service
 
       - name: Create coverage directory if it doesn't exist
-        run: mkdir -p ./service/coverage
+        run: mkdir -p ./worker/coverage
       - name: Create .nyc_output directory if it doesn't exist        
         run: mkdir -p ./.nyc_output
 
@@ -124,7 +124,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: b759b58e-3d1d-46f1-8979-36a61f1a706d
-          files: ./service/coverage/lcov.info
+          files: ./worker/coverage/lcov.info
           fail_ci_if_error: true
           verbose: true                
 
@@ -151,7 +151,7 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           docker build -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build -t uka17/envault-service:latest -f Dockerfiles/service .
+          docker build -t uka17/envault-service:latest -f Dockerfiles/worker .
           docker push uka17/envault-api:latest
           docker push uka17/envault-service:latest
 

@@ -6,6 +6,7 @@ import { Language } from "./Language";
 import { Translation } from "./Translation";
 import { Text } from "./Text";
 import { Stash } from "./Stash";
+import { SendLog } from "./SendLog";
 
 /**
  *
@@ -18,7 +19,7 @@ function getAppDataSource(dbURL: string, showLogs = false): DataSource {
     type: "postgres",
     url: dbURL,
     database: process.env.DB_NAME,
-    entities: [User, Language, Text, Translation, Stash],
+    entities: [User, Language, Text, Translation, Stash, SendLog],
     synchronize: true,
     logging: showLogs,
     connectTimeoutMS: 10000,

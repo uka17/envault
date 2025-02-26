@@ -1,11 +1,12 @@
-import { Logger } from "./logger";
+import { Logger } from "../lib/logger";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
 import { Transporter } from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 import { AwsCredentialIdentityProvider } from "@smithy/types";
+import { DataSource } from "typeorm";
 
-export default class SendMail {
+export default class EmailService {
   private sesClient: SESClient;
   private logger: Logger;
   private transporter: Transporter;
@@ -13,9 +14,14 @@ export default class SendMail {
   /**
    * Creates instance of `SendMail` object which can send emails via sendinblue.com
    * @param credentials aws credentials provider
+   * @param dataSource TypeORM data source
    * @param logger Logger object
    */
-  constructor(logger: Logger, credentials: AwsCredentialIdentityProvider) {
+  constructor(
+    logger: Logger,
+    dataSource: DataSource,
+    credentials: AwsCredentialIdentityProvider
+  ) {
     this.logger = logger;
     this.sesClient = new SESClient({
       region: "eu-north-1",
@@ -26,20 +32,18 @@ export default class SendMail {
     });
   }
   /**
-   *
+   * Sends email using nodemailer and AWS SES
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
+   * @returns Message ID of the email received from AWS SES or `null` if error
    */
-  public async send(mailOptions: Mail.Options) {
+  public async send(mailOptions: Mail.Options): Promise<string | null> {
     try {
       this.logger.info(`Sending email to ${mailOptions.to}...`);
-      this.transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          this.logger.error(error);
-        }
-        this.logger.info(`Email sent: ${info.response}`);
-      });
+      const info = await this.transporter.sendMail(mailOptions);
+      return info.messageId || null;
     } catch (error) {
       this.logger.error(error);
+      return null;
     }
   }
 }

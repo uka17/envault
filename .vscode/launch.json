@@ -19,10 +19,10 @@
       "request": "launch",
       "name": "Launch service",
       //"runtimeExecutable": "nodemon",
-      "program": "${workspaceFolder}/out/service/index.js",
+      "program": "${workspaceFolder}/out/worker/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/service/**/*.js", "${workspaceFolder}/out/**/*.js.map"]
+      "outFiles": ["${workspaceFolder}/out/worker/**/*.js", "${workspaceFolder}/out/**/*.js.map"]
     },
     {
       "type": "node",

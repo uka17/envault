@@ -103,9 +103,9 @@ export default function (
         newUser.password = hash;
         newUser.created_by = email;
         newUser.modified_by = email;
-        await appDataSource.manager.save(newUser);
+        const createdUser = await appDataSource.manager.save(newUser);
 
-        const result = Object.assign({}, newUser);
+        const result = Object.assign({}, createdUser);
         delete result.password;
 
         return res.status(201).json(result);
