@@ -1,5 +1,5 @@
 import express from "express";
-import { Logger } from "../../../lib/logger";
+import { Logger } from "../../../lib/Logger";
 import { DataSource } from "typeorm";
 import Translations from "../../../lib/Translations";
 

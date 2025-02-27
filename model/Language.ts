@@ -10,6 +10,6 @@ export class Language extends Base {
   @Column("text")
   code: string;
 
-  @OneToMany(() => Translation, (translations) => translations.language)
-  translations: Translation[];
+  @OneToMany(() => Translation, (translation) => translation.language)
+  translation: Translation[];
 }

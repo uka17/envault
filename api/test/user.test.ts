@@ -5,7 +5,7 @@ import userRoutes from "../src/route/user";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 const userId = customAlphabet("1234567890abcdef", 10);
-import { Logger } from "../../lib/logger";
+import { Logger } from "../../lib/Logger";
 import { User } from "../../model/User";
 
 describe("User Routes", () => {

@@ -2,7 +2,7 @@ import Translations from "../../lib/Translations";
 import getAppDataSource from "../../model/dataSource";
 import config from "../src/config/config";
 import sinon from "sinon";
-import { Logger } from "../../lib/logger";
+import { Logger } from "../../lib/Logger";
 import express from "express";
 
 const dbURL = config.testDbURL;

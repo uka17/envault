@@ -6,14 +6,14 @@ export class Base {
   id: number;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
-  creaeted_on: Date;
+  creaetedOn: Date;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
-  modified_on: Date;
+  modifiedOn: Date;
 
   @Column({ type: "varchar", nullable: true, length: 255 })
-  created_by: string;
+  createdBy: string;
 
   @Column({ type: "varchar", nullable: true, length: 255 })
-  modified_by: string;
+  modifiedBy: string;
 }

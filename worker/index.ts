@@ -12,7 +12,7 @@ import { fromEnv } from "@aws-sdk/credential-providers";
 import { DataSource } from "typeorm";
 import StashService from "../service/StashService";
 
-import { Logger, LogLevel } from "../lib/logger";
+import { Logger, LogLevel } from "../lib/Logger";
 
 async function init() {
   //Init logger
@@ -39,7 +39,7 @@ async function init() {
   };
   const messageId = await emailService.send(mailOptions);
   const stashService = new StashService(appDataSource, logger);
-  await stashService.log(5, mailOptions, messageId);
+  await stashService.log(3, mailOptions, messageId);
 
   //---End of play zone
 
@@ -52,7 +52,7 @@ async function init() {
 async function main(appDataSource: DataSource) {
   const stashRepository = appDataSource.getRepository(Stash);
   const result = await stashRepository.find({
-    where: { send_at: LessThan(new Date(Date.now())) },
+    where: { sendAt: LessThan(new Date(Date.now())) },
   });
   console.log(
     chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found.")

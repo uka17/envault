@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { Logger } from "../lib/logger";
+import { Logger } from "../lib/Logger";
 import Mail from "nodemailer/lib/mailer";
 import { Stash } from "../model/Stash";
 import { SendLog } from "../model/SendLog";
@@ -37,7 +37,7 @@ export default class StashService {
       });
       const sendLog = new SendLog();
       sendLog.stash = stash;
-      sendLog.message_id = messageId;
+      sendLog.messageId = messageId;
       await this.dataSource.manager.save(sendLog);
     } catch (error) {
       this.logger.error(error);

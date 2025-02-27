@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import { Logger } from "../../../lib/logger";
+import { Logger } from "../../../lib/Logger";
 import { DataSource } from "typeorm";
 import { User } from "../../../model/User";
 import Translations from "../../../lib/Translations";
@@ -101,8 +101,8 @@ export default function (
         newUser.name = name;
         newUser.email = email;
         newUser.password = hash;
-        newUser.created_by = email;
-        newUser.modified_by = email;
+        newUser.createdBy = email;
+        newUser.modifiedBy = email;
         const createdUser = await appDataSource.manager.save(newUser);
 
         const result = Object.assign({}, createdUser);

@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { DataSource } from "typeorm";
+import { SnakeNamingStrategy } from "../lib/SnakeNamingStrategy";
+//--Tables
 import { User } from "./User";
 import { Language } from "./Language";
 import { Translation } from "./Translation";
@@ -23,6 +25,7 @@ function getAppDataSource(dbURL: string, showLogs = false): DataSource {
     synchronize: true,
     logging: showLogs,
     connectTimeoutMS: 10000,
+    namingStrategy: new SnakeNamingStrategy(),
   });
 }
 
