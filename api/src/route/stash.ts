@@ -42,7 +42,7 @@ export default function (
             }
       } */
       try {
-        const { body, to, send_at } = req.body;
+        const { body, to, sendAt } = req.body;
         if (!to.match(config.emailRegExp)) {
           return res
             .status(422)
@@ -57,9 +57,9 @@ export default function (
         newStash.key = nanoid();
         newStash.to = to;
         newStash.user = user;
-        newStash.send_at = send_at;
-        newStash.created_by = user.email;
-        newStash.modified_by = user.email;
+        newStash.sendAt = sendAt;
+        newStash.createdBy = user.email;
+        newStash.modifiedBy = user.email;
         await stashRepository.manager.save(newStash);
         delete newStash.user;
         return res.status(201).json(newStash);
@@ -232,8 +232,8 @@ export default function (
         if (!stash) {
           res.status(404).send();
         } else {
-          stash.send_at = new Date(stash.send_at);
-          stash.send_at.setDate(stash.send_at.getDate() + days);
+          stash.sendAt = new Date(stash.sendAt);
+          stash.sendAt.setDate(stash.sendAt.getDate() + days);
           const result = await stashRepository.manager.save(stash);
           res.status(200).json(result);
         }

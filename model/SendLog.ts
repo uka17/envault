@@ -8,5 +8,5 @@ export class SendLog extends Base {
   stash: Stash;
 
   @Column("text")
-  message_id: string;
+  messageId: string;
 }

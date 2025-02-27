@@ -37,7 +37,7 @@ export default class StashService {
       });
       const sendLog = new SendLog();
       sendLog.stash = stash;
-      sendLog.message_id = messageId;
+      sendLog.messageId = messageId;
       await this.dataSource.manager.save(sendLog);
     } catch (error) {
       this.logger.error(error);

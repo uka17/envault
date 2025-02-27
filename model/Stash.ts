@@ -14,7 +14,7 @@ export class Stash extends Base {
     type: "boolean",
     nullable: true,
   })
-  is_sent: boolean;
+  isSent: boolean;
 
   @Column({
     type: "text",
@@ -27,5 +27,5 @@ export class Stash extends Base {
   user: User;
 
   @Column("timestamptz")
-  send_at: Date;
+  sendAt: Date;
 }
