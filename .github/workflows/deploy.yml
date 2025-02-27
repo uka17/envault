@@ -72,8 +72,8 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-  test_service:
-    name: Run tests for service, collect coverage and upload to Codecov  
+  test_worker:
+    name: Run tests for worker, collect coverage and upload to Codecov  
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -104,7 +104,7 @@ jobs:
         run: npm ci
 
       - name: Run API tests
-        run: npm run mtest:service
+        run: npm run mtest:worker
 
       - name: Create coverage directory if it doesn't exist
         run: mkdir -p ./worker/coverage
@@ -112,13 +112,13 @@ jobs:
         run: mkdir -p ./.nyc_output
 
       - name: Collect coverage statistics
-        run: npm run test:service
+        run: npm run test:worker
 
       - name: Generate coverage report
-        run: npm run coverage:service
+        run: npm run coverage:worker
 
       - name: Check coverage
-        run: npm run check-coverage:service        
+        run: npm run check-coverage:worker        
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - test_api
-      - test_service
+      - test_worker
 
     steps:
       - name: Checkout Repository
@@ -151,9 +151,9 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           docker build -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build -t uka17/envault-service:latest -f Dockerfiles/worker .
+          docker build -t uka17/envault-worker:latest -f Dockerfiles/worker .
           docker push uka17/envault-api:latest
-          docker push uka17/envault-service:latest
+          docker push uka17/envault-worker:latest
 
   deploy:
     name: Deploy containers to EC2
@@ -173,7 +173,7 @@ jobs:
 
             # Refresh images
             docker pull uka17/envault-api:latest
-            docker pull uka17/envault-service:latest
+            docker pull uka17/envault-worker:latest
 
             # Restart services
             docker-compose down
