@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { Logger } from "../lib/logger";
+import { Logger } from "../lib/Logger";
 import Mail from "nodemailer/lib/mailer";
 import { Stash } from "../model/Stash";
 import { SendLog } from "../model/SendLog";

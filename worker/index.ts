@@ -12,7 +12,7 @@ import { fromEnv } from "@aws-sdk/credential-providers";
 import { DataSource } from "typeorm";
 import StashService from "../service/StashService";
 
-import { Logger, LogLevel } from "../lib/logger";
+import { Logger, LogLevel } from "../lib/Logger";
 
 async function init() {
   //Init logger

@@ -1,4 +1,4 @@
-import { Logger } from "../lib/logger";
+import { Logger } from "../lib/Logger";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
 import { Transporter } from "nodemailer";

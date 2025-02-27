@@ -20,7 +20,7 @@ import passportConfig from "./src/config/passport";
 import Translations from "../lib/Translations";
 const expressListRoutes = require("express-list-routes");
 
-import { Logger, LogLevel } from "../lib/logger";
+import { Logger, LogLevel } from "../lib/Logger";
 import chalk from "chalk";
 import { DataSource } from "typeorm";
 const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
