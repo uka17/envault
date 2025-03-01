@@ -9,6 +9,7 @@ import * as CryptoJS from "crypto-js";
 import config from "../config/config";
 import { customAlphabet } from "nanoid";
 const nanoid = customAlphabet("1234567890abcdef", 32);
+import StashService from "../../../service/StashService";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -48,11 +49,9 @@ export default function (
             .status(422)
             .json({ error: translations.getText("email_format_incorrect") });
         }
-        // Create a new user
         const user = req.user as User;
         const newStash = new Stash();
 
-        //TODO remove after client side encryption is in place
         newStash.body = CryptoJS.AES.encrypt(body, "secret").toString();
         newStash.key = nanoid();
         newStash.to = to;
@@ -60,7 +59,10 @@ export default function (
         newStash.sendAt = sendAt;
         newStash.createdBy = user.email;
         newStash.modifiedBy = user.email;
-        await stashRepository.manager.save(newStash);
+
+        const stashService = new StashService(appDataSource, logger);
+        stashService.createStash(newStash, user);
+
         delete newStash.user;
         return res.status(201).json(newStash);
       } catch (e: unknown) {

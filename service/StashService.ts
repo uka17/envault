@@ -4,6 +4,8 @@ import Mail from "nodemailer/lib/mailer";
 import { Stash } from "../model/Stash";
 import { SendLog } from "../model/SendLog";
 import { Repository } from "typeorm";
+import { User } from "../model/User";
+import * as CryptoJS from "crypto-js";
 
 export default class StashService {
   private dataSource: DataSource;
@@ -38,9 +40,16 @@ export default class StashService {
       const sendLog = new SendLog();
       sendLog.stash = stash;
       sendLog.messageId = messageId;
-      await this.dataSource.manager.save(sendLog);
+      const createdStash = await this.dataSource.manager.save(sendLog);
+      return createdStash || null;
     } catch (error) {
       this.logger.error(error);
+      return null;
     }
+  }
+
+  public async createStash(newStash: Stash, user: User) {
+    await this.stashRepository.manager.save(newStash);
+    delete newStash.user;
   }
 }
