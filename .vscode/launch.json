@@ -12,7 +12,7 @@
       "program": "${workspaceFolder}/out/api/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/api/**/*.js"]
+      "outFiles": ["${workspaceFolder}/out/**/*.js"]
     },
     {
       "type": "node",

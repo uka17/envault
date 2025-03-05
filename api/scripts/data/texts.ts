@@ -3,23 +3,23 @@ export default [
     languageCode: "en",
     language: "English",
     textTranslations: {
-      email_required: "email parameter is required",
-      name_required: "name parameter is required",
-      id_required: "id parameter is required",
-      days_required: "days parameter is required",
-      key_required: "key parameter is required",
-      name_alphanumeric: "Name should contain only letters and numerals",
-      password_required: "Password is required",
-      incorrect_password_or_email: "Password or email is incorrect",
-      email_format_incorrect: "Incorrect email format",
-      incorrect_token: "Token is incorrect",
-      user_not_found: "User not found",
-      user_already_exists: "Email is invalid or already taken",
+      is_required: "email parameter is required",
+      should_be_alphanumeric: "should contain only letters and numerals",
+      email_format_incorrect: "has incorrect email format",
+      date_format_incorrect: "has incorrect date format",
+      should_be_numeric: "should be numeric",
       password_format_incorrect:
         "Password should have minimum eight characters, at least one capital letter and one number",
+      //already exists
+      user_already_exists: "Email is invalid or already taken",
+      //errors
+      user_not_found: "User not found",
+      incorrect_token: "Token is incorrect",
+      incorrect_password_or_email: "Password or email is incorrect",
       error_500:
         "Oops, something went wrong an server returned status code 500",
       unauthorized: "Unauthorized",
+      body_required: "body parameter is required",
     },
   },
 ];

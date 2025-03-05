@@ -7,12 +7,12 @@ export class User extends Base {
   @Column("text")
   email: string;
 
-  @Column("text")
+  @Column("text", { select: false })
   password: string;
 
   @Column("text")
   name: string;
 
   @OneToMany(() => Stash, (stash) => stash.user)
-  stash: Stash[];
+  stashes: Stash[];
 }
