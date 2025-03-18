@@ -7,7 +7,7 @@ export class User extends Base {
   @Column("text")
   email: string;
 
-  @Column("text", { select: false })
+  @Column("text")
   password: string;
 
   @Column("text")
