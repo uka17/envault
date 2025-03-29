@@ -158,6 +158,7 @@ jobs:
   deploy:
     name: Deploy containers to EC2
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs: build_and_push 
 
     steps:

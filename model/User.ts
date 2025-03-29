@@ -14,5 +14,5 @@ export class User extends Base {
   name: string;
 
   @OneToMany(() => Stash, (stash) => stash.user)
-  stash: Stash[];
+  stashes: Stash[];
 }

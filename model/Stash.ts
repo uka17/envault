@@ -23,7 +23,7 @@ export class Stash extends Base {
   })
   key: string;
 
-  @ManyToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.stashes)
   user: User;
 
   @Column("timestamptz")

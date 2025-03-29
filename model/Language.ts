@@ -11,5 +11,5 @@ export class Language extends Base {
   code: string;
 
   @OneToMany(() => Translation, (translation) => translation.language)
-  translation: Translation[];
+  translations: Translation[];
 }
