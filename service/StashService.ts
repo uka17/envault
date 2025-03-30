@@ -72,7 +72,7 @@ export default class StashService {
    * @param userId User ID
    * @returns Stash object or empty array if not found or null if error
    */
-  public async findStashes(userId: number): Promise<Stash[] | null> {
+  public async getUserStashes(userId: number): Promise<Stash[] | null> {
     try {
       const stashes = await this.stashRepository.find({
         where: {
@@ -93,7 +93,7 @@ export default class StashService {
    * @param stashId
    * @returns  Stash object or null if error or not found
    */
-  public async findStash(stashId: number): Promise<Stash | null> {
+  public async getStash(stashId: number): Promise<Stash | null> {
     try {
       const stash = await this.stashRepository.findOne({
         where: {
@@ -133,7 +133,7 @@ export default class StashService {
     key: string
   ): Promise<string | null> {
     try {
-      const stash = await this.findStash(stashId);
+      const stash = await this.getStash(stashId);
       if (!stash) {
         return null;
       }
@@ -156,7 +156,7 @@ export default class StashService {
     days: number
   ): Promise<Stash | null> {
     try {
-      const stash = await this.findStash(stashId);
+      const stash = await this.getStash(stashId);
       if (!stash) {
         return null;
       }

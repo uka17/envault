@@ -4,7 +4,7 @@ import Translations from "../../../../lib/Translations";
 
 /**
  * Generates validation rules for stash with proper translations
- * @param translations Trasnlations instance
+ * @param translations Translations instance
  * @returns Object with validation rules for stash
  */
 export const stashValidationRules = function (translations: Translations) {

@@ -2,11 +2,10 @@
 import request from "supertest";
 import { expect } from "chai";
 import userRoutes from "../src/route/user";
+import { User } from "../../model/User";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 const userId = customAlphabet("1234567890abcdef", 10);
-import { Logger } from "../../lib/Logger";
-import { User } from "../../model/User";
 
 describe("User Routes", () => {
   before(async () => {
@@ -26,15 +25,15 @@ describe("User Routes", () => {
 
   describe("POST /api/v1/users", () => {
     it("should handle unexpected error correctly", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "save")
-        .throws(new Error("Unexpected error"));
-
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
         name: `user${userId()}`,
       };
+
+      sinon
+        .stub(globalThis.appDataSource.manager, "save")
+        .throws(new Error("Unexpected error"));
 
       const response = await request(globalThis.app)
         .post("/api/v1/users")
@@ -62,7 +61,7 @@ describe("User Routes", () => {
       const failedCreateResponse = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(failedCreateResponse.body.error?.textCode).to.equal(
+      expect(failedCreateResponse.body.errors?.[0]?.msg?.textCode).to.equal(
         "user_already_exists"
       );
       expect(failedCreateResponse.status).to.equal(422);
@@ -77,7 +76,9 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal("email_required");
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "email_required"
+      );
       expect(response.status).to.equal(422);
     });
 
@@ -90,7 +91,9 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal("name_required");
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "name_required"
+      );
       expect(response.status).to.equal(422);
     });
 
@@ -104,7 +107,9 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal("name_alphanumeric");
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "name_alphanumeric"
+      );
       expect(response.status).to.equal(422);
     });
 
@@ -118,7 +123,9 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal("email_format_incorrect");
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "email_format_incorrect"
+      );
       expect(response.status).to.equal(422);
     });
 
@@ -131,7 +138,9 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal("password_required");
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "password_required"
+      );
       expect(response.status).to.equal(422);
     });
 
@@ -145,7 +154,7 @@ describe("User Routes", () => {
       const response = await request(globalThis.app)
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.error?.textCode).to.equal(
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
         "password_format_incorrect"
       );
       expect(response.status).to.equal(422);
@@ -153,6 +162,48 @@ describe("User Routes", () => {
   });
 
   describe("POST /api/v1/users/login", () => {
+    it("should fail to login with empty email", async () => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({
+          email: "",
+          password: "123",
+        });
+
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "email_required"
+      );
+      expect(response.status).to.equal(422);
+    });
+
+    it("should fail to login with incorrect email", async () => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({
+          email: "123",
+          password: "123",
+        });
+
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "email_format_incorrect"
+      );
+      expect(response.status).to.equal(422);
+    });
+
+    it("should fail to login with empty password", async () => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({
+          email: "mail@test.com",
+          password: "",
+        });
+
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
+        "password_required"
+      );
+      expect(response.status).to.equal(422);
+    });
+
     it("should create new user and login an existing user with correct credentials", async () => {
       //Use random email and password
       const userCredentials = {

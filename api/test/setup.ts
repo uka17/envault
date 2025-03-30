@@ -5,6 +5,7 @@ import sinon from "sinon";
 import { Logger } from "../../lib/Logger";
 import express from "express";
 import passportConfig from "../src/config/passport";
+import UserService from "../../service/UserService";
 
 const dbURL = config.testDbURL;
 
