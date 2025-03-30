@@ -6,7 +6,6 @@ import { User } from "../../../model/User";
 import { Stash } from "../../../model/Stash";
 import Translations from "../../../lib/Translations";
 import * as CryptoJS from "crypto-js";
-import config from "../config/config";
 import { customAlphabet } from "nanoid";
 const nanoid = customAlphabet("1234567890abcdef", 32);
 import StashService from "../../../service/StashService";
@@ -51,7 +50,7 @@ export default function (
       try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+          return res.status(422).json({ errors: errors.array() });
         }
 
         const { body, to, sendAt } = req.body;
@@ -90,7 +89,7 @@ export default function (
             .status(401)
             .json({ error: translations.getText("incorrect_token") });
         } else {
-          stashes = await stashService.findStashes(userId);
+          stashes = await stashService.getUserStashes(userId);
 
           return res.status(200).json(stashes);
         }
@@ -118,7 +117,7 @@ export default function (
 
         //TODO check for not found behavior
 
-        const stash = await stashService.findStash(id);
+        const stash = await stashService.getStash(id);
 
         if (!stash) {
           return res.status(404).send();

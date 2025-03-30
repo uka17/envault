@@ -1,12 +1,13 @@
 import express from "express";
 import passport from "passport";
-import jwt from "jsonwebtoken";
 import { Logger } from "../../../lib/Logger";
 import { DataSource } from "typeorm";
 import { User } from "../../../model/User";
 import Translations from "../../../lib/Translations";
 import bcrypt from "bcryptjs";
-import config from "../config/config";
+import { validationResult } from "express-validator";
+import { userValidationRules } from "./validator/userValidator";
+import UserService from "../../../service/UserService";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -28,9 +29,12 @@ export default function (
   //...
 
   const userRepository = appDataSource.getRepository(User);
+  const userService = new UserService(appDataSource, logger);
+  const validationRules = userValidationRules(translations, userRepository);
 
   app.post(
     "/api/v1/users",
+    validationRules.create,
     async (req: express.Request, res: express.Response) => {
       // #swagger.summary = 'Register new user'
       /*  #swagger.parameters['body'] = {
@@ -45,52 +49,9 @@ export default function (
       try {
         const { email, password, name } = req.body;
 
-        //Standart checks for password and username
-        if (!email) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("email_required") });
-        }
-
-        if (!name) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("name_required") });
-        }
-
-        if (!name.match(config.nameRegExp)) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("name_alphanumeric") });
-        }
-
-        if (!email.match(config.emailRegExp)) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("email_format_incorrect") });
-        }
-
-        if (!password) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("password_required") });
-        }
-
-        if (!password.match(config.passwordRegExp)) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("password_format_incorrect") });
-        }
-
-        // Check if the user already exists
-        const user = await userRepository.findOneBy({
-          email: email,
-        });
-
-        if (user) {
-          return res
-            .status(422)
-            .json({ error: translations.getText("user_already_exists") });
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json({ errors: errors.array() });
         }
 
         // Hash the password
@@ -103,15 +64,15 @@ export default function (
         newUser.password = hash;
         newUser.createdBy = email;
         newUser.modifiedBy = email;
-        const createdUser = await appDataSource.manager.save(newUser);
+        const createdUser = await userService.createUser(newUser);
 
-        const result = Object.assign({}, createdUser);
-        delete result.password;
-
-        return res.status(201).json(result);
+        if (createdUser !== null) res.status(201).json(createdUser);
+        else throw new Error("User was not created");
       } catch (e: unknown) /* istanbul ignore next */ {
         logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        return res
+          .status(500)
+          .send({ error: translations.getText("error_500") });
       }
     }
   );
@@ -119,6 +80,7 @@ export default function (
   // Log in as an existing user
   app.post(
     "/api/v1/users/login",
+    validationRules.login,
     (
       req: express.Request,
       res: express.Response,
@@ -134,6 +96,10 @@ export default function (
             }
       } */
       try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json({ errors: errors.array() });
+        }
         // In fact route returns result of callback
         return passport.authenticate(
           "local",
@@ -147,19 +113,7 @@ export default function (
             }
 
             if (passportUser) {
-              const expirationDate = new Date();
-              expirationDate.setDate(
-                expirationDate.getDate() + config.JWTMaxAge
-              );
-              const token = jwt.sign(
-                {
-                  email: passportUser.email,
-                  id: passportUser.id,
-                  exp: Math.round(expirationDate.getTime() / 1000),
-                },
-                process.env.API_JWT_SECRET
-              );
-              return res.json({ token: token });
+              return res.json({ token: userService.createToken(passportUser) });
             }
 
             return res.status(401).json({
@@ -169,7 +123,9 @@ export default function (
         )(req, res, next);
       } catch (e: unknown) /* istanbul ignore next */ {
         logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        return res
+          .status(500)
+          .send({ error: translations.getText("error_500") });
       }
     }
   );
@@ -183,17 +139,13 @@ export default function (
       try {
         const id = (req.user as User).id;
 
-        const user = await userRepository.findOneBy({
-          id: id,
-        });
+        const result = await userService.getUser(id);
 
-        /* istanbul ignore next */ if (!user) {
+        /* istanbul ignore next */ if (result === null) {
           return res
             .status(401)
             .json({ error: translations.getText("incorrect_token") });
         } else {
-          const result = Object.assign({}, user);
-          delete result.password;
           res.status(200).json(result);
         }
       } catch (e: unknown) /* istanbul ignore next */ {
