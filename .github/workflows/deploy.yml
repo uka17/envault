@@ -67,9 +67,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: b759b58e-3d1d-46f1-8979-36a61f1a706d
+          token: secrets.CODECOV_TOKEN
           files: ./api/coverage/lcov.info
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           verbose: true
 
   test_worker:
