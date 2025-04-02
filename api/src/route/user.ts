@@ -35,7 +35,11 @@ export default function (
   app.post(
     "/api/v1/users",
     validationRules.create,
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Register new user'
       /*  #swagger.parameters['body'] = {
             in: 'body',
@@ -69,10 +73,7 @@ export default function (
         if (createdUser !== null) res.status(201).json(createdUser);
         else throw new Error("User was not created");
       } catch (e: unknown) /* istanbul ignore next */ {
-        logger.error(e as object);
-        return res
-          .status(500)
-          .send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );

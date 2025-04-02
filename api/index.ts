@@ -19,6 +19,7 @@ import { User } from "../model/User";
 import passportConfig from "./src/config/passport";
 import Translations from "../lib/Translations";
 const expressListRoutes = require("express-list-routes");
+import { createErrorHandler } from "./src/route/error";
 
 import { Logger, LogLevel } from "../lib/Logger";
 import chalk from "chalk";
@@ -72,6 +73,8 @@ appDataSource
 
     //Attach routes to app
     app.use("/", router);
+    //Add global error handler middleware
+    app.use(createErrorHandler(logger, translations));
 
     initDB(appDataSource, process.env.API_SILENT_INIT === "TRUE");
 
