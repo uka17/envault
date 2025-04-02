@@ -71,6 +71,7 @@ jobs:
           files: ./api/coverage/lcov.info
           fail_ci_if_error: false
           verbose: true
+        continue-on-error: true
 
   test_worker:
     name: Run tests for worker, collect coverage and upload to Codecov  
