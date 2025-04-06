@@ -1,6 +1,17 @@
-const ERROR_MESSAGES = {
+const MESSAGES = {
   API_REQUEST_VALIDATION_ERROR: "API request validation error",
   USER_WAS_NOT_CREATED: "User was not created",
+  API_UNAUTHORIZED_ERROR: "Unauthorized",
+  API_FORBIDDEN_ERROR: "Forbidden",
 };
 
-export { ERROR_MESSAGES };
+const CODES = {
+  API_CREATED: 201,
+  API_OK: 200,
+  API_REQUEST_VALIDATION_ERROR: 422,
+  API_UNAUTHORIZED: 401,
+  API_FORBIDDEN: 403,
+  SERVER_ERROR: 500,
+};
+
+export { MESSAGES, CODES };

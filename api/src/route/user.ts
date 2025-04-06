@@ -5,11 +5,10 @@ import { DataSource } from "typeorm";
 import { User } from "../../../model/User";
 import Translations from "../../../lib/Translations";
 import bcrypt from "bcryptjs";
-import { validationResult } from "express-validator";
 import { userValidationRules } from "./validator/userValidator";
 import UserService from "../../../service/UserService";
-import ApiError from "../../../lib/ApiError";
-import { ERROR_MESSAGES } from "../../../lib/constants";
+import { CODES, MESSAGES } from "../../../lib/constants";
+import { validateRequest } from "./validator/common";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -55,14 +54,7 @@ export default function (
       try {
         const { email, password, name } = req.body;
 
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          throw new ApiError(
-            422,
-            ERROR_MESSAGES.API_REQUEST_VALIDATION_ERROR,
-            errors.array()
-          );
-        }
+        validateRequest(req);
 
         // Hash the password
         const hash = bcrypt.hashSync(password);
@@ -76,8 +68,9 @@ export default function (
         newUser.modifiedBy = email;
         const createdUser = await userService.createUser(newUser);
 
-        if (createdUser !== null) res.status(201).json(createdUser);
-        else throw new Error(ERROR_MESSAGES.USER_WAS_NOT_CREATED);
+        if (createdUser !== null)
+          res.status(CODES.API_CREATED).json(createdUser);
+        else throw new Error(MESSAGES.USER_WAS_NOT_CREATED);
       } catch (e: unknown) /* istanbul ignore next */ {
         next(e);
       }
@@ -103,10 +96,7 @@ export default function (
             }
       } */
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(422).json({ errors: errors.array() });
-        }
+        validateRequest(req);
         // In fact route returns result of callback
         return passport.authenticate(
           "local",
@@ -115,7 +105,7 @@ export default function (
             /* istanbul ignore next */ if (err) {
               logger.error(err as object);
               res
-                .status(500)
+                .status(CODES.SERVER_ERROR)
                 .send({ error: translations.getText("error_500") });
             }
 
@@ -123,16 +113,13 @@ export default function (
               return res.json({ token: userService.createToken(passportUser) });
             }
 
-            return res.status(401).json({
+            return res.status(CODES.API_UNAUTHORIZED).json({
               error: translations.getText("incorrect_password_or_email"),
             });
           }
         )(req, res, next);
       } catch (e: unknown) /* istanbul ignore next */ {
-        logger.error(e as object);
-        return res
-          .status(500)
-          .send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -141,7 +128,11 @@ export default function (
   app.get(
     "/api/v1/users/whoami",
     passport.authenticate("jwt", { session: false }),
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Fetch currently current user'
       try {
         const id = (req.user as User).id;
@@ -150,14 +141,13 @@ export default function (
 
         /* istanbul ignore next */ if (result === null) {
           return res
-            .status(401)
+            .status(CODES.API_UNAUTHORIZED)
             .json({ error: translations.getText("incorrect_token") });
         } else {
-          res.status(200).json(result);
+          res.status(CODES.API_OK).json(result);
         }
       } catch (e: unknown) /* istanbul ignore next */ {
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
