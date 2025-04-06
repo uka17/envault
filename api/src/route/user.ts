@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import { userValidationRules } from "./validator/userValidator";
 import UserService from "../../../service/UserService";
+import ApiError from "../../../lib/ApiError";
+import { ERROR_MESSAGES } from "../../../lib/constants";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -55,7 +57,11 @@ export default function (
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          return res.status(422).json({ errors: errors.array() });
+          throw new ApiError(
+            422,
+            ERROR_MESSAGES.API_REQUEST_VALIDATION_ERROR,
+            errors.array()
+          );
         }
 
         // Hash the password
@@ -71,7 +77,7 @@ export default function (
         const createdUser = await userService.createUser(newUser);
 
         if (createdUser !== null) res.status(201).json(createdUser);
-        else throw new Error("User was not created");
+        else throw new Error(ERROR_MESSAGES.USER_WAS_NOT_CREATED);
       } catch (e: unknown) /* istanbul ignore next */ {
         next(e);
       }
