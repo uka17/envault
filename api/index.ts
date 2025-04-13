@@ -51,7 +51,9 @@ app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get("/", async (req: express.Request, res: express.Response) => {
   // #swagger.summary = 'Check if api is online'
   res.send(
-    "API is online (TypeORM, Passport, Express.js)<br/><a href='/swagger/'>Swagger doc</a>"
+    `API is online (TypeORM, Passport, Express.js)<br/>
+    SHA: ${process.env.COMMIT_HASH}<br/> 
+    <a href='/swagger/'>Swagger doc</a>`
   );
 });
 
