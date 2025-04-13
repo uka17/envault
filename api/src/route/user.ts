@@ -1,16 +1,19 @@
 import express from "express";
 import passport from "passport";
-import { Logger } from "../../../lib/Logger";
+import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+
 import { User } from "../../../model/User";
-import Translations from "../../../lib/Translations";
-import bcrypt from "bcryptjs";
-import { userValidationRules } from "./validator/userValidator";
 import UserService from "../../../service/UserService";
+
+import { Logger } from "../../../lib/Logger";
+import ApiError from "../../../lib/ApiError";
+import Translations from "../../../lib/Translations";
 import { CODES, MESSAGES } from "../../../lib/constants";
+
+import { userValidationRules } from "./validator/userValidator";
 import { validateRequest } from "./validator/common";
 
-import dotenv from "dotenv";
 dotenv.config();
 
 /**
@@ -26,12 +29,8 @@ export default function (
   translations: Translations,
   appDataSource: DataSource
 ) {
-  //Put all routes here
-  //...
-
-  const userRepository = appDataSource.getRepository(User);
   const userService = new UserService(appDataSource, logger);
-  const validationRules = userValidationRules(translations, userRepository);
+  const validationRules = userValidationRules(translations, userService);
 
   app.post(
     "/api/v1/users",
@@ -42,6 +41,8 @@ export default function (
       next: express.NextFunction
     ) => {
       // #swagger.summary = 'Register new user'
+      // #swagger.tags = ['User']
+      // #swagger.description = 'Register new user'
       /*  #swagger.parameters['body'] = {
             in: 'body',
             description: 'User',
@@ -56,16 +57,14 @@ export default function (
 
         validateRequest(req);
 
-        // Hash the password
-        const hash = bcrypt.hashSync(password);
-
         // Create a new user
         const newUser = new User();
         newUser.name = name;
         newUser.email = email;
-        newUser.password = hash;
+        newUser.password = userService.getPasswordHash(password);
         newUser.createdBy = email;
         newUser.modifiedBy = email;
+
         const createdUser = await userService.createUser(newUser);
 
         if (createdUser !== null)
@@ -137,12 +136,14 @@ export default function (
       try {
         const id = (req.user as User).id;
 
-        const result = await userService.getUser(id);
+        const result = await userService.getUserById(id);
 
         /* istanbul ignore next */ if (result === null) {
-          return res
-            .status(CODES.API_UNAUTHORIZED)
-            .json({ error: translations.getText("incorrect_token") });
+          throw new ApiError(
+            CODES.API_UNAUTHORIZED,
+            MESSAGES.API_UNAUTHORIZED_ERROR,
+            [translations.getText("incorrect_token")]
+          );
         } else {
           res.status(CODES.API_OK).json(result);
         }

@@ -1,11 +1,16 @@
-import Translations from "../../lib/Translations";
-import getAppDataSource from "../../model/dataSource";
-import config from "../src/config/config";
 import sinon from "sinon";
-import { Logger } from "../../lib/Logger";
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
+
+import Translations from "lib/Translations";
+import getAppDataSource from "model/dataSource";
+import config from "../src/config/config";
+
+import { Logger } from "lib/Logger";
 
 const dbURL = config.testDbURL;
+console.log(dbURL);
 globalThis.appDataSource = getAppDataSource(dbURL);
 globalThis.translations = null;
 

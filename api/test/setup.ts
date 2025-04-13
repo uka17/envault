@@ -1,13 +1,18 @@
-import Translations from "../../lib/Translations";
-import getAppDataSource from "../../model/dataSource";
-import config from "../src/config/config";
 import sinon from "sinon";
-import { Logger } from "../../lib/Logger";
 import express from "express";
-import passportConfig from "../src/config/passport";
-import UserService from "../../service/UserService";
-import { createErrorHandler } from "../src/route/error";
-import userRoutes from "../src/route/user";
+import dotenv from "dotenv";
+dotenv.config();
+
+import getAppDataSource from "model/dataSource";
+
+import config from "api/src/config/config";
+import passportConfig from "api/src/config/passport";
+import Translations from "lib/Translations";
+import { Logger } from "lib/Logger";
+
+import { createErrorHandler } from "api/src/route/error";
+import userRoutes from "api/src/route/user";
+import stashRoutes from "api/src/route/user";
 
 const dbURL = config.testDbURL;
 
@@ -32,8 +37,11 @@ async function startApp() {
     globalThis.appDataSource
   );
 
-  globalThis.app.use(
-    createErrorHandler(globalThis.mockLogger, globalThis.translations)
+  stashRoutes(
+    globalThis.app,
+    globalThis.mockLogger,
+    globalThis.translations,
+    globalThis.appDataSource
   );
 
   globalThis.app.use(

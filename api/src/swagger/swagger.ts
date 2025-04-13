@@ -14,12 +14,13 @@ const doc = {
 
 const routeFolder = "./api/src/route";
 const fileList = [];
-
+const fileExclude = ["validator"];
 fs.readdir(routeFolder, (err, files) => {
   if (files) {
     //Generate file list
     for (let i = 0; i < files.length; i++) {
       //TODO mark route files in order to segreagate them
+      if (fileExclude.includes(files[i])) continue;
       fileList.push(`../route/${files[i]}`);
       console.log(
         chalk.green(`File ../route/${files[i]} with route definition found`)

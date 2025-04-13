@@ -4,7 +4,6 @@ import { Text } from "../../model/Text";
 import { Language } from "../../model/Language";
 import { Translation } from "../../model/Translation";
 import chalk from "chalk";
-import config from "../src/config/config";
 import { DataSource } from "typeorm";
 
 /**
