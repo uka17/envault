@@ -15,6 +15,7 @@
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "dockerapi": "npx ts-node -r tsconfig-paths/register Dockerfiles/dockerapi.ts",
     "dockerworker": "npx ts-node -r tsconfig-paths/register Dockerfiles/dockerworker.ts",
+    "build": "npx tsc && tsc-alias",
     "worker": "npx tsc && tsc-alias && node out/worker/index.js",
     "api": "npx tsc && tsc-alias && node out/api/index.js"
   },
