@@ -20,7 +20,7 @@ services:
       retries: 3        
   
   api:
-    image: uka17/envault-worker:latest
+    image: uka17/envault-api:latest
     build:
       args:
         GIT_COMMIT_SHA: ${GIT_COMMIT_SHA}  # get sha for versioning      
