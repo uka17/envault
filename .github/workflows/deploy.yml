@@ -195,7 +195,7 @@ jobs:
             cd /home/ubuntu/envault
             git pull origin master
             
-            export GIT_COMMIT_SHA=$(git rev-parse --short HEAD)  # versioning
+            export GIT_COMMIT_SHA=$(git rev-parse --short HEAD)
 
             # Refresh images
             docker pull uka17/envault-api:latest
