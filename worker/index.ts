@@ -1,18 +1,18 @@
 import "reflect-metadata";
+import { LessThan } from "typeorm";
+import chalk from "chalk";
+import { DataSource } from "typeorm";
+import { fromEnv } from "@aws-sdk/credential-providers";
 import dotenv from "dotenv";
-import EmailService from "../service/EmailService";
 dotenv.config();
 
-import { LessThan } from "typeorm";
-import getAppDataSource from "../model/dataSource";
-import { Stash } from "../model/Stash";
-import config from "./src/config/config";
-import chalk from "chalk";
-import { fromEnv } from "@aws-sdk/credential-providers";
-import { DataSource } from "typeorm";
-import StashService from "../service/StashService";
+import config from "worker/src/config/config";
+import getAppDataSource from "model/dataSource";
+import { Stash } from "model/Stash";
+import { Logger, LogLevel } from "lib/Logger";
 
-import { Logger, LogLevel } from "../lib/Logger";
+import StashService from "service/StashService";
+import EmailService from "service/EmailService";
 
 async function init() {
   //Init logger

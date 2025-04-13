@@ -1,7 +1,10 @@
 import express from "express";
-import { Logger } from "../../../lib/Logger";
 import { DataSource } from "typeorm";
+
+import { Logger } from "../../../lib/Logger";
 import Translations from "../../../lib/Translations";
+
+import { CODES, MESSAGES } from "../../../lib/constants";
 
 /**
  * Main route. Initiates `GET("/")` and all nested routes
@@ -24,7 +27,7 @@ export default function (
   });
   //Health endpoint
   app.get("/health", async (req: express.Request, res: express.Response) => {
-    res.status(200).send();
+    res.status(CODES.API_OK).send();
   });
   //Default error handlers
   app.use(function (
@@ -35,7 +38,9 @@ export default function (
   ) {
     if (err) {
       if (err.name === "UnauthorizedError") {
-        res.status(401).send({ error: translations.getText("unauthorized") });
+        res
+          .status(CODES.API_UNAUTHORIZED)
+          .send({ error: translations.getText("unauthorized") });
       } else {
         logger.error(err);
       }

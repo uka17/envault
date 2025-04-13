@@ -1,19 +1,19 @@
 import express from "express";
 import passport from "passport";
-import { Logger } from "../../../lib/Logger";
 import { DataSource } from "typeorm";
+import dotenv from "dotenv";
+
 import { User } from "../../../model/User";
 import { Stash } from "../../../model/Stash";
-import Translations from "../../../lib/Translations";
-import * as CryptoJS from "crypto-js";
-import { customAlphabet } from "nanoid";
-const nanoid = customAlphabet("1234567890abcdef", 32);
 import StashService from "../../../service/StashService";
 import { stashValidationRules } from "./validator/stashValidator";
-import { validationResult } from "express-validator";
+import { validateRequest } from "./validator/common";
 
-import dotenv from "dotenv";
-import { resolveRuntimeExtensions } from "@aws-sdk/client-ses/dist-types/runtimeExtensions";
+import Translations from "../../../lib/Translations";
+import { Logger } from "../../../lib/Logger";
+import { CODES, MESSAGES } from "../../../lib/constants";
+import ApiError from "../../../lib/ApiError";
+
 dotenv.config();
 
 /**
@@ -29,7 +29,6 @@ export default function (
   translations: Translations,
   appDataSource: DataSource
 ) {
-  const stashRepository = appDataSource.getRepository(Stash);
   const stashService = new StashService(appDataSource, logger);
   const validationRules = stashValidationRules(translations);
 
@@ -37,7 +36,11 @@ export default function (
     `/api/v1/stashes`,
     passport.authenticate("jwt", { session: false }),
     validationRules.create,
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Create new stash'
       /*  #swagger.parameters['body'] = {
             in: 'body',
@@ -48,17 +51,15 @@ export default function (
             }
       } */
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(422).json({ errors: errors.array() });
-        }
+        validateRequest(req);
 
         const { body, to, sendAt } = req.body;
         const user = req.user as User;
         const newStash = new Stash();
 
-        newStash.body = CryptoJS.AES.encrypt(body, "secret").toString();
-        newStash.key = nanoid();
+        //TODO: add real secret
+        newStash.body = stashService.encryptBody(body, "secret");
+        newStash.key = stashService.generateStashKey();
         newStash.to = to;
         newStash.user = user;
         newStash.sendAt = sendAt;
@@ -66,11 +67,10 @@ export default function (
         newStash.modifiedBy = user.email;
 
         const createdStash = await stashService.createStash(newStash);
-        return res.status(201).json(createdStash);
+        return res.status(CODES.API_CREATED).json(createdStash);
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -78,25 +78,29 @@ export default function (
   app.get(
     `/api/v1/stashes`,
     passport.authenticate("jwt", { session: false }),
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Get list of stashes for curret user'
       try {
         const userId = (req.user as User).id;
         let stashes = [];
 
         if (!userId) {
-          return res
-            .status(401)
-            .json({ error: translations.getText("incorrect_token") });
+          throw new ApiError(
+            CODES.API_UNAUTHORIZED,
+            translations.getText("incorrect_token").translation,
+            [translations.getText("incorrect_token")]
+          );
         } else {
           stashes = await stashService.getUserStashes(userId);
-
-          return res.status(200).json(stashes);
+          return res.status(CODES.API_OK).json(stashes);
         }
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -105,28 +109,28 @@ export default function (
     `/api/v1/stashes/:id`,
     passport.authenticate("jwt", { session: false }),
     validationRules.find,
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Get stash by id'
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
+        validateRequest(req);
 
         const id = parseInt(req.params.id);
 
-        //TODO check for not found behavior
+        //TODO test for not found behavior
 
         const stash = await stashService.getStash(id);
 
         if (!stash) {
-          return res.status(404).send();
+          return res.status(CODES.API_NOT_FOUND).send();
         }
         res.status(200).json(stash);
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -134,22 +138,22 @@ export default function (
     `/api/v1/stashes/:id`,
     passport.authenticate("jwt", { session: false }),
     validationRules.delete,
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Delete stash by id'
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
+        validateRequest(req);
         const id = parseInt(req.params.id);
 
         const result = await stashService.deleteStash(id);
 
-        res.status(200).json(result);
+        res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -158,22 +162,22 @@ export default function (
     `/api/v1/stashes/:id/decrypt/:key`,
     passport.authenticate("jwt", { session: false }),
     validationRules.decrypt,
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Decrypt stash by id and provided key'
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
+        validateRequest(req);
         const id = parseInt(req.params.id);
         const key = req.params.key;
 
         const result = await stashService.decryptStash(id, key);
-        return res.status(200).json(result);
+        return res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
   );
@@ -182,17 +186,21 @@ export default function (
     `/api/v1/stashes/:id/snooze/:days`,
     validationRules.snooze,
     passport.authenticate("jwt", { session: false }),
-    async (req: express.Request, res: express.Response) => {
+    async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
       // #swagger.summary = 'Snooze stash by id fro N days'
       try {
+        validateRequest(req);
         const id = parseInt(req.params.id);
         const days = parseInt(req.params.days);
         const result = await stashService.snoozeStash(id, days);
-        res.status(200).json(result);
+        res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */
-        logger.error(e as object);
-        res.status(500).send({ error: translations.getText("error_500") });
+        next(e);
       }
     }
 

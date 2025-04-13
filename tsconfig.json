@@ -9,5 +9,9 @@
     "resolveJsonModule": true /* Enable importing .json files */,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-  }
+    "baseUrl": "."
+  },
+  "include": ["api", "worker"]
+
+
 }

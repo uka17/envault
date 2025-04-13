@@ -1,14 +1,10 @@
-import { DataSource, DeleteResult } from "typeorm";
-import { Logger } from "../lib/Logger";
-import { SendLog } from "../model/SendLog";
+import { DataSource } from "typeorm";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 import { User } from "../model/User";
-import jwt from "jsonwebtoken";
+import { Logger } from "../lib/Logger";
 import config from "../api/src/config/config";
-
-import { Translation } from "../model/Translation";
-import { Text } from "../model/Text";
-import { Language } from "../model/Language";
 
 export default class UserService {
   private dataSource: DataSource;
@@ -62,7 +58,7 @@ export default class UserService {
    * @param userId User ID
    * @returns User or null if not found
    */
-  public async getUser(userId: number): Promise<User | null> {
+  public async getUserById(userId: number): Promise<User | null> {
     try {
       const user = await this.userRepository.findOne({
         where: {
@@ -76,5 +72,34 @@ export default class UserService {
       this.logger.error(error);
       return null;
     }
+  }
+  /**
+   * Returns user by email
+   * @param userId User email
+   * @returns User or null if not found
+   */
+  public async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          email: email,
+        },
+      });
+      delete user.password;
+      return user || null;
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+  /**
+   * Hashes a password
+   * @param password Password to hash
+   * @returns Hashed password
+   * @throws Error if hashing fails
+   */
+  public getPasswordHash(password: string): string {
+    return bcrypt.hashSync(password);
   }
 }

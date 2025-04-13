@@ -2,7 +2,7 @@ import { body, param } from "express-validator";
 import config from "../../config/config";
 import Translations from "../../../../lib/Translations";
 import { Repository } from "typeorm";
-import { User } from "../../../../model/User";
+import UserService from "../../../../service/UserService";
 
 /**
  * Generates validation rules for user with proper translations
@@ -11,7 +11,7 @@ import { User } from "../../../../model/User";
  */
 export const userValidationRules = function (
   translations: Translations,
-  userRepository: Repository<User>
+  userService: UserService
 ) {
   return {
     create: [
@@ -21,9 +21,7 @@ export const userValidationRules = function (
         .matches(config.emailRegExp)
         .withMessage(translations.getText("email_format_incorrect"))
         .custom(async (email) => {
-          const user = await userRepository.findOneBy({
-            email: email,
-          });
+          const user = await userService.getUserByEmail(email);
           if (user) {
             return Promise.reject(translations.getText("user_already_exists"));
           }

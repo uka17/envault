@@ -17,6 +17,10 @@ export default {
   passwordRegExp: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
   nameRegExp: /^[a-z0-9]+$/i,
   emailRegExp: /.+@.+\..+/i,
+  stashNanoId: {
+    alphabet: "1234567890abcdef",
+    length: 32,
+  },
   JWTMaxAge: 60, //days
   currentIp: () => {
     const os = require("os");

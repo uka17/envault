@@ -1,21 +1,13 @@
 // user.test.ts
 import request from "supertest";
 import { expect } from "chai";
-import userRoutes from "../src/route/user";
 import { User } from "../../model/User";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 const userId = customAlphabet("1234567890abcdef", 10);
 
 describe("User Routes", () => {
-  before(async () => {
-    userRoutes(
-      globalThis.app,
-      globalThis.mockLogger,
-      globalThis.translations,
-      globalThis.appDataSource
-    );
-  });
+  before(async () => {});
 
   beforeEach(() => {});
 
@@ -40,7 +32,7 @@ describe("User Routes", () => {
         .send(newUser);
 
       expect(response.status).to.equal(500);
-      expect(response.body.error.textCode).to.equal("error_500");
+      expect(response.body.message?.textCode).to.equal("error_500");
     });
 
     it("should return error user_already_exists", async () => {

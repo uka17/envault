@@ -1,15 +1,14 @@
 import { DataSource, DeleteResult } from "typeorm";
-import { Logger } from "../lib/Logger";
+import { Repository } from "typeorm";
+import * as CryptoJS from "crypto-js";
 import Mail from "nodemailer/lib/mailer";
+import { customAlphabet } from "nanoid";
+
 import { Stash } from "../model/Stash";
 import { SendLog } from "../model/SendLog";
-import { Repository } from "typeorm";
-import { User } from "../model/User";
-import * as CryptoJS from "crypto-js";
 
-import { Translation } from "../model/Translation";
-import { Text } from "../model/Text";
-import { Language } from "../model/Language";
+import { Logger } from "../lib/Logger";
+import config from "api/src/config/config";
 
 export default class StashService {
   private dataSource: DataSource;
@@ -167,5 +166,34 @@ export default class StashService {
       this.logger.error(error);
       return null;
     }
+  }
+
+  /**
+   * Encrypts the stash body using the key
+   * @param body Stash body
+   * @param key Key to encrypt the stash body
+   */
+  public encryptBody(body: string, key: string): string {
+    return CryptoJS.AES.encrypt(body, key).toString();
+  }
+
+  /**
+   * Generates a random stash key
+   * @returns Random stash key
+   */
+  public generateStashKey(): string {
+    const nanoid = customAlphabet(
+      config.stashNanoId.alphabet,
+      config.stashNanoId.length
+    );
+    return nanoid();
+  }
+  /**
+   * Decrypts the stash body using the key
+   * @param body Stash body
+   * @param key Key to decrypt the stash body
+   */
+  public decryptBody(body: string, key: string): string {
+    return CryptoJS.AES.decrypt(body, key).toString(CryptoJS.enc.Utf8);
   }
 }
