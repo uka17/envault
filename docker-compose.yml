@@ -20,9 +20,8 @@ services:
       retries: 3        
   
   api:
+    image: uka17/envault-worker:latest
     build:
-      context: .
-      dockerfile: Dockerfiles/api
       args:
         GIT_COMMIT_SHA: ${GIT_COMMIT_SHA}  # get sha for versioning      
     container_name: envault-api
@@ -48,9 +47,7 @@ services:
       - "${API_PORT}:${API_PORT}"
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfiles/worker
+    image: uka17/envault-worker:latest
     container_name: envault-worker
     environment:
       DB_USER: ${DB_USER}
