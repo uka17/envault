@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 env:
   TEST_DB_HOST: localhost
   TEST_DB_USER: testuser
@@ -129,6 +132,7 @@ jobs:
   build:
     name: Build Docker Images  
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.base_ref == 'master'
     needs: 
       - test_api
       - test_worker
@@ -148,7 +152,7 @@ jobs:
   build_and_push:
     name: Build and Push Docker Images  
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'   
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: 
       - test_api
       - test_worker
