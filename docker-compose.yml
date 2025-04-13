@@ -23,6 +23,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfiles/api
+      args:
+        GIT_COMMIT_SHA: ${GIT_COMMIT_SHA}  # get sha for versioning      
     container_name: envault-api
     environment:
       DB_USER: ${DB_USER}
@@ -34,7 +36,8 @@ services:
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
       LOG_LEVEL: ${LOG_LEVEL}
-      API_SILENT_INIT: ${API_SILENT_INIT}      
+      API_SILENT_INIT: ${API_SILENT_INIT}
+      GIT_COMMIT_SHA: ${GIT_COMMIT_SHA}      
     depends_on:
       postgres:
         condition: service_healthy
