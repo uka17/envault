@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 FROM node:19-alpine AS build
+
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
+
 #Generate swagger content
 RUN npm run swagger
 RUN npx tsc
@@ -13,5 +15,7 @@ RUN apk add --no-cache bash curl
 WORKDIR /app
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
+ARG COMMIT_HASH
+ENV COMMIT_HASH=${COMMIT_HASH}
 CMD node dist/api/index.js
 EXPOSE 9000

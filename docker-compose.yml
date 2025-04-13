@@ -44,18 +44,17 @@ services:
     ports:
       - "${API_PORT}:${API_PORT}"
 
-  service:
+  worker:
     build:
       context: .
-      dockerfile: Dockerfiles/service
-    container_name: envault-service
+      dockerfile: Dockerfiles/worker
+    container_name: envault-worker
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
-      SERVICE_MAILAPI: ${SERVICE_MAILAPI}
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
       LOG_LEVEL: ${LOG_LEVEL}      
@@ -64,7 +63,7 @@ services:
         condition: service_healthy
     networks:
       envault_network:
-        ipv4_address: ${SERVICE_HOST}                
+        ipv4_address: ${WORKER_HOST}                
 
 volumes:
   postgres_data:

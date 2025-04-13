@@ -151,8 +151,8 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker build --build-arg COMMIT_HASH=$(git rev-parse HEAD) -t uka17/envault-api:latest -f Dockerfiles/api .
+          docker build --build-arg COMMIT_HASH=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
           docker push uka17/envault-api:latest
           docker push uka17/envault-worker:latest
 
