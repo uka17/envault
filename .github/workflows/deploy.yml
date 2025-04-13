@@ -172,8 +172,8 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build --build-arg COMMIT_HASH=$(git rev-parse HEAD) -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build --build-arg COMMIT_HASH=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-api:latest -f Dockerfiles/api .
+          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
           docker push uka17/envault-api:latest
           docker push uka17/envault-worker:latest
 
@@ -194,7 +194,7 @@ jobs:
           script: |
             cd /home/ubuntu/envault
             git pull origin master
-
+            
             # Refresh images
             docker pull uka17/envault-api:latest
             docker pull uka17/envault-worker:latest
