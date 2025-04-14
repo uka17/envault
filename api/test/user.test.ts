@@ -1,16 +1,11 @@
 // user.test.ts
 import request from "supertest";
 import { expect } from "chai";
-import { User } from "../../model/User";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 const userId = customAlphabet("1234567890abcdef", 10);
 
 describe("User Routes", () => {
-  before(async () => {});
-
-  beforeEach(() => {});
-
   afterEach(() => {
     sinon.restore();
   });
@@ -207,10 +202,7 @@ describe("User Routes", () => {
       //Create user
       const createResponse = await request(globalThis.app)
         .post("/api/v1/users")
-        .send({
-          ...userCredentials,
-          name: `user${userId()}`,
-        });
+        .send(userCredentials);
 
       expect(createResponse.body.error).to.not.exist;
       expect(createResponse.body.name).to.exist;

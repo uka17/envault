@@ -12,7 +12,7 @@ import { Logger } from "lib/Logger";
 
 import { createErrorHandler } from "api/src/route/error";
 import userRoutes from "api/src/route/user";
-import stashRoutes from "api/src/route/user";
+import stashRoutes from "api/src/route/stash";
 
 const dbURL = config.testDbURL;
 

@@ -3,7 +3,7 @@ export default [
     languageCode: "en",
     language: "English",
     textTranslations: {
-      is_required: "email parameter is required",
+      is_required: "parameter is required",
       should_be_alphanumeric: "should contain only letters and numerals",
       email_format_incorrect: "has incorrect email format",
       date_format_incorrect: "has incorrect date format",

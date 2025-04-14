@@ -11,7 +11,6 @@ export const stashValidationRules = function (translations: Translations) {
   return {
     create: [
       body("body").notEmpty().withMessage(translations.getText("is_required")),
-      body("secret").notEmpty().withMessage(translations.getText("secret")),
       body("to").notEmpty().withMessage(translations.getText("is_required")),
       body("to")
         .matches(config.emailRegExp)

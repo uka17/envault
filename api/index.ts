@@ -33,7 +33,7 @@ const appDataSource = getAppDataSource(dbURL, showSQLLogs);
 welcomeMessage();
 
 logger.info(
-  `Initializing API (version=${config.version}, port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
+  `Initializing API (port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
 );
 
 const app: Express = express();
@@ -94,10 +94,6 @@ function welcomeMessage() {
       config.logLevel
     )}, show=${chalk.yellowBright(config.showLogs)}`
   );
-  console.log(
-    `SHA: ${chalk.blueBright(
-      process.env.GIT_COMMIT_SHA || "DEV"
-    )}, version: ${chalk.blueBright(config.version)}`
-  );
+  console.log(`SHA: ${chalk.blueBright(process.env.GIT_COMMIT_SHA || "DEV")}`);
   console.log("==========================================" + "\n");
 }
