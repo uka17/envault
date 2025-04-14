@@ -10,8 +10,7 @@ dotenv.config();
 import getAppDataSource from "../model/dataSource";
 import initDB from "./scripts/init";
 import config from "./src/config/config";
-import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "./src/swagger/swagger.json";
+
 import health from "./src/route/health";
 import user from "./src/route/user";
 import stash from "./src/route/stash";
@@ -46,27 +45,16 @@ app.use(bodyParser.json());
 //Basic checks
 if (!process.env.API_JWT_SECRET) throw "JWT_SECRET is empty or nor found";
 
-//Swagger
-app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.get("/", async (req: express.Request, res: express.Response) => {
-  // #swagger.summary = 'Check if api is online'
-  res.send(
-    `API is online (TypeORM, Passport, Express.js)<br/>
-    SHA: ${process.env.GIT_COMMIT_SHA}<br/> 
-    <a href='/swagger/'>Swagger doc</a>`
-  );
-});
-
-//Configure all routes
-
 appDataSource
   .initialize()
   .then(async () => {
     //Get translations
     const translations = new Translations(appDataSource);
     await translations.loadTranslations("en");
+
     //Configure passport policies
     passportConfig(appDataSource, translations);
+
     //Configure all routes
     const router = express.Router();
     health(router, logger, translations, appDataSource);
@@ -75,6 +63,7 @@ appDataSource
 
     //Attach routes to app
     app.use("/", router);
+
     //Add global error handler middleware
     app.use(createErrorHandler(logger, translations));
 
@@ -85,6 +74,7 @@ appDataSource
       logger.info(
         `API is live at: http://${config.currentIp()}:${config.port}/`
       );
+      //TODO: remove this
       let userCount = await appDataSource.getRepository(User).count();
       logger.info(`Users: ${userCount} `);
     });
@@ -103,6 +93,11 @@ function welcomeMessage() {
     `Envault API. Logs: level=${chalk.yellowBright(
       config.logLevel
     )}, show=${chalk.yellowBright(config.showLogs)}`
+  );
+  console.log(
+    `SHA: ${chalk.blueBright(
+      process.env.GIT_COMMIT_SHA || "DEV"
+    )}, version: ${chalk.blueBright(config.version)}`
   );
   console.log("==========================================" + "\n");
 }
