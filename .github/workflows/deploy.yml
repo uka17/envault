@@ -155,7 +155,7 @@ jobs:
           docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
 
   build_and_push:
-    name: 📦 🏗️ Build and Push Docker Images  
+    name: 🚢 Build and Push Docker Images  
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: 
