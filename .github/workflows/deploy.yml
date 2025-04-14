@@ -22,7 +22,7 @@ env:
 
 jobs:
   test_api:
-    name: Run tests for API, collect coverage and upload to Codecov  
+    name: 🧪 Run tests for API, collect coverage and upload to Codecov  
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -79,7 +79,7 @@ jobs:
         continue-on-error: true
 
   test_worker:
-    name: Run tests for worker, collect coverage and upload to Codecov  
+    name: 🧪 Run tests for worker, collect coverage and upload to Codecov  
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -135,7 +135,7 @@ jobs:
           verbose: true                
 
   build:
-    name: Build Docker Images  
+    name: 📦 Build Docker Images  
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.base_ref == 'master'
     needs: 
@@ -155,7 +155,7 @@ jobs:
           docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
 
   build_and_push:
-    name: Build and Push Docker Images  
+    name: 📦 🏗️ Build and Push Docker Images  
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: 
