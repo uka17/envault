@@ -89,6 +89,7 @@ export default function (
         let stashes = [];
 
         if (!userId) {
+          /* istanbul ignore next */
           throw new ApiError(
             CODES.API_UNAUTHORIZED,
             translations.getText("incorrect_token").translation,
@@ -125,7 +126,11 @@ export default function (
         const stash = await stashService.getStash(id);
 
         if (!stash) {
-          return res.status(CODES.API_NOT_FOUND).send();
+          throw new ApiError(
+            CODES.API_NOT_FOUND,
+            translations.getText("stash_not_found").translation,
+            [translations.getText("stash_not_found")]
+          );
         }
         res.status(200).json(stash);
       } catch (e: unknown) {
@@ -159,31 +164,7 @@ export default function (
   );
 
   app.post(
-    `/api/v1/stashes/:id/decrypt/:key`,
-    passport.authenticate("jwt", { session: false }),
-    validationRules.decrypt,
-    async (
-      req: express.Request,
-      res: express.Response,
-      next: express.NextFunction
-    ) => {
-      // #swagger.summary = 'Decrypt stash by id and provided key'
-      try {
-        validateRequest(req);
-        const id = parseInt(req.params.id);
-        const key = req.params.key;
-
-        const result = await stashService.decryptStash(id, key);
-        return res.status(CODES.API_OK).json(result);
-      } catch (e: unknown) {
-        /* istanbul ignore next */
-        next(e);
-      }
-    }
-  );
-
-  app.post(
-    `/api/v1/stashes/:id/snooze/:days`,
+    `/api/v1/stashes/:id/snooze/:hours`,
     validationRules.snooze,
     passport.authenticate("jwt", { session: false }),
     async (
@@ -191,12 +172,18 @@ export default function (
       res: express.Response,
       next: express.NextFunction
     ) => {
-      // #swagger.summary = 'Snooze stash by id fro N days'
+      // #swagger.summary = 'Snooze stash by id for N hours'
       try {
         validateRequest(req);
         const id = parseInt(req.params.id);
-        const days = parseInt(req.params.days);
-        const result = await stashService.snoozeStash(id, days);
+        const hours = parseInt(req.params.hours);
+        const result = await stashService.snoozeStash(id, hours);
+        /* istanbul ignore next */
+        if (result === null) {
+          throw new ApiError(CODES.SERVER_ERROR, MESSAGES.SERVER_ERROR, [
+            translations.getText("error_500"),
+          ]);
+        }
         res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */

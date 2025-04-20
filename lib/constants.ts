@@ -3,6 +3,7 @@ const MESSAGES = {
   USER_WAS_NOT_CREATED: "User was not created",
   API_UNAUTHORIZED_ERROR: "Unauthorized",
   API_FORBIDDEN_ERROR: "Forbidden",
+  SERVER_ERROR: "Server error",
 };
 
 const CODES = {

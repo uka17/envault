@@ -43,8 +43,9 @@ export default class StashService {
       const sendLog = new SendLog();
       sendLog.stash = stash;
       sendLog.messageId = messageId;
-      const createdStash = await this.dataSource.manager.save(sendLog);
-      return createdStash || null;
+      //TODO: add mailOptions to sendLog
+      const logRecord = await this.sendLogRepository.manager.save(sendLog);
+      return logRecord || null;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -122,44 +123,21 @@ export default class StashService {
   }
 
   /**
-   * Decrypts the stash body using the key
-   * @param stashId Stash ID
-   * @param key Key to decrypt the stash body
-   * @returns  Decrypted stash body or null if error or not found
-   */
-  public async decryptStash(
-    stashId: number,
-    key: string
-  ): Promise<string | null> {
-    try {
-      const stash = await this.getStash(stashId);
-      if (!stash) {
-        return null;
-      }
-      const stashDecryptedBody = CryptoJS.AES.decrypt(stash.body, key);
-      return stashDecryptedBody.toString(CryptoJS.enc.Utf8);
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
-  }
-
-  /**
    * Snoozes the stash by changing the sendAt date
    * @param stashId Stash ID
-   * @param days Number of days to snooze
+   * @param hours Number of hours to snooze
    * @returns  Updated stash object or null if error or not found
    */
   public async snoozeStash(
     stashId: number,
-    days: number
+    hours: number
   ): Promise<Stash | null> {
     try {
       const stash = await this.getStash(stashId);
       if (!stash) {
         return null;
       }
-      stash.sendAt.setDate(stash.sendAt.getDate() + days);
+      stash.sendAt.setHours(stash.sendAt.getHours() + hours);
       const updatedStash = await this.stashRepository.save(stash);
       return updatedStash || null;
     } catch (error) {
@@ -187,13 +165,5 @@ export default class StashService {
       config.stashNanoId.length
     );
     return nanoid();
-  }
-  /**
-   * Decrypts the stash body using the key
-   * @param body Stash body
-   * @param key Key to decrypt the stash body
-   */
-  public decryptBody(body: string, key: string): string {
-    return CryptoJS.AES.decrypt(body, key).toString(CryptoJS.enc.Utf8);
   }
 }

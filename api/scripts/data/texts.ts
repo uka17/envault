@@ -14,6 +14,7 @@ export default [
       user_already_exists: "Email is invalid or already taken",
       //errors
       user_not_found: "User not found",
+      stash_not_found: "Stash not found",
       incorrect_token: "Token is incorrect",
       incorrect_password_or_email: "Password or email is incorrect",
       error_500:

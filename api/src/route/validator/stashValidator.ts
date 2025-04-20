@@ -24,7 +24,6 @@ export const stashValidationRules = function (translations: Translations) {
         .withMessage(translations.getText("date_format_incorrect")),
     ],
     find: [
-      param("id").notEmpty().withMessage(translations.getText("is_required")),
       param("id")
         .isNumeric()
         .withMessage(translations.getText("should_be_numeric")),
@@ -36,19 +35,16 @@ export const stashValidationRules = function (translations: Translations) {
         .withMessage(translations.getText("should_be_numeric")),
     ],
     decrypt: [
-      param("id").notEmpty().withMessage(translations.getText("is_required")),
       param("id")
         .isNumeric()
         .withMessage(translations.getText("should_be_numeric")),
       param("key").notEmpty().withMessage(translations.getText("is_required")),
     ],
     snooze: [
-      param("id").notEmpty().withMessage(translations.getText("is_required")),
       param("id")
         .isNumeric()
         .withMessage(translations.getText("should_be_numeric")),
-      param("days").notEmpty().withMessage(translations.getText("is_required")),
-      param("days")
+      param("hours")
         .isNumeric()
         .withMessage(translations.getText("should_be_numeric")),
     ],

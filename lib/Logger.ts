@@ -33,7 +33,6 @@ class databaseTransport extends Transport {
 export default class Logger {
   private static instance: Logger;
   private winstonLoggger: winston.Logger;
-  public tet: string;
 
   private constructor() {}
 
