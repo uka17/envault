@@ -45,7 +45,7 @@ export default class StashService {
       sendLog.messageId = messageId;
       //TODO: add mailOptions to sendLog
       const logRecord = await this.sendLogRepository.manager.save(sendLog);
-      return logRecord || null;
+      return logRecord;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -60,7 +60,7 @@ export default class StashService {
   public async createStash(newStash: Stash): Promise<Stash | null> {
     try {
       const createdStash = await this.stashRepository.manager.save(newStash);
-      return createdStash || null;
+      return createdStash;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -81,7 +81,7 @@ export default class StashService {
           },
         },
       });
-      return stashes || null;
+      return stashes;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -100,7 +100,7 @@ export default class StashService {
           id: stashId,
         },
       });
-      return stash || null;
+      return stash;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -115,7 +115,7 @@ export default class StashService {
   public async deleteStash(stashId: number): Promise<DeleteResult | null> {
     try {
       const result = await this.stashRepository.delete({ id: stashId });
-      return result || null;
+      return result;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -138,8 +138,8 @@ export default class StashService {
         return null;
       }
       stash.sendAt.setHours(stash.sendAt.getHours() + hours);
-      const updatedStash = await this.stashRepository.save(stash);
-      return updatedStash || null;
+      const updatedStash = await this.stashRepository.manager.save(stash);
+      return updatedStash;
     } catch (error) {
       this.logger.error(error);
       return null;

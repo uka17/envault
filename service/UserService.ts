@@ -29,7 +29,7 @@ export default class UserService {
       const result = Object.assign({}, createdUser);
       delete result.password;
 
-      return result || null;
+      return result;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -67,7 +67,7 @@ export default class UserService {
       });
       const result = Object.assign({}, user);
       delete result.password;
-      return result || null;
+      return result;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -86,7 +86,7 @@ export default class UserService {
         },
       });
       delete user.password;
-      return user || null;
+      return user;
     } catch (error) {
       this.logger.error(error);
       return null;
