@@ -132,7 +132,7 @@ export default function (
             [translations.getText("stash_not_found")]
           );
         }
-        res.status(200).json(stash);
+        return res.status(200).json(stash);
       } catch (e: unknown) {
         /* istanbul ignore next */
         next(e);
@@ -155,7 +155,7 @@ export default function (
 
         const result = await stashService.deleteStash(id);
 
-        res.status(CODES.API_OK).json(result);
+        return res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */
         next(e);
@@ -184,7 +184,7 @@ export default function (
             translations.getText("error_500"),
           ]);
         }
-        res.status(CODES.API_OK).json(result);
+        return res.status(CODES.API_OK).json(result);
       } catch (e: unknown) {
         /* istanbul ignore next */
         next(e);
