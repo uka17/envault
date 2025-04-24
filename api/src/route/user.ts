@@ -68,7 +68,7 @@ export default function (
         const createdUser = await userService.createUser(newUser);
 
         if (createdUser !== null)
-          res.status(CODES.API_CREATED).json(createdUser);
+          return res.status(CODES.API_CREATED).json(createdUser);
         else throw new Error(MESSAGES.USER_WAS_NOT_CREATED);
       } catch (e: unknown) /* istanbul ignore next */ {
         next(e);
@@ -145,7 +145,7 @@ export default function (
             [translations.getText("incorrect_token")]
           );
         } else {
-          res.status(CODES.API_OK).json(result);
+          return res.status(CODES.API_OK).json(result);
         }
       } catch (e: unknown) /* istanbul ignore next */ {
         next(e);
