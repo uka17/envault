@@ -1,0 +1,6 @@
+{
+  "watch": ["."],
+  "ext": "ts",
+  "ignore": ["dist"],
+  "exec": "npx tsc && tsc-alias && node out/api/index.js"
+}
