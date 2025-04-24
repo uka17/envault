@@ -55,9 +55,10 @@ export default class Logger {
           colorize({
             colors: { info: "blue", error: "red", warning: "orange" },
           }),
+
           timestamp(),
-          printf(({ level, message, timestamp }) => {
-            return `${timestamp} [${level}]: ${message}`;
+          printf(({ level, message, timestamp, stack }) => {
+            return `${timestamp} [${level}]: ${stack || message}`;
           })
         ),
         transports: [
