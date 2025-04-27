@@ -11,7 +11,7 @@
     "test:worker": "nyc --exclude=api --reporter=html --reporter=text --report-dir=worker/coverage mocha -r ts-node/register -r tsconfig-paths/register --file worker/test/setup.ts worker/test/**/*.test.ts",
     "mtest:worker": "mocha -r ts-node/register -r tsconfig-paths/register --file worker/test/setup.ts worker/test/**/*.test.ts",
     "coverage:worker": "nyc --exclude=api report --reporter=text-lcov > ./worker/coverage/lcov.info",
-    "check-coverage:worker": "nyc check-coverage --lines 80 --functions 80 --branches 50",
+    "check-coverage:worker": "nyc check-coverage --lines 80 --functions 80 --branches 80",
     "swagger": "npx ts-node api/src/swagger/swagger.ts",
     "dockerapi": "npx ts-node -r tsconfig-paths/register Dockerfiles/dockerapi.ts",
     "dockerworker": "npx ts-node -r tsconfig-paths/register Dockerfiles/dockerworker.ts",
