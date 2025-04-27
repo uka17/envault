@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { User } from "model/User";
 
 @Entity()
 export class Base {
@@ -11,9 +12,9 @@ export class Base {
   @Column({ type: "timestamptz", default: () => "NOW()" })
   modifiedOn: Date;
 
-  @Column({ type: "varchar", nullable: true, length: 255 })
-  createdBy: string;
+  @ManyToOne(() => User, (user) => user.id, { nullable: true })
+  createdBy: User;
 
-  @Column({ type: "varchar", nullable: true, length: 255 })
-  modifiedBy: string;
+  @ManyToOne(() => User, (user) => user.id, { nullable: true })
+  modifiedBy: User;
 }

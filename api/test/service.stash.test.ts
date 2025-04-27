@@ -19,7 +19,11 @@ describe("Stash service", () => {
         globalThis.mockLogger
       );
 
-      let result = await stashService.snoozeStash(Number.MAX_SAFE_INTEGER, 1);
+      let result = await stashService.snoozeStash(
+        Number.MAX_SAFE_INTEGER,
+        1,
+        {} as any
+      );
 
       expect(result).to.be.null;
     });
@@ -98,7 +102,7 @@ describe("Stash service", () => {
     it("should error on snoozeStash", async () => {
       sinon.stub(globalThis.appDataSource.manager, "findOne").returns({});
 
-      let result = await stashService.snoozeStash(1, 1);
+      let result = await stashService.snoozeStash(1, 1, {} as any);
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;

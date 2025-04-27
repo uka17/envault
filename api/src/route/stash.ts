@@ -63,8 +63,8 @@ export default function (
         newStash.to = to;
         newStash.user = user;
         newStash.sendAt = sendAt;
-        newStash.createdBy = user.email;
-        newStash.modifiedBy = user.email;
+        newStash.createdBy = user;
+        newStash.modifiedBy = user;
 
         const createdStash = await stashService.createStash(newStash);
         return res.status(CODES.API_CREATED).json(createdStash);
@@ -177,7 +177,8 @@ export default function (
         validateRequest(req);
         const id = parseInt(req.params.id);
         const hours = parseInt(req.params.hours);
-        const result = await stashService.snoozeStash(id, hours);
+        const user = req.user as User;
+        const result = await stashService.snoozeStash(id, hours, user);
         /* istanbul ignore next */
         if (result === null) {
           throw new ApiError(CODES.SERVER_ERROR, MESSAGES.SERVER_ERROR, [
