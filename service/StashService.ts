@@ -6,6 +6,7 @@ import { customAlphabet } from "nanoid";
 
 import { Stash } from "../model/Stash";
 import { SendLog } from "../model/SendLog";
+import { User } from "model/User";
 
 import { Logger } from "../lib/Logger";
 import config from "api/src/config/config";
@@ -126,11 +127,13 @@ export default class StashService {
    * Snoozes the stash by changing the sendAt date
    * @param stashId Stash ID
    * @param hours Number of hours to snooze
+   * @param modifiedBy User who modified the stash
    * @returns  Updated stash object or null if error or not found
    */
   public async snoozeStash(
     stashId: number,
-    hours: number
+    hours: number,
+    modifiedBy: User
   ): Promise<Stash | null> {
     try {
       const stash = await this.getStash(stashId);
@@ -138,6 +141,8 @@ export default class StashService {
         return null;
       }
       stash.sendAt.setHours(stash.sendAt.getHours() + hours);
+      stash.modifiedBy = modifiedBy;
+      stash.modifiedOn = new Date(Date.now());
       const updatedStash = await this.stashRepository.manager.save(stash);
       return updatedStash;
     } catch (error) {

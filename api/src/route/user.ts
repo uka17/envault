@@ -53,7 +53,12 @@ export default function (
             }
     } */
       try {
-        const { email, password, name } = req.body;
+        const { email, password, name } = req.body as {
+          email: string;
+          password: string;
+          name: string;
+        };
+        const user = req.user as User;
 
         validateRequest(req);
 
@@ -62,8 +67,8 @@ export default function (
         newUser.name = name;
         newUser.email = email;
         newUser.password = userService.getPasswordHash(password);
-        newUser.createdBy = email;
-        newUser.modifiedBy = email;
+        newUser.createdBy = user;
+        newUser.modifiedBy = user;
 
         const createdUser = await userService.createUser(newUser);
 
