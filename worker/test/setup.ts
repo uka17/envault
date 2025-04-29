@@ -3,14 +3,15 @@ import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
 
-import Translations from "lib/Translations";
+import TranslationService from "service/TranslationService";
 import getAppDataSource from "model/dataSource";
+import { Translation } from "model/Translation";
+
 import config from "../src/config/config";
 
 import { Logger } from "lib/Logger";
 
 const dbURL = config.testDbURL;
-console.log(dbURL);
 globalThis.appDataSource = getAppDataSource(dbURL);
 globalThis.translations = null;
 
@@ -23,7 +24,9 @@ async function startApp() {
 
   await globalThis.appDataSource.initialize();
 
-  globalThis.translations = new Translations(globalThis.appDataSource);
+  globalThis.translations = new TranslationService(
+    globalThis.appDataSource.getRepository(Translation)
+  );
   await globalThis.translations.loadTranslations("en");
 }
 
