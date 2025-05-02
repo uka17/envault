@@ -10,7 +10,7 @@ import Text from "../model/Text";
 import Stash from "../model/Stash";
 import SendLog from "../model/SendLog";
 
-console.log(__dirname + "/../model/**/*.{js,ts}");
+import path from "path";
 
 /**
  *
@@ -23,7 +23,6 @@ function getAppDataSource(dbURL: string, showLogs = false): DataSource {
     type: "postgres",
     url: dbURL,
     database: process.env.DB_NAME,
-    //entities: [__dirname + "/../model/**/*.{js,ts}"],
     entities: [User, Language, Text, Translation, Stash, SendLog],
     synchronize: true,
     logging: showLogs,
