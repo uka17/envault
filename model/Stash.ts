@@ -1,9 +1,9 @@
 import { Entity, Column, IsNull, ManyToOne } from "typeorm";
-import { Base } from "./Base";
-import { User } from "./User";
+import Base from "./Base";
+import User from "./User";
 
 @Entity()
-export class Stash extends Base {
+export default class Stash extends Base {
   @Column("text")
   to: string;
 

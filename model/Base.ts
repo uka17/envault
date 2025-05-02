@@ -1,8 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
-import { User } from "model/User";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  BaseEntity as TypeORMBaseEntity,
+} from "typeorm";
+import User from "model/User";
 
 @Entity()
-export class Base {
+export default abstract class BaseEntity extends TypeORMBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -3,7 +3,7 @@ import passport from "passport";
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
 
-import { User } from "../../../model/User";
+import User from "../../../model/User";
 import UserService from "../../../service/UserService";
 
 import { Logger } from "../../../lib/Logger";

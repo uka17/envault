@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import TranslationService from "service/TranslationService";
-import getAppDataSource from "model/dataSource";
-import { Translation } from "model/Translation";
+import getAppDataSource from "lib/dataSource";
+import Translation from "model/Translation";
 
 import config from "../src/config/config";
 

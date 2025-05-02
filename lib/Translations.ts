@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm";
 import util from "util";
 
-import { Translation } from "model/Translation";
+import Translation from "model/Translation";
 
 export default class Translations {
   public items: Translation[] = [];

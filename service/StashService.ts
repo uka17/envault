@@ -4,9 +4,9 @@ import * as CryptoJS from "crypto-js";
 import Mail from "nodemailer/lib/mailer";
 import { customAlphabet } from "nanoid";
 
-import { Stash } from "../model/Stash";
-import { SendLog } from "../model/SendLog";
-import { User } from "model/User";
+import Stash from "../model/Stash";
+import SendLog from "../model/SendLog";
+import User from "model/User";
 
 import { Logger } from "../lib/Logger";
 import config from "api/src/config/config";

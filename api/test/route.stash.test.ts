@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 import { CODES } from "lib/constants";
-import { Stash } from "model/Stash";
+import Stash from "model/Stash";
 
 let user: object;
 let token: string;

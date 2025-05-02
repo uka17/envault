@@ -3,7 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
 
-import getAppDataSource from "model/dataSource";
+import getAppDataSource from "lib/dataSource";
 
 import config from "api/src/config/config";
 import passportConfig from "api/src/config/passport";

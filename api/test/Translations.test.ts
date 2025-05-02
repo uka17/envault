@@ -1,8 +1,8 @@
 // config.test.ts
 import { expect } from "chai";
 import Translations from "../../lib/Translations";
-import { Translation } from "../../model/Translation";
-import { Text } from "../../model/Text";
+import Translation from "../../model/Translation";
+import Text from "../../model/Text";
 
 describe("Translations", () => {
   it("should load empty translation for 'en' language and fallback to textCode", async () => {

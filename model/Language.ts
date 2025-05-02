@@ -1,9 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
-import { Translation } from "./Translation";
-import { Base } from "./Base";
+import Translation from "./Translation";
+import Base from "./Base";
 
 @Entity()
-export class Language extends Base {
+export default class Language extends Base {
   @Column("text")
   language: string;
 

@@ -2,7 +2,7 @@ import { DataSource } from "typeorm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
-import { User } from "../model/User";
+import User from "../model/User";
 import { Logger } from "../lib/Logger";
 import config from "../api/src/config/config";
 

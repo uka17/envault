@@ -3,8 +3,8 @@ import passport from "passport";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 
-import { User } from "../../../model/User";
-import { Stash } from "../../../model/Stash";
+import User from "../../../model/User";
+import Stash from "../../../model/Stash";
 import StashService from "../../../service/StashService";
 import { stashValidationRules } from "./validator/stashValidator";
 import { validateRequest } from "./validator/common";

@@ -4,7 +4,7 @@ import local from "passport-local";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { User } from "../../../model/User";
+import User from "../../../model/User";
 import { DataSource } from "typeorm";
 
 import Translations from "../../../lib/Translations";

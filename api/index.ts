@@ -7,14 +7,14 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-import getAppDataSource from "../model/dataSource";
+import getAppDataSource from "../lib/dataSource";
 import initDB from "./scripts/init";
 import config from "./src/config/config";
 
 import health from "./src/route/health";
 import user from "./src/route/user";
 import stash from "./src/route/stash";
-import { User } from "../model/User";
+import User from "../model/User";
 import passportConfig from "./src/config/passport";
 import Translations from "../lib/Translations";
 const expressListRoutes = require("express-list-routes");

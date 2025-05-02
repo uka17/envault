@@ -7,8 +7,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import config from "worker/src/config/config";
-import getAppDataSource from "model/dataSource";
-import { Stash } from "model/Stash";
+import getAppDataSource from "lib/dataSource";
+import Stash from "model/Stash";
 import { Logger, LogLevel } from "lib/Logger";
 
 import StashService from "service/StashService";
