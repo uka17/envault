@@ -32,13 +32,8 @@ async function startApp() {
 
   globalThis.app = express();
   globalThis.app.use(express.json());
-  userRoutes(
-    globalThis.app,
-    globalThis.mockLogger,
-    globalThis.translations,
-    globalThis.appDataSource
-  );
 
+  userRoutes(globalThis.app, globalThis.mockLogger, globalThis.translations);
   stashRoutes(globalThis.app, globalThis.translations);
 
   globalThis.app.use(

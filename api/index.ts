@@ -60,7 +60,7 @@ appDataSource
     //Configure all routes
     const router = express.Router();
     health(router, logger, translations, appDataSource);
-    user(router, logger, translations, appDataSource);
+    user(router, logger, translations);
     stash(router, translations);
 
     //Attach routes to app

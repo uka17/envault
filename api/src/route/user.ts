@@ -2,14 +2,16 @@ import express from "express";
 import passport from "passport";
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+import { container } from "tsyringe";
 
-import User from "../../../model/User";
-import UserService from "../../../service/UserService";
+import User from "model/User";
+import UserService from "service/UserService";
 
-import { Logger } from "../../../lib/Logger";
-import ApiError from "../../../lib/ApiError";
-import Translations from "../../../lib/Translations";
-import { CODES, MESSAGES } from "../../../lib/constants";
+import { Logger } from "lib/Logger";
+import ApiError from "lib/ApiError";
+import Translations from "lib/Translations";
+import { CODES, MESSAGES } from "lib/constants";
+import { TOKENS } from "di/tokens";
 
 import { userValidationRules } from "./validator/userValidator";
 import { validateRequest } from "./validator/common";
@@ -26,10 +28,9 @@ dotenv.config();
 export default function (
   app: express.Router,
   logger: Logger,
-  translations: Translations,
-  appDataSource: DataSource
+  translations: Translations
 ) {
-  const userService = new UserService(appDataSource, logger);
+  const userService = container.resolve<UserService>(TOKENS.UserService);
   const validationRules = userValidationRules(translations, userService);
 
   app.post(

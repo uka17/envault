@@ -1,4 +1,4 @@
-import { DataSource, DeleteResult, Repository } from "typeorm";
+import { DeleteResult, Repository } from "typeorm";
 import * as CryptoJS from "crypto-js";
 import Mail from "nodemailer/lib/mailer";
 import { customAlphabet } from "nanoid";

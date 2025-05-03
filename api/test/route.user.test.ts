@@ -3,6 +3,11 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
+import { TOKENS } from "di/tokens";
+import { container } from "tsyringe";
+
+import { Logger } from "lib/Logger";
+
 const userId = customAlphabet("1234567890abcdef", 10);
 
 describe("User Routes", () => {
@@ -17,6 +22,9 @@ describe("User Routes", () => {
         password: `Password${userId()}`,
         name: `user${userId()}`,
       };
+
+      const logger = container.resolve<Logger>(TOKENS.Logger);
+      const errorStub = sinon.stub(logger, "error");
 
       sinon
         .stub(globalThis.appDataSource.manager, "save")

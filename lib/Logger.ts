@@ -32,7 +32,6 @@ class databaseTransport extends Transport {
 }
 @injectable()
 export default class Logger {
-  private static instance: Logger;
   private winstonLoggger: winston.Logger;
 
   /**
