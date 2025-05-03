@@ -23,12 +23,14 @@ import { createErrorHandler } from "./src/route/error";
 import { Logger, LogLevel } from "../lib/Logger";
 import chalk from "chalk";
 import { DataSource } from "typeorm";
-const logger = Logger.getInstance(config.showLogs, config.logLevel as LogLevel);
+import initDI from "di/container";
+const logger = new Logger(config.showLogs, config.logLevel as LogLevel);
 
 //Init data source
 const dbURL = config.dbURL;
 const showSQLLogs = config.showSQLLogs;
 const appDataSource = getAppDataSource(dbURL, showSQLLogs);
+initDI(appDataSource);
 
 welcomeMessage();
 
@@ -59,7 +61,7 @@ appDataSource
     const router = express.Router();
     health(router, logger, translations, appDataSource);
     user(router, logger, translations, appDataSource);
-    stash(router, logger, translations, appDataSource);
+    stash(router, translations);
 
     //Attach routes to app
     app.use("/", router);

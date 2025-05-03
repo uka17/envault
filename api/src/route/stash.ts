@@ -2,6 +2,7 @@ import express from "express";
 import passport from "passport";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
+import { container } from "tsyringe";
 
 import User from "../../../model/User";
 import Stash from "../../../model/Stash";
@@ -10,7 +11,6 @@ import { stashValidationRules } from "./validator/stashValidator";
 import { validateRequest } from "./validator/common";
 
 import Translations from "../../../lib/Translations";
-import { Logger } from "../../../lib/Logger";
 import { CODES, MESSAGES } from "../../../lib/constants";
 import ApiError from "../../../lib/ApiError";
 
@@ -19,17 +19,11 @@ dotenv.config();
 /**
  * User routes
  * @param app Express instance
- * @param logger Logger instance
  * @param translations Translations instance
- * @param appDataSource Database connection instance
  */
-export default function (
-  app: express.Router,
-  logger: Logger,
-  translations: Translations,
-  appDataSource: DataSource
-) {
-  const stashService = new StashService(appDataSource, logger);
+export default function (app: express.Router, translations: Translations) {
+  const stashService = container.resolve(StashService);
+
   const validationRules = stashValidationRules(translations);
 
   app.post(

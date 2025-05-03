@@ -9,6 +9,7 @@ dotenv.config();
 import config from "worker/src/config/config";
 import getAppDataSource from "lib/dataSource";
 import Stash from "model/Stash";
+import SendLog from "model/SendLog";
 import { Logger, LogLevel } from "lib/Logger";
 
 import StashService from "service/StashService";
@@ -16,7 +17,7 @@ import EmailService from "service/EmailService";
 
 async function init() {
   //Init logger
-  const logger = Logger.getInstance(
+  const logger = new Logger(
     process.env.ENV != "PROD",
     config.logLevel as LogLevel
   );
@@ -38,7 +39,13 @@ async function init() {
     text: "New stash",
   };
   const messageId = await emailService.send(mailOptions);
-  const stashService = new StashService(appDataSource, logger);
+  let stashRepository = appDataSource.getRepository(Stash);
+  let sendLogRepository = appDataSource.getRepository(SendLog);
+  const stashService = new StashService(
+    stashRepository,
+    sendLogRepository,
+    logger
+  );
   await stashService.log(3, mailOptions, messageId);
 
   //---End of play zone

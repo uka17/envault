@@ -9,6 +9,7 @@ import config from "api/src/config/config";
 import passportConfig from "api/src/config/passport";
 import Translations from "lib/Translations";
 import { Logger } from "lib/Logger";
+import initDI from "di/container";
 
 import { createErrorHandler } from "api/src/route/error";
 import userRoutes from "api/src/route/user";
@@ -24,6 +25,7 @@ async function startApp() {
   globalThis.mockLogger = sinon.createStubInstance(Logger);
 
   await globalThis.appDataSource.initialize();
+  initDI(globalThis.appDataSource);
 
   globalThis.translations = new Translations(globalThis.appDataSource);
   await globalThis.translations.loadTranslations("en");
@@ -37,12 +39,7 @@ async function startApp() {
     globalThis.appDataSource
   );
 
-  stashRoutes(
-    globalThis.app,
-    globalThis.mockLogger,
-    globalThis.translations,
-    globalThis.appDataSource
-  );
+  stashRoutes(globalThis.app, globalThis.translations);
 
   globalThis.app.use(
     createErrorHandler(globalThis.mockLogger, globalThis.translations)

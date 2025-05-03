@@ -3,8 +3,12 @@ import { expect } from "chai";
 import sinon from "sinon";
 
 import StashService from "service/StashService";
+import Stash from "model/Stash";
+import SendLog from "model/SendLog";
 
 let stashService: StashService;
+let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);
+let sendLogRepository = globalThis.appDataSource.getRepository(SendLog);
 let loggerStub: { error: sinon.SinonStub };
 
 describe("Stash service", () => {
@@ -15,7 +19,8 @@ describe("Stash service", () => {
 
     it("should fail to snooze stash", async () => {
       let stashService: StashService = new StashService(
-        globalThis.appDataSource,
+        stashRepositoryStub,
+        sendLogRepository,
         globalThis.mockLogger
       );
 
@@ -32,7 +37,8 @@ describe("Stash service", () => {
   describe("Errors", () => {
     beforeEach(() => {
       stashService = new StashService(
-        globalThis.appDataSource,
+        stashRepositoryStub,
+        sendLogRepository,
         globalThis.mockLogger
       );
 

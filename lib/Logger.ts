@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 import winston, { createLogger } from "winston";
+import { injectable } from "tsyringe";
 const { combine, timestamp, colorize, printf, logstash } = winston.format;
 import Transport from "winston-transport";
 
@@ -29,12 +30,10 @@ class databaseTransport extends Transport {
     callback();
   }
 }
-
+@injectable()
 export default class Logger {
   private static instance: Logger;
   private winstonLoggger: winston.Logger;
-
-  private constructor() {}
 
   /**
    * Returns singleton instance of `Logger`
@@ -42,39 +41,32 @@ export default class Logger {
    * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
    * @returns {Logger} `Logger` instance
    */
-  public static getInstance(
-    silent: boolean = false,
-    logLevel: LogLevel = LogLevel.Info
-  ): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-      Logger.instance.winstonLoggger = createLogger({
-        level: logLevel,
-        silent: !silent,
-        format: combine(
-          colorize({
-            colors: { info: "blue", error: "red", warning: "orange" },
-          }),
+  constructor(silent: boolean = false, logLevel: LogLevel = LogLevel.Info) {
+    this.winstonLoggger = createLogger({
+      level: logLevel,
+      silent: !silent,
+      format: combine(
+        colorize({
+          colors: { info: "blue", error: "red", warning: "orange" },
+        }),
 
-          timestamp(),
-          printf(({ level, message, timestamp, stack }) => {
-            return `${timestamp} [${level}]: ${stack || message}`;
-          })
-        ),
-        transports: [
-          new winston.transports.File({
-            filename: "./log/app.log",
-            maxFiles: 10,
-            maxsize: 1024,
-            tailable: true,
-          }),
-          new winston.transports.Console(),
-        ],
-      });
-    }
-
-    return Logger.instance;
+        timestamp(),
+        printf(({ level, message, timestamp, stack }) => {
+          return `${timestamp} [${level}]: ${stack || message}`;
+        })
+      ),
+      transports: [
+        new winston.transports.File({
+          filename: "./log/app.log",
+          maxFiles: 10,
+          maxsize: 1024,
+          tailable: true,
+        }),
+        new winston.transports.Console(),
+      ],
+    });
   }
+
   public info(message: string | object): void {
     this.winstonLoggger.info(message);
   }
