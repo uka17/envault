@@ -1,15 +1,14 @@
 import express from "express";
 import passport from "passport";
 import dotenv from "dotenv";
-import { DataSource } from "typeorm";
 import { container } from "tsyringe";
 
 import User from "model/User";
 import UserService from "service/UserService";
+import TranslationService from "service/TranslationService";
 
 import { Logger } from "lib/Logger";
 import ApiError from "lib/ApiError";
-import Translations from "lib/Translations";
 import { CODES, MESSAGES } from "lib/constants";
 import { TOKENS } from "di/tokens";
 
@@ -22,16 +21,16 @@ dotenv.config();
  * User routes
  * @param app Express instance
  * @param logger Logger instance
- * @param translations Translations instance
+ * @param translationService Translations instance
  * @param appDataSource Database connection instance
  */
 export default function (
   app: express.Router,
   logger: Logger,
-  translations: Translations
+  translationService: TranslationService
 ) {
   const userService = container.resolve<UserService>(TOKENS.UserService);
-  const validationRules = userValidationRules(translations, userService);
+  const validationRules = userValidationRules(translationService, userService);
 
   app.post(
     "/api/v1/users",
@@ -111,7 +110,7 @@ export default function (
               logger.error(err as object);
               res
                 .status(CODES.SERVER_ERROR)
-                .send({ error: translations.getText("error_500") });
+                .send({ error: translationService.getText("error_500") });
             }
 
             if (passportUser) {
@@ -119,7 +118,7 @@ export default function (
             }
 
             return res.status(CODES.API_UNAUTHORIZED).json({
-              error: translations.getText("incorrect_password_or_email"),
+              error: translationService.getText("incorrect_password_or_email"),
             });
           }
         )(req, res, next);
@@ -148,7 +147,7 @@ export default function (
           throw new ApiError(
             CODES.API_UNAUTHORIZED,
             MESSAGES.API_UNAUTHORIZED_ERROR,
-            [translations.getText("incorrect_token")]
+            [translationService.getText("incorrect_token")]
           );
         } else {
           return res.status(CODES.API_OK).json(result);

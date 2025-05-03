@@ -1,11 +1,7 @@
 import express from "express";
-import { DataSource } from "typeorm";
 import swaggerUi from "swagger-ui-express";
 
-import { Logger } from "../../../lib/Logger";
-import Translations from "../../../lib/Translations";
-
-import { CODES, MESSAGES } from "../../../lib/constants";
+import { CODES } from "lib/constants";
 
 import swaggerDocument from "api/src/swagger/swagger.json";
 
@@ -13,15 +9,10 @@ import swaggerDocument from "api/src/swagger/swagger.json";
  * Main route. Initiates `GET("/")` and all nested routes
  * @param app Express instance
  * @param logger Logger instance
- * @param translations Translations instance
+ * @param translationService Translations instance
  * @param appDataSource Database connection instance
  */
-export default function (
-  app: express.Router,
-  logger: Logger,
-  translations: Translations,
-  appDataSource: DataSource
-) {
+export default function (app: express.Router) {
   app.get(
     "/",
     async (

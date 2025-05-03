@@ -9,7 +9,7 @@ import StashService from "service/StashService";
 import { stashValidationRules } from "./validator/stashValidator";
 import { validateRequest } from "./validator/common";
 
-import Translations from "lib/Translations";
+import TranslationService from "service/TranslationService";
 import { CODES, MESSAGES } from "lib/constants";
 import ApiError from "lib/ApiError";
 
@@ -20,12 +20,15 @@ dotenv.config();
 /**
  * User routes
  * @param app Express instance
- * @param translations Translations instance
+ * @param translationService Translations instance
  */
-export default function (app: express.Router, translations: Translations) {
+export default function (
+  app: express.Router,
+  translationService: TranslationService
+) {
   const stashService = container.resolve<StashService>(TOKENS.StashService);
 
-  const validationRules = stashValidationRules(translations);
+  const validationRules = stashValidationRules(translationService);
 
   app.post(
     `/api/v1/stashes`,
@@ -87,8 +90,8 @@ export default function (app: express.Router, translations: Translations) {
           /* istanbul ignore next */
           throw new ApiError(
             CODES.API_UNAUTHORIZED,
-            translations.getText("incorrect_token").translation,
-            [translations.getText("incorrect_token")]
+            translationService.getText("incorrect_token").translation,
+            [translationService.getText("incorrect_token")]
           );
         } else {
           stashes = await stashService.getUserStashes(userId);
@@ -123,8 +126,8 @@ export default function (app: express.Router, translations: Translations) {
         if (!stash) {
           throw new ApiError(
             CODES.API_NOT_FOUND,
-            translations.getText("stash_not_found").translation,
-            [translations.getText("stash_not_found")]
+            translationService.getText("stash_not_found").translation,
+            [translationService.getText("stash_not_found")]
           );
         }
         return res.status(200).json(stash);
@@ -177,7 +180,7 @@ export default function (app: express.Router, translations: Translations) {
         /* istanbul ignore next */
         if (result === null) {
           throw new ApiError(CODES.SERVER_ERROR, MESSAGES.SERVER_ERROR, [
-            translations.getText("error_500"),
+            translationService.getText("error_500"),
           ]);
         }
         return res.status(CODES.API_OK).json(result);

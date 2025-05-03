@@ -7,9 +7,12 @@ import { TOKENS } from "di/tokens";
 
 import Stash from "model/Stash";
 import User from "model/User";
+import Translation from "model/Translation";
+
 import StashService from "service/StashService";
 import SendLog from "model/SendLog";
 import UserService from "service/UserService";
+import TranslationService from "service/TranslationService";
 
 export default function initDI(appDataSource: DataSource) {
   const logger = new Logger(config.showLogs, config.logLevel as LogLevel);
@@ -24,6 +27,13 @@ export default function initDI(appDataSource: DataSource) {
   const userRepository = appDataSource.getRepository(User);
   container.registerInstance(TOKENS.UserRepository, userRepository);
 
+  const translationRepository = appDataSource.getRepository(Translation);
+  container.registerInstance(
+    TOKENS.TranslationRepository,
+    translationRepository
+  );
+
   container.registerSingleton(TOKENS.StashService, StashService);
   container.registerSingleton(TOKENS.UserService, UserService);
+  container.registerSingleton(TOKENS.TranslationService, TranslationService);
 }

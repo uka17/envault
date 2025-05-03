@@ -1,30 +1,28 @@
-import { DataSource, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import util from "util";
+import { injectable, inject } from "tsyringe";
 
 import Translation from "../model/Translation";
-
+import { TOKENS } from "di/tokens";
+@injectable()
 export default class TranslationService {
   public items: Translation[] = [];
-  private appDataSource: DataSource;
-  private translationsRepository: Repository<Translation>;
 
-  constructor(translationsRepository: Repository<Translation>) {
-    this.translationsRepository = translationsRepository;
+  constructor(
+    @inject(TOKENS.TranslationRepository)
+    private translationRepository: Repository<Translation>
+  ) {
+    this.loadTranslations();
   }
 
   /**
    *
    * @param languageCode Code of language (default is `en`) for which translations should be loaded
    */
-  public async loadTranslations(languageCode: string = "en"): Promise<void> {
-    this.items = await this.translationsRepository.find({
+  private async loadTranslations(): Promise<void> {
+    this.items = await this.translationRepository.find({
       relations: {
         text: true,
-      },
-      where: {
-        language: {
-          code: languageCode,
-        },
       },
     });
   }
@@ -32,13 +30,17 @@ export default class TranslationService {
    * Returns translation for provided text code, and undefined otherwise
    * @param textCode Code of text entry
    * @param [params] Array of parameters to be replaced in the translation (optional)
+   * @param [languageCode] Code of language (default is `en`)
    * @returns {{ translation: string, textCode: string }}
    */
   public getText(
     textCode: string,
-    params: string[] | number[] | null = null
+    params: string[] | number[] | null = null,
+    languageCode: string = "en"
   ): { translation: string; textCode: string } {
-    const translation = this.items.find((e) => e.text.text == textCode);
+    const translation = this.items.find(
+      (e) => e.text.text == textCode && e.language.code == languageCode
+    );
     //no translation - fallback to text code
     if (!translation) {
       return {

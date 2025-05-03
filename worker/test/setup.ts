@@ -1,19 +1,22 @@
+import "reflect-metadata";
 import sinon from "sinon";
 import express from "express";
 import dotenv from "dotenv";
+import { container } from "tsyringe";
 dotenv.config();
 
 import TranslationService from "service/TranslationService";
 import getAppDataSource from "lib/dataSource";
-import Translation from "model/Translation";
+import { TOKENS } from "di/tokens";
 
 import config from "../src/config/config";
 
 import { Logger } from "lib/Logger";
+import initDI from "di/container";
 
 const dbURL = config.testDbURL;
 globalThis.appDataSource = getAppDataSource(dbURL);
-globalThis.translations = null;
+globalThis.translationService = null;
 
 async function startApp() {
   // Mock/setup dependencies
@@ -23,11 +26,10 @@ async function startApp() {
   globalThis.app.use(express.json());
 
   await globalThis.appDataSource.initialize();
-
-  globalThis.translations = new TranslationService(
-    globalThis.appDataSource.getRepository(Translation)
+  initDI(globalThis.appDataSource);
+  globalThis.translationService = container.resolve<TranslationService>(
+    TOKENS.TranslationService
   );
-  await globalThis.translations.loadTranslations("en");
 }
 
 before(async () => {

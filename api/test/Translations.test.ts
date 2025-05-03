@@ -1,48 +1,43 @@
 // config.test.ts
 import { expect } from "chai";
-import Translations from "../../lib/Translations";
-import Translation from "../../model/Translation";
-import Text from "../../model/Text";
+
+import Translation from "model/Translation";
+import Text from "model/Text";
+import Language from "model/Language";
 
 describe("Translations", () => {
   it("should load empty translation for 'en' language and fallback to textCode", async () => {
-    const translations = new Translations(globalThis.appDataSource);
-    translations.loadTranslations();
-    const result = translations.getText("error_500");
+    const result = globalThis.translationService.getText("error_500");
     expect(result.translation).to.equal("error_500");
   });
 
   it("should get proper translation", async () => {
-    //load translations
-    const translations = new Translations(globalThis.appDataSource);
-    translations.loadTranslations();
-
     //create fake one for test
     const translation = new Translation();
     translation.text = new Text();
     translation.text.text = "error_500";
-    translation.translation = "transaltion_error_500";
+    translation.translation = "translation_error_500";
+    translation.language = new Language();
+    translation.language.code = "en";
 
-    translations.items.push(translation);
+    globalThis.translationService.items.push(translation);
 
-    const result = translations.getText("error_500");
-    expect(result.translation).to.equal("transaltion_error_500");
+    const result = globalThis.translationService.getText("error_500");
+    expect(result.translation).to.equal("translation_error_500");
   });
 
   it("should get proper translation with applying params", async () => {
-    //load translations
-    const translations = new Translations(globalThis.appDataSource);
-    translations.loadTranslations();
-
     //create fake one for test
     const translation = new Translation();
     translation.text = new Text();
-    translation.text.text = "error_500";
+    translation.text.text = "param_777";
     translation.translation = "param %d value";
+    translation.language = new Language();
+    translation.language.code = "en";
 
-    translations.items.push(translation);
+    globalThis.translationService.items.push(translation);
 
-    const result = translations.getText("error_500", [777]);
+    const result = globalThis.translationService.getText("param_777", [777]);
     expect(result.translation).to.equal("param 777 value");
   });
 });

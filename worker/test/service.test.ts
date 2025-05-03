@@ -7,7 +7,11 @@ const userId = customAlphabet("1234567890abcdef", 10);
 
 describe("Service tests", () => {
   before(async () => {
-    userRoutes(globalThis.app, globalThis.mockLogger, globalThis.translations);
+    userRoutes(
+      globalThis.app,
+      globalThis.mockLogger,
+      globalThis.translationService
+    );
   });
 
   after(async () => {});
