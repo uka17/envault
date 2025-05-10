@@ -5,13 +5,19 @@ import Translation from "model/Translation";
 import Text from "model/Text";
 import Language from "model/Language";
 
+import TranslationService from "service/TranslationService";
+
+let translationRepository = globalThis.appDataSource.getRepository(Translation);
+const translationService = new TranslationService(translationRepository);
+//not doing init here, as we want to test empty translationService
+
 describe("Translations", () => {
-  it("should load empty translation for 'en' language and fallback to textCode", async () => {
-    const result = globalThis.translationService.getText("error_500");
+  it("should load empty translation for 'en' language and fallback to textCode", async() => {
+    const result = translationService.getText("error_500");
     expect(result.translation).to.equal("error_500");
   });
 
-  it("should get proper translation", async () => {
+  it("should get proper translation", async() => {
     //create fake one for test
     const translation = new Translation();
     translation.text = new Text();
@@ -20,13 +26,13 @@ describe("Translations", () => {
     translation.language = new Language();
     translation.language.code = "en";
 
-    globalThis.translationService.items.push(translation);
+    translationService.items.push(translation);
 
-    const result = globalThis.translationService.getText("error_500");
+    const result = translationService.getText("error_500");
     expect(result.translation).to.equal("translation_error_500");
   });
 
-  it("should get proper translation with applying params", async () => {
+  it("should get proper translation with applying params", async() => {
     //create fake one for test
     const translation = new Translation();
     translation.text = new Text();
@@ -35,9 +41,9 @@ describe("Translations", () => {
     translation.language = new Language();
     translation.language.code = "en";
 
-    globalThis.translationService.items.push(translation);
+    translationService.items.push(translation);
 
-    const result = globalThis.translationService.getText("param_777", [777]);
+    const result = translationService.getText("param_777", [777]);
     expect(result.translation).to.equal("param 777 value");
   });
 });

@@ -12,7 +12,7 @@ import { TOKENS } from "di/tokens";
 export default class UserService {
   constructor(
     @inject(TOKENS.UserRepository) private userRepository: Repository<User>,
-    @inject(TOKENS.Logger) private logger: Logger
+    @inject(TOKENS.Logger) private logger: Logger,
   ) {}
 
   /**
@@ -21,17 +21,12 @@ export default class UserService {
    * @returns Created user object or null if error
    */
   public async createUser(newUser: User): Promise<User | null> {
-    try {
-      const createdUser = await this.userRepository.manager.save(newUser);
+    const createdUser = await this.userRepository.manager.save(newUser);
 
-      const result = Object.assign({}, createdUser);
-      delete result.password;
+    const result = Object.assign({}, createdUser);
+    delete result.password;
 
-      return result;
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
+    return result;
   }
   /**
    * Create token for user
@@ -47,7 +42,7 @@ export default class UserService {
         id: user.id,
         exp: Math.round(expirationDate.getTime() / 1000),
       },
-      process.env.API_JWT_SECRET
+      process.env.API_JWT_SECRET,
     );
     return token;
   }

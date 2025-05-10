@@ -10,50 +10,45 @@ import getAppDataSource from "lib/dataSource";
 import config from "api/src/config/config";
 import passportConfig from "api/src/config/passport";
 import { Logger } from "lib/Logger";
-import initDI from "di/container";
 import { TOKENS } from "di/tokens";
 
 import { createErrorHandler } from "api/src/route/error";
+import initDI from "di/container";
+import initDB from "api/scripts/init";
 import userRoutes from "api/src/route/user";
 import stashRoutes from "api/src/route/stash";
 import TranslationService from "service/TranslationService";
 
 const dbURL = config.testDbURL;
-
 globalThis.appDataSource = getAppDataSource(dbURL);
 globalThis.translationService = null;
 
 async function startApp() {
   await globalThis.appDataSource.initialize();
-  initDI(globalThis.appDataSource);
   // Mock/setup dependencies
-  globalThis.mockLogger = sinon.createStubInstance(Logger);
-
-  globalThis.translationService = container.resolve<TranslationService>(
-    TOKENS.TranslationService
-  );
+  initDI(globalThis.appDataSource);
+  await initDB(globalThis.appDataSource, true);  
+  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
+  await translationService.init();
+  //Suppress logs
+  const loggerServiceStub = sinon.createStubInstance(Logger);
+  container.registerInstance(TOKENS.Logger, loggerServiceStub);
 
   globalThis.app = express();
   globalThis.app.use(express.json());
 
-  userRoutes(
-    globalThis.app,
-    globalThis.mockLogger,
-    globalThis.translationService
-  );
-  stashRoutes(globalThis.app, globalThis.translationService);
+  passportConfig(globalThis.appDataSource, translationService);
+  userRoutes(globalThis.app);
+  stashRoutes(globalThis.app);
 
-  globalThis.app.use(
-    createErrorHandler(globalThis.mockLogger, globalThis.translationService)
-  );
-
-  passportConfig(globalThis.appDataSource, globalThis.translationService);
+  const errorHandler = createErrorHandler(loggerServiceStub, translationService);
+  globalThis.app.use(errorHandler);
 }
 
-before(async () => {
+before(async() => {
   await startApp();
 });
 
-after(async () => {
+after(async() => {
   await globalThis.appDataSource.destroy();
 });

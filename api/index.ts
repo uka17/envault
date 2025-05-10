@@ -12,7 +12,7 @@ import initDB from "./scripts/init";
 import config from "./src/config/config";
 
 import health from "./src/route/health";
-import user from "./src/route/user";
+import user from "api/src/route/user";
 import stash from "./src/route/stash";
 import User from "../model/User";
 import passportConfig from "./src/config/passport";
@@ -35,7 +35,7 @@ initDI(appDataSource);
 welcomeMessage();
 
 logger.info(
-  `Initializing API (port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`
+  `Initializing API (port=${config.port}, ENV=${process.env.ENV}, logLevel=${config.logLevel})...`,
 );
 
 const app: Express = express();
@@ -45,15 +45,16 @@ app.use(session(config.session));
 app.use(bodyParser.json());
 
 //Basic checks
-if (!process.env.API_JWT_SECRET) throw "JWT_SECRET is empty or nor found";
+if (!process.env.API_JWT_SECRET) {
+  throw "JWT_SECRET is empty or nor found";
+}
 
 appDataSource
   .initialize()
-  .then(async () => {
+  .then(async() => {
     //Get translationService
-    const translationService = container.resolve<TranslationService>(
-      TOKENS.TranslationService
-    );
+    const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
+    await translationService.init();
 
     //Configure passport policies
     passportConfig(appDataSource, translationService);
@@ -61,8 +62,8 @@ appDataSource
     //Configure all routes
     const router = express.Router();
     health(router);
-    user(router, logger, translationService);
-    stash(router, translationService);
+    user(router);
+    stash(router);
 
     //Attach routes to app
     app.use("/", router);
@@ -73,10 +74,8 @@ appDataSource
     initDB(appDataSource, process.env.API_SILENT_INIT === "TRUE");
 
     //Start app
-    app.listen(config.port, async () => {
-      logger.info(
-        `API is live at: http://${config.currentIp()}:${config.port}/`
-      );
+    app.listen(config.port, async() => {
+      logger.info(`API is live at: http://${config.currentIp()}:${config.port}/`);
       //TODO: remove this
       let userCount = await appDataSource.getRepository(User).count();
       logger.info(`Users: ${userCount} `);
@@ -93,9 +92,9 @@ function welcomeMessage() {
   console.log(chalk.yellowBright(config.logo));
   console.log("==========================================");
   console.log(
-    `Envault API. Logs: level=${chalk.yellowBright(
-      config.logLevel
-    )}, show=${chalk.yellowBright(config.showLogs)}`
+    `Envault API. Logs: level=${chalk.yellowBright(config.logLevel)}, show=${chalk.yellowBright(
+      config.showLogs,
+    )}`,
   );
   console.log(`SHA: ${chalk.blueBright(process.env.GIT_COMMIT_SHA || "DEV")}`);
   console.log("==========================================" + "\n");

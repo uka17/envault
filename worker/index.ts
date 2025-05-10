@@ -19,7 +19,7 @@ async function init() {
   //Init logger
   const logger = new Logger(
     process.env.ENV != "PROD",
-    config.logLevel as LogLevel
+    config.logLevel as LogLevel,
   );
   logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
@@ -44,14 +44,14 @@ async function init() {
   const stashService = new StashService(
     stashRepository,
     sendLogRepository,
-    logger
+    logger,
   );
   await stashService.log(3, mailOptions, messageId);
 
   //---End of play zone
 
   //Init watch function to check for stashes to send
-  setInterval(function () {
+  setInterval(function() {
     main(appDataSource);
   }, config.runInterval);
 }
@@ -62,7 +62,7 @@ async function main(appDataSource: DataSource) {
     where: { sendAt: LessThan(new Date(Date.now())) },
   });
   console.log(
-    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found.")
+    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found."),
   );
 }
 

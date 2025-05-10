@@ -5,6 +5,7 @@ import sinon from "sinon";
 import StashService from "service/StashService";
 import Stash from "model/Stash";
 import SendLog from "model/SendLog";
+import stash from "api/src/route/stash";
 
 let stashService: StashService;
 let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);
@@ -17,18 +18,14 @@ describe("Stash service", () => {
       sinon.restore();
     });
 
-    it("should fail to snooze stash", async () => {
+    it("should fail to snooze stash as it doesn't exist", async() => {
       let stashService: StashService = new StashService(
         stashRepositoryStub,
         sendLogRepository,
-        globalThis.mockLogger
+        globalThis.mockLogger,
       );
 
-      let result = await stashService.snoozeStash(
-        Number.MAX_SAFE_INTEGER,
-        1,
-        {} as any
-      );
+      let result = await stashService.snoozeStash(99999, 1, {} as any);
 
       expect(result).to.be.null;
     });
@@ -39,7 +36,7 @@ describe("Stash service", () => {
       stashService = new StashService(
         stashRepositoryStub,
         sendLogRepository,
-        globalThis.mockLogger
+        globalThis.mockLogger,
       );
 
       loggerStub = { error: sinon.stub() };
@@ -50,10 +47,8 @@ describe("Stash service", () => {
       sinon.restore();
     });
 
-    it("should error on log", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "save")
-        .throws(new Error("Unexpected error"));
+    it("should error on log", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "save").throws(new Error("Unexpected error"));
 
       let result = await stashService.log(1, {} as any, "msg-1");
 
@@ -61,10 +56,8 @@ describe("Stash service", () => {
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
-    it("should error on createStash", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "save")
-        .throws(new Error("Unexpected error"));
+    it("should error on createStash", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "save").throws(new Error("Unexpected error"));
 
       let result = await stashService.createStash({} as any);
 
@@ -72,10 +65,8 @@ describe("Stash service", () => {
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
-    it("should error on getUserStashes", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "find")
-        .throws(new Error("Unexpected error"));
+    it("should error on getUserStashes", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "find").throws(new Error("Unexpected error"));
 
       let result = await stashService.getUserStashes(Number.MAX_SAFE_INTEGER);
 
@@ -83,10 +74,8 @@ describe("Stash service", () => {
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
-    it("should error on getStash", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "findOne")
-        .throws(new Error("Unexpected error"));
+    it("should error on getStash", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "findOne").throws(new Error("Unexpected error"));
 
       let result = await stashService.getStash(Number.MAX_SAFE_INTEGER);
 
@@ -94,10 +83,8 @@ describe("Stash service", () => {
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
-    it("should error on deleteStash", async () => {
-      sinon
-        .stub(globalThis.appDataSource.manager, "delete")
-        .throws(new Error("Unexpected error"));
+    it("should error on deleteStash", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "delete").throws(new Error("Unexpected error"));
 
       let result = await stashService.deleteStash(Number.MAX_SAFE_INTEGER);
 
@@ -105,10 +92,10 @@ describe("Stash service", () => {
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
-    it("should error on snoozeStash", async () => {
+    it("should error on snoozeStash", async() => {
       sinon.stub(globalThis.appDataSource.manager, "findOne").returns({});
 
-      let result = await stashService.snoozeStash(1, 1, {} as any);
+      let result = await stashService.snoozeStash(1, 1, {} as never);
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;

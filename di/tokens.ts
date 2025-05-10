@@ -1,5 +1,3 @@
-import TranslationService from "service/TranslationService";
-
 export const TOKENS = {
   StashRepository: Symbol("StashRepository"),
   UserRepository: Symbol("UserRepository"),
@@ -12,4 +10,10 @@ export const TOKENS = {
   StashService: Symbol("StashService"),
   UserService: Symbol("UserService"),
   TranslationService: Symbol("TranslationService"),
+
+  UserController: Symbol("UserController"),
+  StashController: Symbol("StashController"),
+
+  UserValidator: Symbol("UserValidator"),
+  StashValidator: Symbol("StashValidator"),
 };

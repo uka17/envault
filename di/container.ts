@@ -14,10 +14,18 @@ import SendLog from "model/SendLog";
 import UserService from "service/UserService";
 import TranslationService from "service/TranslationService";
 
+import UserController from "api/src/controller/UserController";
+import StashController from "api/src/controller/StashController";
+
+import UserValidator from "api/src/route/validator/UserValidator";
+import StashValidator from "api/src/route/validator/StashValidator";
+
 export default function initDI(appDataSource: DataSource) {
+  // Register the logger
   const logger = new Logger(config.showLogs, config.logLevel as LogLevel);
   container.registerInstance(TOKENS.Logger, logger);
 
+  // Register repositories
   const stashRepository = appDataSource.getRepository(Stash);
   container.registerInstance(TOKENS.StashRepository, stashRepository);
 
@@ -28,12 +36,18 @@ export default function initDI(appDataSource: DataSource) {
   container.registerInstance(TOKENS.UserRepository, userRepository);
 
   const translationRepository = appDataSource.getRepository(Translation);
-  container.registerInstance(
-    TOKENS.TranslationRepository,
-    translationRepository
-  );
+  container.registerInstance(TOKENS.TranslationRepository, translationRepository);
 
+  // Register services
+  container.registerSingleton(TOKENS.TranslationService, TranslationService);
   container.registerSingleton(TOKENS.StashService, StashService);
   container.registerSingleton(TOKENS.UserService, UserService);
-  container.registerSingleton(TOKENS.TranslationService, TranslationService);
+
+  // Register controllers
+  container.registerSingleton(TOKENS.UserController, UserController);
+  container.registerSingleton(TOKENS.StashController, StashController);
+
+  // Register validators
+  container.registerSingleton(TOKENS.UserValidator, UserValidator);
+  container.registerSingleton(TOKENS.StashValidator, StashValidator);
 }

@@ -32,16 +32,17 @@ class databaseTransport extends Transport {
 }
 @injectable()
 export default class Logger {
-  private winstonLoggger: winston.Logger;
+  private winstonLogger: winston.Logger;
 
   /**
    * Returns singleton instance of `Logger`
    * @param {boolean} silent Should instance show debug information or not, `false` by default
-   * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
+   * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level
+   * (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
    * @returns {Logger} `Logger` instance
    */
   constructor(silent: boolean = false, logLevel: LogLevel = LogLevel.Info) {
-    this.winstonLoggger = createLogger({
+    this.winstonLogger = createLogger({
       level: logLevel,
       silent: !silent,
       format: combine(
@@ -52,7 +53,7 @@ export default class Logger {
         timestamp(),
         printf(({ level, message, timestamp, stack }) => {
           return `${timestamp} [${level}]: ${stack || message}`;
-        })
+        }),
       ),
       transports: [
         new winston.transports.File({
@@ -67,13 +68,13 @@ export default class Logger {
   }
 
   public info(message: string | object): void {
-    this.winstonLoggger.info(message);
+    this.winstonLogger.info(message);
   }
   public error(message: string | object): void {
-    this.winstonLoggger.error(message);
+    this.winstonLogger.error(message);
   }
   public warn(message: string | object): void {
-    this.winstonLoggger.warn(message);
+    this.winstonLogger.warn(message);
   }
 }
 

@@ -3,12 +3,11 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
-import { TOKENS } from "di/tokens";
-import { container } from "tsyringe";
 
-import { Logger } from "lib/Logger";
-
-const userId = customAlphabet("1234567890abcdef", 10);
+const userId = customAlphabet(
+  "1234567890abcdef",
+  10,
+);
 
 describe("User Routes", () => {
   afterEach(() => {
@@ -16,190 +15,220 @@ describe("User Routes", () => {
   });
 
   describe("POST /api/v1/users", () => {
-    it("should handle unexpected error correctly", async () => {
+    it("should handle unexpected error correctly", async() => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
         name: `user${userId()}`,
       };
 
-      const logger = container.resolve<Logger>(TOKENS.Logger);
-      const errorStub = sinon.stub(logger, "error");
-
       sinon
-        .stub(globalThis.appDataSource.manager, "save")
-        .throws(new Error("Unexpected error"));
+        .stub(
+          globalThis.appDataSource.manager,
+          "save",
+        ).throws(new Error("Unexpected error"));
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
 
       expect(response.status).to.equal(500);
-      expect(response.body.message?.textCode).to.equal("error_500");
+      expect(
+        response.body.message?.textCode,
+      ).to.equal("error_500");
     });
 
-    it("should return error user_already_exists", async () => {
+    it("should return error user_already_exists", async() => {
       const newUser = {
         password: `Password${userId()}`,
         name: `user${userId()}`,
         email: `${userId()}@test.com`,
       };
 
-      const createResponse = await request(globalThis.app)
+      const createResponse = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
       expect(createResponse.status).to.equal(201);
-      expect(createResponse.body.error).to.not.exist;
-      expect(createResponse.body.name).to.exist;
+      expect(createResponse.body.error).to.be
+        .undefined;
+      expect(createResponse.body.name).to.not.be
+        .undefined;
       expect(createResponse.status).to.equal(201);
 
-      const failedCreateResponse = await request(globalThis.app)
+      const failedCreateResponse = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(failedCreateResponse.body.errors?.[0]?.msg?.textCode).to.equal(
-        "user_already_exists"
-      );
-      expect(failedCreateResponse.status).to.equal(422);
+      expect(
+        failedCreateResponse.body.errors?.[0]?.msg
+          ?.textCode,
+      ).to.equal("user_already_exists");
+      expect(
+        failedCreateResponse.status,
+      ).to.equal(422);
     });
 
-    it("should return error email_required", async () => {
+    it("should return error email_required", async() => {
       const newUser = {
         password: `Password${userId()}`,
         name: `user${userId()}`,
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "email_required"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("email_required");
       expect(response.status).to.equal(422);
     });
 
-    it("should return error name_required", async () => {
+    it("should return error name_required", async() => {
       const newUser = {
         password: `Password${userId()}`,
         email: `${userId()}@test.com`,
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "name_required"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("name_required");
       expect(response.status).to.equal(422);
     });
 
-    it("should return error name_alphanumeric", async () => {
+    it("should return error name_alphanumeric", async() => {
       const newUser = {
         password: `Password${userId()}`,
         email: `${userId()}@test.com`,
         name: "*",
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "name_alphanumeric"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("name_alphanumeric");
       expect(response.status).to.equal(422);
     });
 
-    it("should return error email_format_incorrect", async () => {
+    it("should return error email_format_incorrect", async() => {
       const newUser = {
         password: `Password${userId()}`,
         email: "test",
         name: `user${userId()}`,
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "email_format_incorrect"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("email_format_incorrect");
       expect(response.status).to.equal(422);
     });
 
-    it("should return error password_required", async () => {
+    it("should return error password_required", async() => {
       const newUser = {
         email: `${userId()}@test.com`,
         name: `user${userId()}`,
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "password_required"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("password_required");
       expect(response.status).to.equal(422);
     });
 
-    it("should return error password_format_incorrect", async () => {
+    it("should return error password_format_incorrect", async() => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: "password",
         name: `user${userId()}`,
       };
 
-      const response = await request(globalThis.app)
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(newUser);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "password_format_incorrect"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("password_format_incorrect");
       expect(response.status).to.equal(422);
     });
   });
 
   describe("POST /api/v1/users/login", () => {
-    it("should fail to login with empty email", async () => {
-      const response = await request(globalThis.app)
+    it("should fail to login with empty email", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send({
           email: "",
           password: "123",
         });
 
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "email_required"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("email_required");
       expect(response.status).to.equal(422);
     });
 
-    it("should fail to login with incorrect email", async () => {
-      const response = await request(globalThis.app)
+    it("should fail to login with incorrect email", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send({
           email: "123",
           password: "123",
         });
 
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "email_format_incorrect"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("email_format_incorrect");
       expect(response.status).to.equal(422);
     });
 
-    it("should fail to login with empty password", async () => {
-      const response = await request(globalThis.app)
+    it("should fail to login with empty password", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send({
           email: "mail@test.com",
           password: "",
         });
 
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal(
-        "password_required"
-      );
+      expect(
+        response.body.errors?.[0]?.msg?.textCode,
+      ).to.equal("password_required");
       expect(response.status).to.equal(422);
     });
 
-    it("should create new user and login an existing user with correct credentials", async () => {
+    it("should create new user and login an existing user with correct credentials", async() => {
       //Use random email and password
       const userCredentials = {
         email: `${userId()}@test.com`,
@@ -208,35 +237,45 @@ describe("User Routes", () => {
       };
 
       //Create user
-      const createResponse = await request(globalThis.app)
+      const createResponse = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users")
         .send(userCredentials);
 
-      expect(createResponse.body.error).to.not.exist;
-      expect(createResponse.body.name).to.exist;
+      expect(createResponse.body.error).to.be
+        .undefined;
+      expect(createResponse.body.name).to.not.be
+        .undefined;
       expect(createResponse.status).to.equal(201);
 
       //Login user
-      const loginResponse = await request(globalThis.app)
+      const loginResponse = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send(userCredentials);
 
-      expect(loginResponse.body.error).to.not.exist;
-      expect(loginResponse.body.token).to.exist;
+      expect(loginResponse.body.error).to.be
+        .undefined;
+      expect(loginResponse.body.token).to.not.be
+        .undefined;
       expect(loginResponse.status).to.equal(200);
     });
 
-    it("should fail to login with incorrect credentials", async () => {
-      const response = await request(globalThis.app)
+    it("should fail to login with incorrect credentials", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send({
           email: "wrong@test.com",
           password: "wrongPassword",
         });
 
-      expect(response.body.error?.textCode).to.equal(
-        "incorrect_password_or_email"
-      );
+      expect(
+        response.body.error?.textCode,
+      ).to.equal("incorrect_password_or_email");
       expect(response.status).to.equal(401);
     });
   });
@@ -244,16 +283,20 @@ describe("User Routes", () => {
   describe("GET /api/v1/users/whoami", () => {
     let token;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
         name: `user${userId()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(newUser);
+      await request(globalThis.app)
+        .post("/api/v1/users")
+        .send(newUser);
 
-      const loginResponse = await request(globalThis.app)
+      const loginResponse = await request(
+        globalThis.app,
+      )
         .post("/api/v1/users/login")
         .send({
           email: newUser.email,
@@ -263,24 +306,34 @@ describe("User Routes", () => {
       token = loginResponse.body.token;
     });
 
-    it("should fetch the current user with valid token", async () => {
-      const response = await request(globalThis.app)
+    it("should fetch the current user with valid token", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .get("/api/v1/users/whoami")
         .set("Authorization", `Bearer ${token}`);
 
-      expect(response.body.error).to.not.exist;
-      expect(response.body.email).to.exist;
+      expect(response.body.error).to.be.undefined;
+      expect(response.body.email).to.not.be
+        .undefined;
       expect(response.status).to.equal(200);
     });
 
-    it("should not fetch user with invalid token", async () => {
-      const response = await request(globalThis.app)
+    it("should not fetch user with invalid token", async() => {
+      const response = await request(
+        globalThis.app,
+      )
         .get("/api/v1/users/whoami")
-        .set("Authorization", "Bearer invalidToken");
+        .set(
+          "Authorization",
+          "Bearer invalidToken",
+        );
 
       //This error is handled by passport config in api/src/route/health.ts.
       //We can not check textCode, so just checking Unauthorized is there
-      expect(response.text).to.equal("Unauthorized");
+      expect(response.text).to.equal(
+        "Unauthorized",
+      );
       expect(response.status).to.equal(401);
     });
   });

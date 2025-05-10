@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { PrimaryColumnOptions, Repository } from "typeorm";
 import util from "util";
 import { injectable, inject } from "tsyringe";
 
@@ -10,18 +10,16 @@ export default class TranslationService {
 
   constructor(
     @inject(TOKENS.TranslationRepository)
-    private translationRepository: Repository<Translation>
-  ) {
-    this.loadTranslations();
-  }
+    private translationRepository: Repository<Translation>,
+  ) {}
 
   /**
-   *
-   * @param languageCode Code of language (default is `en`) for which translations should be loaded
+   * Loads translations from the database
    */
-  private async loadTranslations(): Promise<void> {
+  public async init(): Promise<void> {
     this.items = await this.translationRepository.find({
       relations: {
+        language: true,
         text: true,
       },
     });
@@ -36,10 +34,13 @@ export default class TranslationService {
   public getText(
     textCode: string,
     params: string[] | number[] | null = null,
-    languageCode: string = "en"
+    languageCode: string = "en",
   ): { translation: string; textCode: string } {
+    if (!this.items && this.items.length == 0) {
+      throw new Error("Translations were not initialized");
+    }
     const translation = this.items.find(
-      (e) => e.text.text == textCode && e.language.code == languageCode
+      (e) => e.text.text == textCode && e.language.code == languageCode,
     );
     //no translation - fallback to text code
     if (!translation) {
@@ -49,7 +50,7 @@ export default class TranslationService {
       };
     } else {
       //we have params, replace them in the translation
-      if (params) {
+      if (params && params.length > 0) {
         let translationText = util.format(translation.translation, ...params);
         let textCode = translation.text.text;
         return {
@@ -58,11 +59,14 @@ export default class TranslationService {
         };
       }
       //no params, return translation
-      else
-        return {
-          translation: translation.translation,
-          textCode: translation.text.text,
-        };
+      else {
+        {
+          return {
+            translation: translation.translation,
+            textCode: translation.text.text,
+          };
+        }
+      }
     }
   }
 }
