@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Entity, Column, ManyToOne } from "typeorm";
 import Language from "./Language";
 import Text from "./Text";
 import Base from "./Base";
@@ -6,11 +6,11 @@ import Base from "./Base";
 @Entity()
 export default class Translation extends Base {
   @ManyToOne(() => Text, (text) => text.id)
-  text: Text;
+    text: Text;
 
   @ManyToOne(() => Language, (language) => language.id)
-  language: Language;
+    language: Language;
 
   @Column("text")
-  translation: string;
+    translation: string;
 }

@@ -9,6 +9,7 @@ dotenv.config();
 import config from "worker/src/config/config";
 import getAppDataSource from "lib/dataSource";
 import Stash from "model/Stash";
+import SendLog from "model/SendLog";
 import { Logger, LogLevel } from "lib/Logger";
 
 import StashService from "service/StashService";
@@ -16,9 +17,9 @@ import EmailService from "service/EmailService";
 
 async function init() {
   //Init logger
-  const logger = Logger.getInstance(
+  const logger = new Logger(
     process.env.ENV != "PROD",
-    config.logLevel as LogLevel
+    config.logLevel as LogLevel,
   );
   logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
@@ -38,13 +39,19 @@ async function init() {
     text: "New stash",
   };
   const messageId = await emailService.send(mailOptions);
-  const stashService = new StashService(appDataSource, logger);
+  let stashRepository = appDataSource.getRepository(Stash);
+  let sendLogRepository = appDataSource.getRepository(SendLog);
+  const stashService = new StashService(
+    stashRepository,
+    sendLogRepository,
+    logger,
+  );
   await stashService.log(3, mailOptions, messageId);
 
   //---End of play zone
 
   //Init watch function to check for stashes to send
-  setInterval(function () {
+  setInterval(function() {
     main(appDataSource);
   }, config.runInterval);
 }
@@ -55,7 +62,7 @@ async function main(appDataSource: DataSource) {
     where: { sendAt: LessThan(new Date(Date.now())) },
   });
   console.log(
-    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found.")
+    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found."),
   );
 }
 

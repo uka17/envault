@@ -11,7 +11,7 @@
     "experimentalDecorators": true,
     "baseUrl": "."
   },
-  "include": ["api", "worker"]
+  "include": ["api", "worker", "di", "model", "lib", "service"]
 
 
 }

@@ -1,21 +1,19 @@
-import { DataSource } from "typeorm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { injectable, inject } from "tsyringe";
 import { Repository } from "typeorm";
-import User from "../model/User";
-import { Logger } from "../lib/Logger";
-import config from "../api/src/config/config";
 
+import User from "model/User";
+import { Logger } from "lib/Logger";
+import config from "api/src/config/config";
+import { TOKENS } from "di/tokens";
+
+@injectable()
 export default class UserService {
-  private dataSource: DataSource;
-  private logger: Logger;
-  private userRepository: Repository<User>;
-
-  constructor(dataSource: DataSource, logger: Logger) {
-    this.dataSource = dataSource;
-    this.userRepository = this.dataSource.manager.getRepository(User);
-    this.logger = logger;
-  }
+  constructor(
+    @inject(TOKENS.UserRepository) private userRepository: Repository<User>,
+    @inject(TOKENS.Logger) private logger: Logger,
+  ) {}
 
   /**
    * Creates a new user
@@ -23,17 +21,12 @@ export default class UserService {
    * @returns Created user object or null if error
    */
   public async createUser(newUser: User): Promise<User | null> {
-    try {
-      const createdUser = await this.userRepository.manager.save(newUser);
+    const createdUser = await this.userRepository.manager.save(newUser);
 
-      const result = Object.assign({}, createdUser);
-      delete result.password;
+    const result = Object.assign({}, createdUser);
+    delete result.password;
 
-      return result;
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
+    return result;
   }
   /**
    * Create token for user
@@ -49,7 +42,7 @@ export default class UserService {
         id: user.id,
         exp: Math.round(expirationDate.getTime() / 1000),
       },
-      process.env.API_JWT_SECRET
+      process.env.API_JWT_SECRET,
     );
     return token;
   }
@@ -85,6 +78,9 @@ export default class UserService {
           email: email,
         },
       });
+      if (!user) {
+        return null;
+      }
       delete user.password;
       return user;
     } catch (error) {

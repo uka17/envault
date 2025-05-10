@@ -10,8 +10,6 @@ import Text from "../model/Text";
 import Stash from "../model/Stash";
 import SendLog from "../model/SendLog";
 
-import path from "path";
-
 /**
  *
  * @param dbURL URL to connect to the database

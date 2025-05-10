@@ -33,7 +33,7 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
       if (!language) {
         !silent &&
           console.log(
-            `Language '${lang.language}' does not exists, creating...`
+            `Language '${lang.language}' does not exists, creating...`,
           );
         language = new Language();
         language.language = lang.language;
@@ -45,7 +45,7 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
 
       //Add translations
       for (const [textCode, textTranslation] of Object.entries(
-        lang.textTranslations
+        lang.textTranslations,
       )) {
         //Check if text already exists and create if needed
         let text = await textRepository.findOneBy({
@@ -79,15 +79,15 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
           !silent &&
             console.log(
               chalk.green(
-                `Created '${textTranslation}' transaltion for text '${translation.text.text}' and language '${translation.language.language}'`
-              )
+                `Created '${textTranslation}' transaltion for text '${translation.text.text}' and language '${translation.language.language}'`,
+              ),
             );
         } else {
           !silent &&
             console.log(
               chalk.grey(
-                `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`
-              )
+                `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`,
+              ),
             );
         }
       }

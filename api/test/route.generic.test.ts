@@ -13,9 +13,7 @@ describe("Config", () => {
 
 describe("Default routes", () => {
   it("should return 404 for non existing route", async () => {
-    const response = await request(globalThis.app)
-      .get(`/api/v1/nonexistent`)
-      .send();
+    const response = await request(globalThis.app).get(`/api/v1/nonexistent`).send();
 
     expect(response.status).to.equal(CODES.API_NOT_FOUND);
   });

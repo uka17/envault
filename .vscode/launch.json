@@ -17,7 +17,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch service",
+      "name": "Launch worker",
       //"runtimeExecutable": "nodemon",
       "program": "${workspaceFolder}/out/worker/index.js",
       "console": "integratedTerminal",
@@ -27,7 +27,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Mocha",
+      "name": "Mocha api",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
         "-r",
@@ -40,6 +40,23 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "outputCapture": "std",        
-  }                       
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha worker",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "--file",
+        "worker/test/setup.ts",
+        "worker/test/**/*.test.ts"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",        
+    }
   ]
 }

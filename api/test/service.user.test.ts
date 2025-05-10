@@ -3,17 +3,16 @@ import { expect } from "chai";
 import sinon from "sinon";
 
 import UserService from "service/UserService";
+import User from "model/User";
 
 let userService: UserService;
+let userRepositoryStub = globalThis.appDataSource.getRepository(User);
 let loggerStub: { error: sinon.SinonStub };
 
 describe("User service", () => {
   describe("Errors", () => {
     beforeEach(() => {
-      userService = new UserService(
-        globalThis.appDataSource,
-        globalThis.mockLogger
-      );
+      userService = new UserService(userRepositoryStub, globalThis.mockLogger);
 
       loggerStub = { error: sinon.stub() };
       (userService as any).logger = loggerStub;
