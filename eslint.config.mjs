@@ -1,7 +1,5 @@
 import typescriptPlugin from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
-import prettierPlugin from "eslint-plugin-prettier";
-import prettierConfig from "eslint-config-prettier";
 import chaiFriendlyPlugin from "eslint-plugin-chai-friendly";
 
 export default [
@@ -34,6 +32,7 @@ export default [
       "@typescript-eslint/no-unused-expressions": "off",
       "no-unused-expressions": "off",
       "chai-friendly/no-unused-expressions": "error",
+      '@typescript-eslint/no-explicit-any': 'off',
     },
     linterOptions: {
       reportUnusedDisableDirectives: true,
