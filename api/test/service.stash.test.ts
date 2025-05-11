@@ -22,7 +22,7 @@ describe("Stash service", () => {
       let stashService: StashService = new StashService(
         stashRepositoryStub,
         sendLogRepository,
-        globalThis.mockLogger,
+        globalThis.mockLogService,
       );
 
       let result = await stashService.snoozeStash(99999, 1, {} as any);
@@ -36,7 +36,7 @@ describe("Stash service", () => {
       stashService = new StashService(
         stashRepositoryStub,
         sendLogRepository,
-        globalThis.mockLogger,
+        globalThis.mockLogService,
       );
 
       loggerStub = { error: sinon.stub() };

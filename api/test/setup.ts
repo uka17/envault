@@ -9,7 +9,7 @@ import getAppDataSource from "lib/dataSource";
 
 import config from "api/src/config/config";
 import passportConfig from "api/src/config/passport";
-import { Logger } from "lib/Logger";
+import LogService from "service/LogService";
 import { TOKENS } from "di/tokens";
 
 import { createErrorHandler } from "api/src/route/error";
@@ -31,8 +31,8 @@ async function startApp() {
   const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
   await translationService.init();
   //Suppress logs
-  const loggerServiceStub = sinon.createStubInstance(Logger);
-  container.registerInstance(TOKENS.Logger, loggerServiceStub);
+  const loggerServiceStub = sinon.createStubInstance(LogService);
+  container.registerInstance(TOKENS.LogService, loggerServiceStub);
 
   globalThis.app = express();
   globalThis.app.use(express.json());

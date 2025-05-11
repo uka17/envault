@@ -9,7 +9,7 @@ import SendLog from "../model/SendLog";
 import User from "model/User";
 import { TOKENS } from "di/tokens";
 
-import { Logger } from "../lib/Logger";
+import LogService from "./LogService";
 import config from "api/src/config/config";
 
 @injectable()
@@ -18,7 +18,7 @@ export default class StashService {
     @inject(TOKENS.StashRepository) private stashRepository: Repository<Stash>,
     @inject(TOKENS.SendLogRepository)
     private sendLogRepository: Repository<SendLog>,
-    @inject(TOKENS.Logger) private logger: Logger
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**
@@ -30,7 +30,7 @@ export default class StashService {
   public async log(
     stashId: number,
     mailOptions: Mail.Options,
-    messageId: string
+    messageId: string,
   ) {
     try {
       const stash = await this.stashRepository.findOne({
@@ -130,7 +130,7 @@ export default class StashService {
   public async snoozeStash(
     stashId: number,
     hours: number,
-    modifiedBy: User
+    modifiedBy: User,
   ): Promise<Stash | null> {
     try {
       const stash = await this.getStash(stashId);
@@ -164,7 +164,7 @@ export default class StashService {
   public generateStashKey(): string {
     const nanoid = customAlphabet(
       config.stashNanoId.alphabet,
-      config.stashNanoId.length
+      config.stashNanoId.length,
     );
     return nanoid();
   }

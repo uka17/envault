@@ -4,7 +4,7 @@ import { injectable, inject } from "tsyringe";
 import { Repository } from "typeorm";
 
 import User from "model/User";
-import { Logger } from "lib/Logger";
+import LogService from "service/LogService";
 import config from "api/src/config/config";
 import { TOKENS } from "di/tokens";
 
@@ -12,7 +12,7 @@ import { TOKENS } from "di/tokens";
 export default class UserService {
   constructor(
     @inject(TOKENS.UserRepository) private userRepository: Repository<User>,
-    @inject(TOKENS.Logger) private logger: Logger,
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**

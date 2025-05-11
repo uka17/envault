@@ -14,11 +14,11 @@ dotenv.config();
 /**
  * User routes
  * @param app Express instance
- * @param logger Logger instance
+ * @param logger LogService instance
  * @param translationService Translations instance
  * @param appDataSource Database connection instance
  */
-export default function (app: express.Router) {
+export default function(app: express.Router) {
   const userController =
     container.resolve<UserController>(
       TOKENS.UserController,

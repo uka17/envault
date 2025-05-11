@@ -10,7 +10,7 @@ import config from "worker/src/config/config";
 import getAppDataSource from "lib/dataSource";
 import Stash from "model/Stash";
 import SendLog from "model/SendLog";
-import { Logger, LogLevel } from "lib/Logger";
+import { Logger, LogLevel } from "service/LogService";
 
 import StashService from "service/StashService";
 import EmailService from "service/EmailService";

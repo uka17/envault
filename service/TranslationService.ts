@@ -1,4 +1,4 @@
-import { PrimaryColumnOptions, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import util from "util";
 import { injectable, inject } from "tsyringe";
 

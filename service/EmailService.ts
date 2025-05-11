@@ -1,4 +1,4 @@
-import { Logger } from "../lib/Logger";
+import LogService from "service/LogService";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
 import { Transporter } from "nodemailer";
@@ -8,7 +8,7 @@ import { DataSource } from "typeorm";
 
 export default class EmailService {
   private sesClient: SESClient;
-  private logger: Logger;
+  private logger: LogService;
   private transporter: Transporter;
 
   /**
@@ -18,9 +18,9 @@ export default class EmailService {
    * @param logger Logger object
    */
   constructor(
-    logger: Logger,
+    logger: LogService,
     dataSource: DataSource,
-    credentials: AwsCredentialIdentityProvider
+    credentials: AwsCredentialIdentityProvider,
   ) {
     this.logger = logger;
     this.sesClient = new SESClient({

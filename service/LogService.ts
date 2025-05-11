@@ -31,7 +31,7 @@ class databaseTransport extends Transport {
   }
 }
 @injectable()
-export default class Logger {
+export default class LogService {
   private winstonLogger: winston.Logger;
 
   /**
@@ -78,4 +78,4 @@ export default class Logger {
   }
 }
 
-export { LogLevel, Logger };
+export { LogLevel };

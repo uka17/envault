@@ -9,7 +9,7 @@ import User from "model/User";
 
 import TranslationService from "service/TranslationService";
 import UserService from "service/UserService";
-import { Logger } from "lib/Logger";
+import LogService from "service/LogService";
 import ApiError from "lib/ApiError";
 
 @injectable()
@@ -17,7 +17,7 @@ export default class UserController {
   constructor(
     @inject(TOKENS.UserService) private userService: UserService,
     @inject(TOKENS.TranslationService) private translationService: TranslationService,
-    @inject(TOKENS.Logger) private logger: Logger,
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**

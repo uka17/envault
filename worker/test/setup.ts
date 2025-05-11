@@ -6,7 +6,7 @@ dotenv.config();
 
 import TranslationService from "service/TranslationService";
 import getAppDataSource from "lib/dataSource";
-import { Logger } from "lib/Logger";
+import LogService from "service/LogService";
 import initDI from "di/container";
 import { TOKENS } from "di/tokens";
 import initDB from "api/scripts/init";
@@ -25,11 +25,11 @@ async function startApp() {
   await translationService.init();
 
   // Mock/setup dependencies
-  globalThis.mockLogger = sinon.createStubInstance(Logger);
+  globalThis.mockLogger = sinon.createStubInstance(LogService);
 
   //Suppress logs
-  const loggerServiceStub = sinon.createStubInstance(Logger);
-  container.registerInstance(TOKENS.Logger, loggerServiceStub);
+  const loggerServiceStub = sinon.createStubInstance(LogService);
+  container.registerInstance(TOKENS.LogService, loggerServiceStub);
 
   globalThis.translationService = translationService;
 }

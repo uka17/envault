@@ -8,7 +8,7 @@ import Stash from "model/Stash";
 
 import TranslationService from "service/TranslationService";
 import StashService from "service/StashService";
-import { Logger } from "lib/Logger";
+import LogService from "service/LogService";
 import ApiError from "lib/ApiError";
 import User from "model/User";
 
@@ -17,7 +17,7 @@ export default class StashController {
   constructor(
     @inject(TOKENS.StashService) private stashService: StashService,
     @inject(TOKENS.TranslationService) private translationService: TranslationService,
-    @inject(TOKENS.Logger) private logger: Logger,
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**

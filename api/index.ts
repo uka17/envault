@@ -19,12 +19,12 @@ import passportConfig from "./src/config/passport";
 import { createErrorHandler } from "./src/route/error";
 import TranslationService from "service/TranslationService";
 
-import { Logger, LogLevel } from "../lib/Logger";
+import { LogService, LogLevel } from "../service/LogService";
 import chalk from "chalk";
 import initDI from "di/container";
 import { container } from "tsyringe";
 import { TOKENS } from "di/tokens";
-const logger = new Logger(config.showLogs, config.logLevel as LogLevel);
+const logger = new LogService(config.showLogs, config.logLevel as LogLevel);
 
 //Init data source
 const dbURL = config.dbURL;
