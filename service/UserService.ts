@@ -36,7 +36,7 @@ export default class UserService {
   public createToken(user: User): string {
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + config.JWTMaxAge);
-    const token = jwt.sign(
+    return jwt.sign(
       {
         email: user.email,
         id: user.id,
@@ -44,7 +44,6 @@ export default class UserService {
       },
       process.env.API_JWT_SECRET,
     );
-    return token;
   }
   /**
    * Returns user by id
@@ -68,7 +67,7 @@ export default class UserService {
   }
   /**
    * Returns user by email
-   * @param userId User email
+   * @param email User email
    * @returns User or null if not found
    */
   public async getUserByEmail(email: string): Promise<User | null> {

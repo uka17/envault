@@ -11,7 +11,7 @@ import StashValidator from "api/src/route/validator/StashValidator";
 
 dotenv.config();
 
-export default function (app: express.Router) {
+export default function(app: express.Router) {
   const stashController =
     container.resolve<StashController>(
       TOKENS.StashController,
@@ -24,7 +24,7 @@ export default function (app: express.Router) {
     stashValidator.getRules();
 
   app.post(
-    `/api/v1/stashes`,
+    "/api/v1/stashes",
     passport.authenticate("jwt", {
       session: false,
     }),
@@ -34,7 +34,7 @@ export default function (app: express.Router) {
   );
 
   app.get(
-    `/api/v1/stashes`,
+    "/api/v1/stashes",
     passport.authenticate("jwt", {
       session: false,
     }),
@@ -42,7 +42,7 @@ export default function (app: express.Router) {
   );
 
   app.get(
-    `/api/v1/stashes/:id`,
+    "/api/v1/stashes/:id",
     passport.authenticate("jwt", {
       session: false,
     }),
@@ -52,7 +52,7 @@ export default function (app: express.Router) {
   );
 
   app.delete(
-    `/api/v1/stashes/:id`,
+    "/api/v1/stashes/:id",
     passport.authenticate("jwt", {
       session: false,
     }),
@@ -62,7 +62,7 @@ export default function (app: express.Router) {
   );
 
   app.post(
-    `/api/v1/stashes/:id/snooze/:hours`,
+    "/api/v1/stashes/:id/snooze/:hours",
     passport.authenticate("jwt", {
       session: false,
     }),

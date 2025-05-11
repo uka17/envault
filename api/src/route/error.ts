@@ -1,13 +1,13 @@
 import LogService from "service/LogService";
 import TranslationService from "service/TranslationService";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import ApiError from "../../../lib/ApiError";
 
 const createErrorHandler = (
   logger: LogService,
   translationService: TranslationService,
 ) => {
-  return (error: Error, req: Request, res: Response, next: NextFunction) => {
+  return (error: Error, req: Request, res: Response) => {
     if (error instanceof ApiError) {
       return res
         .status(error.statusCode)

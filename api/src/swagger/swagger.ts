@@ -20,19 +20,21 @@ fs.readdir(routeFolder, (err, files) => {
     //Generate file list
     for (let i = 0; i < files.length; i++) {
       //TODO mark route files in order to segreagate them
-      if (fileExclude.includes(files[i])) continue;
+      if (fileExclude.includes(files[i])) {
+        continue;
+      }
       fileList.push(`../route/${files[i]}`);
       console.log(
-        chalk.green(`File ../route/${files[i]} with route definition found`)
+        chalk.green(`File ../route/${files[i]} with route definition found`),
       );
     }
     //Generate swagger file
     const outputFile = "./swagger.json";
-    const endpointFiles = fileList;
 
-    swaggerAutogen(outputFile, endpointFiles, doc);
-  } else
+    swaggerAutogen(outputFile, fileList, doc);
+  } else {
     console.error(
-      chalk.red(`No files with routes definition found at ${routeFolder}`)
+      chalk.red(`No files with routes definition found at ${routeFolder}`),
     );
+  }
 });

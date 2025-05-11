@@ -5,7 +5,6 @@ import sinon from "sinon";
 import StashService from "service/StashService";
 import Stash from "model/Stash";
 import SendLog from "model/SendLog";
-import stash from "api/src/route/stash";
 
 let stashService: StashService;
 let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);

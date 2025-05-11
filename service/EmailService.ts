@@ -15,7 +15,7 @@ export default class EmailService {
    * Creates instance of `SendMail` object which can send emails via sendinblue.com
    * @param credentials aws credentials provider
    * @param dataSource TypeORM data source
-   * @param logger Logger object
+   * @param logger LogService object
    */
   constructor(
     logger: LogService,

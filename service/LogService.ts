@@ -1,8 +1,8 @@
 /* istanbul ignore file */
 import winston, { createLogger } from "winston";
 import { injectable } from "tsyringe";
-const { combine, timestamp, colorize, printf, logstash } = winston.format;
-import Transport from "winston-transport";
+const { combine, timestamp, colorize, printf } = winston.format;
+//import Transport from "winston-transport";
 
 enum LogLevel {
   Info = "info",
@@ -13,6 +13,7 @@ enum LogLevel {
   Debug = "debug",
   Silly = "silly",
 }
+/*
 class databaseTransport extends Transport {
   constructor(opts?) {
     super(opts);
@@ -30,16 +31,18 @@ class databaseTransport extends Transport {
     callback();
   }
 }
+*/
+
 @injectable()
 export default class LogService {
   private winstonLogger: winston.Logger;
 
   /**
-   * Returns singleton instance of `Logger`
+   * Returns singleton instance of `LogService`
    * @param {boolean} silent Should instance show debug information or not, `false` by default
    * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level
    * (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
-   * @returns {Logger} `Logger` instance
+   * @returns {LogService} `LogService` instance
    */
   constructor(silent: boolean = false, logLevel: LogLevel = LogLevel.Info) {
     this.winstonLogger = createLogger({

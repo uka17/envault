@@ -4,7 +4,7 @@ export const TOKENS = {
   SendLogRepository: Symbol("SendLogRepository"),
   TranslationRepository: Symbol("TranslationRepository"),
 
-  LogService: Symbol("Logger"),
+  LogService: Symbol("LogService"),
   Translations: Symbol("Translations"),
 
   StashService: Symbol("StashService"),

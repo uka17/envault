@@ -25,7 +25,7 @@ async function startApp() {
   await translationService.init();
 
   // Mock/setup dependencies
-  globalThis.mockLogger = sinon.createStubInstance(LogService);
+  globalThis.mockLogService = sinon.createStubInstance(LogService);
 
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);

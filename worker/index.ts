@@ -10,14 +10,14 @@ import config from "worker/src/config/config";
 import getAppDataSource from "lib/dataSource";
 import Stash from "model/Stash";
 import SendLog from "model/SendLog";
-import { Logger, LogLevel } from "service/LogService";
+import LogService, { LogLevel } from "../service/LogService";
 
 import StashService from "service/StashService";
 import EmailService from "service/EmailService";
 
 async function init() {
   //Init logger
-  const logger = new Logger(
+  const logger = new LogService(
     process.env.ENV != "PROD",
     config.logLevel as LogLevel,
   );

@@ -17,7 +17,7 @@ export default class MailOptions {
     from: { name: string; email: string },
     subject: string,
     html: string,
-    text: string
+    text: string,
   ) {
     this.to = to;
     this.from = from;

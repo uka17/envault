@@ -1,7 +1,5 @@
 // user.test.ts
 import { expect } from "chai";
-import { customAlphabet } from "nanoid";
-const userId = customAlphabet("1234567890abcdef", 10);
 
 describe("Service tests", () => {
   before(async() => {

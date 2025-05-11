@@ -57,15 +57,12 @@ export default class TranslationService {
           translation: translationText,
           textCode,
         };
-      }
-      //no params, return translation
-      else {
-        {
-          return {
-            translation: translation.translation,
-            textCode: translation.text.text,
-          };
-        }
+      } else {
+        //no params, return translation
+        return {
+          translation: translation.translation,
+          textCode: translation.text.text,
+        };
       }
     }
   }

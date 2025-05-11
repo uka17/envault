@@ -8,9 +8,6 @@ import swaggerDocument from "api/src/swagger/swagger.json";
 /**
  * Main route. Initiates `GET("/")` and all nested routes
  * @param app Express instance
- * @param logger LogService instance
- * @param translationService Translations instance
- * @param appDataSource Database connection instance
  */
 export default function(app: express.Router) {
   app.get(

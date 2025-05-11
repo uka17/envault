@@ -14,9 +14,6 @@ dotenv.config();
 /**
  * User routes
  * @param app Express instance
- * @param logger LogService instance
- * @param translationService Translations instance
- * @param appDataSource Database connection instance
  */
 export default function(app: express.Router) {
   const userController =

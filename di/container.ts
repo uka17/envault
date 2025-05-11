@@ -2,7 +2,7 @@ import { container } from "tsyringe";
 import { DataSource } from "typeorm";
 
 import config from "api/src/config/config";
-import Logger, { LogLevel } from "service/LogService";
+import LogService, { LogLevel } from "service/LogService";
 import { TOKENS } from "di/tokens";
 
 import Stash from "model/Stash";
@@ -22,7 +22,7 @@ import StashValidator from "api/src/route/validator/StashValidator";
 
 export default function initDI(appDataSource: DataSource) {
   // Register the logger
-  const logger = new Logger(config.showLogs, config.logLevel as LogLevel);
+  const logger = new LogService(config.showLogs, config.logLevel as LogLevel);
   container.registerInstance(TOKENS.LogService, logger);
 
   // Register repositories

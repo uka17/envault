@@ -19,7 +19,7 @@ import passportConfig from "./src/config/passport";
 import { createErrorHandler } from "./src/route/error";
 import TranslationService from "service/TranslationService";
 
-import { LogService, LogLevel } from "../service/LogService";
+import LogService, { LogLevel } from "service/LogService";
 import chalk from "chalk";
 import initDI from "di/container";
 import { container } from "tsyringe";

@@ -16,9 +16,9 @@ import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
  * @param appDataSource Database connection instance
  * @param translationService Translations instance
  */
-export default function (
+export default function(
   appDataSource: DataSource,
-  translationService: TranslationService
+  translationService: TranslationService,
 ) {
   const userRepository = appDataSource.getRepository(User);
   // Set up Local strategy
@@ -28,7 +28,7 @@ export default function (
         usernameField: "email",
         passwordField: "password",
       },
-      async (username, password, done) => {
+      async(username, password, done) => {
         const user = await userRepository.findOneBy({
           email: username,
         });
@@ -50,8 +50,8 @@ export default function (
           }
           return done(null, user);
         });
-      }
-    )
+      },
+    ),
   );
   // Set up JWT strategy
   passport.use(
@@ -60,7 +60,7 @@ export default function (
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
         secretOrKey: process.env.API_JWT_SECRET,
       },
-      async (payload, done) => {
+      async(payload, done) => {
         const user = await userRepository.findOneBy({
           id: payload.sub,
         });
@@ -68,7 +68,7 @@ export default function (
           return done(null, false);
         }
         return done(null, user);
-      }
-    )
+      },
+    ),
   );
 }
