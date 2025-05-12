@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { container } from "tsyringe";
 dotenv.config();
 
-import getAppDataSource from "lib/dataSource";
+import getAppDataSource from "common/dataSource";
 
 import config from "api/src/config/config";
 import passportConfig from "api/src/config/passport";

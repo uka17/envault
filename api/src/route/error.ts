@@ -1,7 +1,7 @@
 import LogService from "service/LogService";
 import TranslationService from "service/TranslationService";
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../../../lib/ApiError";
+import ApiError from "../error/ApiError";
 
 const createErrorHandler = (
   logger: LogService,

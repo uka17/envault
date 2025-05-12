@@ -3,14 +3,14 @@ import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 
 import { TOKENS } from "di/tokens";
-import { CODES, MESSAGES } from "lib/constants";
+import { CODES, MESSAGES } from "common/constants";
 
 import User from "model/User";
 
 import TranslationService from "service/TranslationService";
 import UserService from "service/UserService";
 import LogService from "service/LogService";
-import ApiError from "lib/ApiError";
+import ApiError from "api/src/error/ApiError";
 
 @injectable()
 export default class UserController {

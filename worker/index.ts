@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import config from "worker/src/config/config";
-import getAppDataSource from "lib/dataSource";
+import getAppDataSource from "common/dataSource";
 import Stash from "model/Stash";
 import SendLog from "model/SendLog";
 import LogService, { LogLevel } from "../service/LogService";

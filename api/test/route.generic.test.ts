@@ -3,7 +3,7 @@ import { expect } from "chai";
 import request from "supertest";
 
 import config from "api/src/config/config";
-import { CODES } from "lib/constants";
+import { CODES } from "common/constants";
 
 describe("Config", () => {
   it("should return valid IP", async() => {

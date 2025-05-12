@@ -5,7 +5,7 @@ import { container } from "tsyringe";
 dotenv.config();
 
 import TranslationService from "service/TranslationService";
-import getAppDataSource from "lib/dataSource";
+import getAppDataSource from "common/dataSource";
 import LogService from "service/LogService";
 import initDI from "di/container";
 import { TOKENS } from "di/tokens";

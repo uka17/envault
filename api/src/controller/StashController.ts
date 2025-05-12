@@ -2,14 +2,14 @@ import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
 
 import { TOKENS } from "di/tokens";
-import { CODES, MESSAGES } from "lib/constants";
+import { CODES, MESSAGES } from "common/constants";
 
 import Stash from "model/Stash";
 
 import TranslationService from "service/TranslationService";
 import StashService from "service/StashService";
 import LogService from "service/LogService";
-import ApiError from "lib/ApiError";
+import ApiError from "api/src/error/ApiError";
 import User from "model/User";
 
 @injectable()

@@ -7,7 +7,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-import getAppDataSource from "../lib/dataSource";
+import getAppDataSource from "../common/dataSource";
 import initDB from "./scripts/init";
 import config from "./src/config/config";
 

@@ -3,7 +3,7 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
-import { CODES } from "lib/constants";
+import { CODES } from "common/constants";
 import Stash from "model/Stash";
 
 let token: string;

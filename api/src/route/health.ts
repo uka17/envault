@@ -1,7 +1,7 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 
-import { CODES } from "lib/constants";
+import { CODES } from "common/constants";
 
 import swaggerDocument from "api/src/swagger/swagger.json";
 

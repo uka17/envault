@@ -5,8 +5,8 @@ import {
   NextFunction,
 } from "express";
 
-import ApiError from "lib/ApiError";
-import { CODES, MESSAGES } from "lib/constants";
+import ApiError from "api/src/error/ApiError";
+import { CODES, MESSAGES } from "common/constants";
 
 function validateRequest(
   req: Request,
