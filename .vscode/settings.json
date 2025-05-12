@@ -18,9 +18,11 @@
     "editor.defaultFormatter": null
   },
   "[typescript]": {
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[vue]": {
     "editor.defaultFormatter": null
-  }
+  },
+  "mochaExplorer.files": ["api/test/**/*.ts"],
+  "mochaExplorer.require": ["ts-node/register", "tsconfig-paths/register"],
 }

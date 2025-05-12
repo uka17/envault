@@ -1,13 +1,14 @@
 import LogService from "service/LogService";
 import TranslationService from "service/TranslationService";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import ApiError from "../../../lib/ApiError";
 
 const createErrorHandler = (
   logger: LogService,
   translationService: TranslationService,
 ) => {
-  return (error: Error, req: Request, res: Response) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return (error: Error, req: Request, res: Response, next: NextFunction) => {
     if (error instanceof ApiError) {
       return res
         .status(error.statusCode)
