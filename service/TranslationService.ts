@@ -2,15 +2,14 @@ import { Repository } from "typeorm";
 import util from "util";
 import { injectable, inject } from "tsyringe";
 
-import Translation from "../model/Translation";
+import Translation from "model/Translation";
 import { TOKENS } from "di/tokens";
 @injectable()
 export default class TranslationService {
   public items: Translation[] = [];
 
   constructor(
-    @inject(TOKENS.TranslationRepository)
-    private translationRepository: Repository<Translation>,
+    @inject(TOKENS.TranslationRepository) private translationRepository: Repository<Translation>,
   ) {}
 
   /**

@@ -5,8 +5,8 @@ import { container } from "tsyringe";
 
 import { TOKENS } from "di/tokens";
 
-import UserValidator from "./validator/UserValidator";
-import { validateRequest } from "./validator/common";
+import UserValidator from "api/src/route/validator/UserValidator";
+import { validateRequest } from "api/src/route/validator/common";
 import UserController from "api/src/controller/UserController";
 
 dotenv.config();

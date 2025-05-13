@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne } from "typeorm";
-import Base from "./Base";
-import Stash from "./Stash";
+import Base from "model/Base";
+import Stash from "model/Stash";
 
 @Entity()
 export default class SendLog extends Base {

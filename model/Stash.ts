@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne } from "typeorm";
-import Base from "./Base";
-import User from "./User";
+import Base from "model/Base";
+import User from "model/User";
 
 @Entity()
 export default class Stash extends Base {

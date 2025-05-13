@@ -5,7 +5,7 @@ interface MessageModel {
   message: number;
 }
 
-import config from "../config/config";
+import config from "worker/src/config/config";
 
 function getEmailText(model: MessageModel) {
   return `Hi, ${model.receiverName}.<br>

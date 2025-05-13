@@ -4,20 +4,19 @@ import Mail from "nodemailer/lib/mailer";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
 
-import Stash from "../model/Stash";
-import SendLog from "../model/SendLog";
+import Stash from "model/Stash";
+import SendLog from "model/SendLog";
 import User from "model/User";
 import { TOKENS } from "di/tokens";
 
-import LogService from "./LogService";
+import LogService from "service/LogService";
 import config from "api/src/config/config";
 
 @injectable()
 export default class StashService {
   constructor(
     @inject(TOKENS.StashRepository) private stashRepository: Repository<Stash>,
-    @inject(TOKENS.SendLogRepository)
-    private sendLogRepository: Repository<SendLog>,
+    @inject(TOKENS.SendLogRepository) private sendLogRepository: Repository<SendLog>,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 

@@ -1,7 +1,7 @@
 import swaggerAutogen from "swagger-autogen";
 import fs from "fs";
 import chalk from "chalk";
-import config from "../config/config";
+import config from "api/src/config/config";
 
 const doc = {
   info: {
@@ -12,7 +12,7 @@ const doc = {
   schemes: ["http"],
 };
 
-const routeFolder = "./api/src/route";
+const routeFolder = "api/src/route";
 const fileList = [];
 const fileExclude = ["validator"];
 fs.readdir(routeFolder, (err, files) => {

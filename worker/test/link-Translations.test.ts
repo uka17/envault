@@ -1,1 +1,1 @@
-import "../../api/test/service.translation.test";
+import "api/test/service.translation.test";

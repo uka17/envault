@@ -1,4 +1,3 @@
-import LogService from "service/LogService";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
 import { Transporter } from "nodemailer";
@@ -6,6 +5,9 @@ import Mail from "nodemailer/lib/mailer";
 import { AwsCredentialIdentityProvider } from "@smithy/types";
 import { DataSource } from "typeorm";
 
+import LogService from "service/LogService";
+
+//TODO DI for this service
 export default class EmailService {
   private sesClient: SESClient;
   private logger: LogService;

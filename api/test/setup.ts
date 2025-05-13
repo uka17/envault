@@ -12,7 +12,7 @@ import passportConfig from "api/src/config/passport";
 import LogService from "service/LogService";
 import { TOKENS } from "di/tokens";
 
-import { createErrorHandler } from "api/src/route/error";
+import createErrorHandler from "api/src/route/error";
 import initDI from "di/container";
 import initDB from "api/scripts/init";
 import userRoutes from "api/src/route/user";

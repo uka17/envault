@@ -1,9 +1,10 @@
 import "reflect-metadata";
+import { container } from "tsyringe";
 import express, { Express } from "express";
 import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
-
+import chalk from "chalk";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -16,21 +17,22 @@ import user from "api/src/route/user";
 import stash from "./src/route/stash";
 import User from "../model/User";
 import passportConfig from "./src/config/passport";
-import { createErrorHandler } from "./src/route/error";
+import createErrorHandler from "./src/route/error";
 import TranslationService from "service/TranslationService";
+import LogService from "service/LogService";
 
-import LogService, { LogLevel } from "service/LogService";
-import chalk from "chalk";
 import initDI from "di/container";
-import { container } from "tsyringe";
 import { TOKENS } from "di/tokens";
-const logger = new LogService(config.showLogs, config.logLevel as LogLevel);
+
 
 //Init data source
 const dbURL = config.dbURL;
 const showSQLLogs = config.showSQLLogs;
 const appDataSource = getAppDataSource(dbURL, showSQLLogs);
+
 initDI(appDataSource);
+
+const logger = container.resolve<LogService>(TOKENS.LogService);
 
 welcomeMessage();
 

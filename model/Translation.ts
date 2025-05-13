@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne } from "typeorm";
-import Language from "./Language";
-import Text from "./Text";
-import Base from "./Base";
+import Language from "model/Language";
+import Text from "model/Text";
+import Base from "model/Base";
 
 @Entity()
 export default class Translation extends Base {

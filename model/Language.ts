@@ -1,6 +1,6 @@
 import { Entity, Column, OneToMany } from "typeorm";
-import Translation from "./Translation";
-import Base from "./Base";
+import Translation from "model/Translation";
+import Base from "model/Base";
 
 @Entity()
 export default class Language extends Base {

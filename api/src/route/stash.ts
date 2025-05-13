@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { container } from "tsyringe";
 
 import { TOKENS } from "di/tokens";
-import { validateRequest } from "./validator/common";
+import { validateRequest } from "api/src/route/validator/common";
 
 import StashController from "api/src/controller/StashController";
 import StashValidator from "api/src/route/validator/StashValidator";
