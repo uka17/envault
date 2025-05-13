@@ -34,30 +34,31 @@
     },
     "/api/v1/stashes": {
       "post": {
-        "summary": "Create new stash",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/stashes/{id}": {
+      "get": {
         "description": "",
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "description": "Stash",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "body": {
-                  "type": "string",
-                  "example": "Stash body text"
-                },
-                "to": {
-                  "type": "string",
-                  "example": "journalist@fakemail.com"
-                }
-              },
-              "required": [
-                "body",
-                "to"
-              ]
-            }
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -66,39 +67,7 @@
           }
         }
       },
-      "get": {
-        "summary": "Get list of stashes for curret user",
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/stashes/{id}": {
-      "get": {
-        "summary": "Get stash by id",
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
       "delete": {
-        "summary": "Delete stash by id",
         "description": "",
         "parameters": [
           {
@@ -109,15 +78,14 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "default": {
+            "description": ""
           }
         }
       }
     },
-    "/api/v1/stashes/{id}/decrypt/{key}": {
+    "/api/v1/stashes/{id}/snooze/{hours}": {
       "post": {
-        "summary": "Decrypt stash by id and provided key",
         "description": "",
         "parameters": [
           {
@@ -127,80 +95,22 @@
             "type": "string"
           },
           {
-            "name": "key",
+            "name": "hours",
             "in": "path",
             "required": true,
             "type": "string"
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/stashes/{id}/snooze/{days}": {
-      "post": {
-        "summary": "Snooze stash by id fro N days",
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "days",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
+          "default": {
+            "description": ""
           }
         }
       }
     },
     "/api/v1/users": {
       "post": {
-        "tags": [
-          "User"
-        ],
-        "summary": "Register new user",
-        "description": "Register new user",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "description": "User",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "type": "string",
-                  "example": "john@mail.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "secret@123"
-                },
-                "name": {
-                  "type": "string",
-                  "example": "Jhon Doe"
-                }
-              },
-              "required": [
-                "email",
-                "password",
-                "name"
-              ]
-            }
-          }
-        ],
+        "description": "",
         "responses": {
           "default": {
             "description": ""
@@ -210,42 +120,16 @@
     },
     "/api/v1/users/login": {
       "post": {
-        "summary": "Login user",
         "description": "",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "description": "User",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "type": "string",
-                  "example": "john@mail.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "secret@123"
-                }
-              },
-              "required": [
-                "email",
-                "password"
-              ]
-            }
-          }
-        ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "default": {
+            "description": ""
           }
         }
       }
     },
     "/api/v1/users/whoami": {
       "get": {
-        "summary": "Fetch currently current user",
         "description": "",
         "responses": {
           "default": {

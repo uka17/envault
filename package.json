@@ -13,7 +13,7 @@
     "coverage:worker": "nyc --exclude=api report --reporter=text-lcov > ./worker/coverage/lcov.info",
     "check-coverage:api": "nyc check-coverage --lines 10 --functions 10 --branches 10",
     "check-coverage:worker": "nyc check-coverage --lines 10 --functions 10 --branches 10",
-    "swagger": "npx ts-node api/src/swagger/swagger.ts",
+    "swagger": "npx ts-node  -r ts-node/register -r tsconfig-paths/register api/src/swagger/swagger.ts",
     "build": "npx tsc && tsc-alias",
     "worker": "nodemon --config nodemon.worker.json",
     "api": "nodemon --config nodemon.api.json"

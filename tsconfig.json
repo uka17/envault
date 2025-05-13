@@ -12,6 +12,4 @@
     "baseUrl": "."
   },
   "include": ["api", "worker", "di", "model", "common", "service"]
-
-
 }
