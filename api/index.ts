@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import getAppDataSource from "../common/dataSource";
-import initDB from "./scripts/init";
+import initTranslations from "./scripts/initTranslations";
 import config from "./src/config/config";
 
 import health from "./src/route/health";
@@ -71,9 +71,9 @@ appDataSource
     app.use("/", router);
 
     //Add global error handler middleware
-    app.use(createErrorHandler(logger, translationService));
+    app.use(createErrorHandler());
 
-    initDB(appDataSource, process.env.API_SILENT_INIT === "TRUE");
+    initTranslations(appDataSource, process.env.API_SILENT_INIT === "TRUE");
 
     //Start app
     app.listen(config.port, async() => {

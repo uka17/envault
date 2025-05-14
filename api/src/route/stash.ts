@@ -12,14 +12,8 @@ import StashValidator from "api/src/route/validator/StashValidator";
 dotenv.config();
 
 export default function(app: express.Router) {
-  const stashController =
-    container.resolve<StashController>(
-      TOKENS.StashController,
-    );
-  const stashValidator =
-    container.resolve<StashValidator>(
-      TOKENS.StashValidator,
-    );
+  const stashController = container.resolve<StashController>(TOKENS.StashController);
+  const stashValidator = container.resolve<StashValidator>(TOKENS.StashValidator);
   const validationRules =
     stashValidator.getRules();
 

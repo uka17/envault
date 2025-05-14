@@ -8,7 +8,6 @@ import { AwsCredentialIdentityProvider } from "@smithy/types";
 import LogService from "service/LogService";
 import { TOKENS } from "di/tokens";
 
-//TODO DI for this service
 @injectable()
 export default class EmailService {
   private sesClient: SESClient;
