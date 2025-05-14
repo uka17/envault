@@ -10,17 +10,17 @@ import User from "model/User";
 @Entity()
 export default abstract class BaseEntity extends TypeORMBaseEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+    id: number;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
-  creaetedOn: Date;
+    creaetedOn: Date;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
-  modifiedOn: Date;
+    modifiedOn: Date;
 
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
-  createdBy: User;
+    createdBy: User;
 
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
-  modifiedBy: User;
+    modifiedBy: User;
 }

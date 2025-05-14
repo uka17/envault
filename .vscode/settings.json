@@ -1,0 +1,28 @@
+{
+  // 🛠 Включаем автофиксы ESLint (включая Prettier через eslint-plugin-prettier)
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // ❌ Не использовать встроенный форматтер
+  "editor.formatOnSave": false,
+
+  // ✅ Говорим плагину ESLint, что мы используем Flat Config (`eslint.config.js`)
+  "eslint.useFlatConfig": true,
+
+  // 🧠 Уточняем, какие языки обрабатывать
+  "eslint.validate": ["javascript", "typescript", "typescriptreact", "vue"],
+
+  // 🔕 Явно убираем любой дефолтный форматтер
+  "[javascript]": {
+    "editor.defaultFormatter": null
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": null
+  },
+  "mochaExplorer.files": ["api/test/**/*.ts"],
+  "mochaExplorer.require": ["ts-node/register", "tsconfig-paths/register"],
+}

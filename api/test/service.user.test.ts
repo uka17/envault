@@ -3,17 +3,16 @@ import { expect } from "chai";
 import sinon from "sinon";
 
 import UserService from "service/UserService";
+import User from "model/User";
 
 let userService: UserService;
+let userRepositoryStub = globalThis.appDataSource.getRepository(User);
 let loggerStub: { error: sinon.SinonStub };
 
 describe("User service", () => {
   describe("Errors", () => {
     beforeEach(() => {
-      userService = new UserService(
-        globalThis.appDataSource,
-        globalThis.mockLogger
-      );
+      userService = new UserService(userRepositoryStub, globalThis.mockLogService);
 
       loggerStub = { error: sinon.stub() };
       (userService as any).logger = loggerStub;
@@ -23,7 +22,7 @@ describe("User service", () => {
       sinon.restore();
     });
 
-    it("should error on getUserById", async () => {
+    it("should error on getUserById", async() => {
       sinon
         .stub(globalThis.appDataSource.manager, "findOne")
         .throws(new Error("Unexpected error"));

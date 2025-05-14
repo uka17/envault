@@ -3,14 +3,12 @@ dotenv.config();
 import { DataSource } from "typeorm";
 import { SnakeNamingStrategy } from "./SnakeNamingStrategy";
 //--Tables
-import User from "../model/User";
-import Language from "../model/Language";
-import Translation from "../model/Translation";
-import Text from "../model/Text";
-import Stash from "../model/Stash";
-import SendLog from "../model/SendLog";
-
-import path from "path";
+import User from "model/User";
+import Language from "model/Language";
+import Translation from "model/Translation";
+import Text from "model/Text";
+import Stash from "model/Stash";
+import SendLog from "model/SendLog";
 
 /**
  *

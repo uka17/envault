@@ -1,17 +1,30 @@
 import { validationResult } from "express-validator";
-import ApiError from "../../../../lib/ApiError";
-import { CODES, MESSAGES } from "../../../../lib/constants";
-import { Request } from "express";
+import {
+  Request,
+  Response,
+  NextFunction,
+} from "express";
 
-function validateRequest(req: Request): void {
+import ApiError from "api/src/error/ApiError";
+import { CODES, MESSAGES } from "common/constants";
+
+function validateRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new ApiError(
-      CODES.API_REQUEST_VALIDATION_ERROR,
-      MESSAGES.API_REQUEST_VALIDATION_ERROR,
-      errors.array()
+    return next(
+      new ApiError(
+        CODES.API_REQUEST_VALIDATION_ERROR,
+        MESSAGES.API_REQUEST_VALIDATION_ERROR,
+        errors.array(),
+      ),
     );
   }
+
+  next();
 }
 
 export { validateRequest };

@@ -1,9 +1,13 @@
-import { Logger } from "../../../lib/Logger";
-import Translations from "../../../lib/Translations";
+import LogService from "service/LogService";
+import TranslationService from "service/TranslationService";
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../../../lib/ApiError";
+import ApiError from "api/src/error/ApiError";
 
-const createErrorHandler = (logger: Logger, translations: Translations) => {
+const createErrorHandler = (
+  logger: LogService,
+  translationService: TranslationService,
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return (error: Error, req: Request, res: Response, next: NextFunction) => {
     if (error instanceof ApiError) {
       return res
@@ -12,9 +16,9 @@ const createErrorHandler = (logger: Logger, translations: Translations) => {
     }
     logger.error(error);
     return res.status(500).send({
-      message: translations.getText("error_500"),
+      message: translationService.getText("error_500"),
     });
   };
 };
 
-export { createErrorHandler };
+export default createErrorHandler;

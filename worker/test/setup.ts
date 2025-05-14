@@ -1,39 +1,43 @@
+import "reflect-metadata";
 import sinon from "sinon";
-import express from "express";
 import dotenv from "dotenv";
+import { container } from "tsyringe";
 dotenv.config();
 
 import TranslationService from "service/TranslationService";
-import getAppDataSource from "lib/dataSource";
-import Translation from "model/Translation";
+import getAppDataSource from "common/dataSource";
+import LogService from "service/LogService";
+import initDI from "di/container";
+import { TOKENS } from "di/tokens";
+import initDB from "api/scripts/init";
 
-import config from "../src/config/config";
+import config from "worker/src/config/config";
 
-import { Logger } from "lib/Logger";
 
 const dbURL = config.testDbURL;
 globalThis.appDataSource = getAppDataSource(dbURL);
-globalThis.translations = null;
 
 async function startApp() {
-  // Mock/setup dependencies
-  globalThis.mockLogger = sinon.createStubInstance(Logger);
-
-  globalThis.app = express();
-  globalThis.app.use(express.json());
-
   await globalThis.appDataSource.initialize();
+  initDI(globalThis.appDataSource);
+  await initDB(globalThis.appDataSource, process.env.API_SILENT_INIT === "TRUE");
+  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
+  await translationService.init();
 
-  globalThis.translations = new TranslationService(
-    globalThis.appDataSource.getRepository(Translation)
-  );
-  await globalThis.translations.loadTranslations("en");
+  // Mock/setup dependencies
+  globalThis.mockLogService = sinon.createStubInstance(LogService);
+
+  //Suppress logs
+  const loggerServiceStub = sinon.createStubInstance(LogService);
+  container.registerInstance(TOKENS.LogService, loggerServiceStub);
+
+  globalThis.translationService = translationService;
 }
 
-before(async () => {
+before(async() => {
   await startApp();
 });
 
-after(async () => {
+after(async() => {
   await globalThis.appDataSource.destroy();
 });

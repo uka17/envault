@@ -6,19 +6,19 @@ dotenv.config();
 
 import User from "../../../model/User";
 import { DataSource } from "typeorm";
+import TranslationService from "service/TranslationService";
 
-import Translations from "../../../lib/Translations";
 import bcrypt from "bcryptjs";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 
 /**
  * Configure passport `Local` and `JWT` policies
  * @param appDataSource Database connection instance
- * @param translations Translations instance
+ * @param translationService Translations instance
  */
-export default function (
+export default function(
   appDataSource: DataSource,
-  translations: Translations
+  translationService: TranslationService,
 ) {
   const userRepository = appDataSource.getRepository(User);
   // Set up Local strategy
@@ -28,13 +28,13 @@ export default function (
         usernameField: "email",
         passwordField: "password",
       },
-      async (username, password, done) => {
+      async(username, password, done) => {
         const user = await userRepository.findOneBy({
           email: username,
         });
         if (!user) {
           return done(null, false, {
-            message: translations.getText("incorrect_token").translation,
+            message: translationService.getText("incorrect_token").translation,
           });
         }
 
@@ -44,13 +44,14 @@ export default function (
           }
           /* istanbul ignore next */ if (!res) {
             return done(null, false, {
-              message: translations.getText("incorrect_token").translation,
+              message:
+                translationService.getText("incorrect_token").translation,
             });
           }
           return done(null, user);
         });
-      }
-    )
+      },
+    ),
   );
   // Set up JWT strategy
   passport.use(
@@ -59,7 +60,7 @@ export default function (
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
         secretOrKey: process.env.API_JWT_SECRET,
       },
-      async (payload, done) => {
+      async(payload, done) => {
         const user = await userRepository.findOneBy({
           id: payload.sub,
         });
@@ -67,7 +68,7 @@ export default function (
           return done(null, false);
         }
         return done(null, user);
-      }
-    )
+      },
+    ),
   );
 }

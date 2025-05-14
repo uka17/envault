@@ -1,18 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
-import Stash from "./Stash";
-import Base from "./Base";
+import { Entity, Column, OneToMany } from "typeorm";
+import Stash from "model/Stash";
+import Base from "model/Base";
 
 @Entity()
 export default class User extends Base {
   @Column("text")
-  email: string;
+    email: string;
 
   @Column("text")
-  password: string;
+    password: string;
 
   @Column("text")
-  name: string;
+    name: string;
 
   @OneToMany(() => Stash, (stash) => stash.user)
-  stashes: Stash[];
+    stashes: Stash[];
 }

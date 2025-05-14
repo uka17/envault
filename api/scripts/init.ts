@@ -23,41 +23,47 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
     for (let i = 0; i < texts.length; i++) {
       const lang = texts[i];
 
-      !silent &&
+      if(!silent) {
         console.log(chalk.blue(`Processing ${lang.language} translations`));
+      }
 
       //Check if language already exists and create if needed
       let language = await languageRepository.findOneBy({
         code: lang.languageCode,
       });
       if (!language) {
-        !silent &&
+        if(!silent) {
           console.log(
-            `Language '${lang.language}' does not exists, creating...`
+            `Language '${lang.language}' does not exists, creating...`,
           );
+        }
         language = new Language();
         language.language = lang.language;
         language.code = lang.languageCode;
         await languageRepository.manager.save(language);
-        !silent &&
+        if(!silent) {
           console.log(chalk.green(`Created '${language.language}' language`));
+        }
       }
 
       //Add translations
       for (const [textCode, textTranslation] of Object.entries(
-        lang.textTranslations
+        lang.textTranslations,
       )) {
         //Check if text already exists and create if needed
         let text = await textRepository.findOneBy({
           text: textCode,
         });
         if (!text) {
-          !silent &&
+          if(!silent) {
             console.log(`Text '${textCode}' does not exists, creating...`);
+          }
           text = new Text();
           text.text = textCode;
           await textRepository.manager.save(text);
-          !silent && console.log(chalk.green(`Created text '${textCode}'`));
+          if(!silent) {
+            console.log(chalk.green(`Created text '${textCode}'`));
+          }
         }
 
         //Check if translation already exists and create if needed
@@ -76,19 +82,23 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
           translation.translation = textTranslation;
           translationRepository.manager.save(translation);
 
-          !silent &&
+          if(!silent) {
             console.log(
               chalk.green(
-                `Created '${textTranslation}' transaltion for text '${translation.text.text}' and language '${translation.language.language}'`
-              )
+                `Created '${textTranslation}' transaltion for text '${translation.text.text}' 
+                and language '${translation.language.language}'`,
+              ),
             );
+          }
         } else {
-          !silent &&
+          if(!silent
+          ) {
             console.log(
               chalk.grey(
-                `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`
-              )
+                `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`,
+              ),
             );
+          }
         }
       }
     }

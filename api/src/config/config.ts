@@ -1,11 +1,15 @@
+import os from "os";
+
 /* istanbul ignore next */
 export default {
-  dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-  testDbURL: `postgres://${process.env.TEST_DB_USER}:${process.env.TEST_DB_PASSWORD}@${process.env.TEST_DB_HOST}:${process.env.TEST_DB_PORT}/${process.env.TEST_DB_NAME}`,
+  dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@` +
+    `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  testDbURL: `postgres://${process.env.TEST_DB_USER}:${process.env.TEST_DB_PASSWORD}@` +
+    `${process.env.TEST_DB_HOST}:${process.env.TEST_DB_PORT}/${process.env.TEST_DB_NAME}`,
   port: 9000,
   logLevel: process.env.LOG_LEVEL == "INFO" ? "info" : "warn",
-  showSQLLogs: process.env.SHOW_SQL_LOGS == "TRUE" ? true : false,
-  showLogs: process.env.SHOW_LOGS == "TRUE" ? true : false,
+  showSQLLogs: process.env.SHOW_SQL_LOGS == "TRUE",
+  showLogs: process.env.SHOW_LOGS == "TRUE",
   cors: { origin: "http://localhost:8080" },
   session: {
     secret: "biteme",
@@ -23,14 +27,11 @@ export default {
   },
   JWTMaxAge: 60, //days
   currentIp: () => {
-    const os = require("os");
-    const networkInterfaces = os.networkInterfaces();
-
-    for (const interfaceName in networkInterfaces) {
-      const interfaces = networkInterfaces[interfaceName];
-      for (const iface of interfaces) {
-        if (iface.family === "IPv4" && !iface.internal) {
-          return iface.address;
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        if (net.family === "IPv4" && !net.internal) {
+          return net.address;
         }
       }
     }
