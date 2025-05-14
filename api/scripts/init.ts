@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import "reflect-metadata";
 import texts from "./data/texts";
 import Text from "../../model/Text";
