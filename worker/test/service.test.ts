@@ -1,4 +1,3 @@
-// user.test.ts
 import { expect } from "chai";
 
 describe("Service tests", () => {
