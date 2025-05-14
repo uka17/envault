@@ -4,7 +4,7 @@ import sinon from "sinon";
 import EmailService from "service/EmailService";
 import LogService from "service/LogService";
 
-const mockLogger = sinon.createStubInstance(LogService);
+const mockLogger = new LogService();
 const emailService = new EmailService(mockLogger, null);
 
 describe("Email service", () => {

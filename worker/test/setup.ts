@@ -9,7 +9,7 @@ import getAppDataSource from "common/dataSource";
 import LogService from "service/LogService";
 import initDI from "di/container";
 import { TOKENS } from "di/tokens";
-import initDB from "api/scripts/initTranslations";
+import initTranslations from "api/scripts/initTranslations";
 
 import config from "worker/src/config/config";
 
@@ -20,7 +20,7 @@ globalThis.appDataSource = getAppDataSource(dbURL);
 async function startApp() {
   await globalThis.appDataSource.initialize();
   initDI(globalThis.appDataSource);
-  await initDB(globalThis.appDataSource, process.env.API_SILENT_INIT === "TRUE");
+  await initTranslations(globalThis.appDataSource, true);
   const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
   await translationService.init();
 
