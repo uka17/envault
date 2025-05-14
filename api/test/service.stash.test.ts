@@ -1,4 +1,3 @@
-// config.test.ts
 import { expect } from "chai";
 import sinon from "sinon";
 

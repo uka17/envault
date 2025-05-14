@@ -6,7 +6,7 @@ import Translation from "model/Translation";
 import { TOKENS } from "di/tokens";
 @injectable()
 export default class TranslationService {
-  public items: Translation[] = [];
+  private items: Translation[] = [];
 
   constructor(
     @inject(TOKENS.TranslationRepository) private translationRepository: Repository<Translation>,
@@ -23,6 +23,25 @@ export default class TranslationService {
       },
     });
   }
+
+  public getText(textCode: string): { translation: string; textCode: string };
+
+  public getText(textCode: string, params:  (string | number)[] | null): { translation: string; textCode: string };
+
+  public getText(textCode: string, params:  string | number | null): { translation: string; textCode: string };
+
+  public getText(
+    textCode: string,
+    params: (string | number)[] | null,
+    languageCode: string,
+  ): { translation: string; textCode: string };
+
+  public getText(
+    textCode: string,
+    params: string | number | null,
+    languageCode: string,
+  ): { translation: string; textCode: string };
+
   /**
    * Returns translation for provided text code, and undefined otherwise
    * @param textCode Code of text entry
@@ -32,10 +51,10 @@ export default class TranslationService {
    */
   public getText(
     textCode: string,
-    params: string[] | number[] | null = null,
+    params: (string | number)[] | string | number | null = null,
     languageCode: string = "en",
   ): { translation: string; textCode: string } {
-    if (!this.items && this.items.length == 0) {
+    if (!this.items || this.items.length == 0) {
       throw new Error("Translations were not initialized");
     }
     const translation = this.items.find(
@@ -49,8 +68,16 @@ export default class TranslationService {
       };
     } else {
       //we have params, replace them in the translation
-      if (params && params.length > 0) {
-        let translationText = util.format(translation.translation, ...params);
+      if (params) {
+        let translationText: string;
+        if(Array.isArray(params)) {
+          if(params.length == 0) {
+            throw new Error("Empty params array");
+          }
+          translationText = util.format(translation.translation, ...params);
+        } else {
+          translationText = util.format(translation.translation, params);  
+        }
         let textCode = translation.text.text;
         return {
           translation: translationText,

@@ -9,7 +9,7 @@ import getAppDataSource from "common/dataSource";
 import LogService from "service/LogService";
 import initDI from "di/container";
 import { TOKENS } from "di/tokens";
-import initDB from "api/scripts/init";
+import initDB from "api/scripts/initTranslations";
 
 import config from "worker/src/config/config";
 

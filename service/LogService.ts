@@ -1,4 +1,4 @@
-/* istanbul ignore file */
+
 import winston, { createLogger } from "winston";
 import { injectable } from "tsyringe";
 const { combine, timestamp, colorize, printf } = winston.format;
@@ -54,6 +54,7 @@ export default class LogService {
         }),
 
         timestamp(),
+        /* istanbul ignore next */
         printf(({ level, message, timestamp, stack }) => {
           return `${timestamp} [${level}]: ${stack || message}`;
         }),

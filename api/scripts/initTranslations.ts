@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import "reflect-metadata";
 import texts from "./data/texts";
 import Text from "../../model/Text";
@@ -11,7 +12,7 @@ import { DataSource } from "typeorm";
  * @param silent If true, will not print any logs
  * @param appDataSource Data source to use
  */
-async function initDB(appDataSource: DataSource, silent: boolean = true) {
+export default async function(appDataSource: DataSource, silent: boolean = true) {
   try {
     //if silent === false, print logs
     console.log(chalk.yellow(`>>>Initializing database... (silent=${silent})`));
@@ -106,5 +107,3 @@ async function initDB(appDataSource: DataSource, silent: boolean = true) {
     console.error(error);
   }
 }
-
-export default initDB;

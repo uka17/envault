@@ -14,7 +14,7 @@ import { TOKENS } from "di/tokens";
 
 import createErrorHandler from "api/src/route/error";
 import initDI from "di/container";
-import initDB from "api/scripts/init";
+import initTranslations from "api/scripts/initTranslations";
 import userRoutes from "api/src/route/user";
 import stashRoutes from "api/src/route/stash";
 import TranslationService from "service/TranslationService";
@@ -27,7 +27,7 @@ async function startApp() {
   await globalThis.appDataSource.initialize();
   // Mock/setup dependencies
   initDI(globalThis.appDataSource);
-  await initDB(globalThis.appDataSource, true);  
+  await initTranslations(globalThis.appDataSource, true);  
   const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
   await translationService.init();
   //Suppress logs
@@ -41,8 +41,7 @@ async function startApp() {
   userRoutes(globalThis.app);
   stashRoutes(globalThis.app);
 
-  const errorHandler = createErrorHandler(loggerServiceStub, translationService);
-  globalThis.app.use(errorHandler);
+  globalThis.app.use(createErrorHandler());
 }
 
 before(async() => {
