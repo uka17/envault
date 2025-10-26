@@ -8,7 +8,7 @@
     "test:api": "nyc --exclude=worker --reporter=html --reporter=text --report-dir=api/coverage mocha -r ts-node/register -r tsconfig-paths/register --file api/test/setup.ts api/test/**/*.test.ts",
     "test:worker": "nyc --exclude=api --reporter=html --reporter=text --report-dir=worker/coverage mocha -r ts-node/register -r tsconfig-paths/register --file worker/test/setup.ts worker/test/**/*.test.ts",
     "mtest:api": "mocha -r ts-node/register -r tsconfig-paths/register --file api/test/setup.ts api/test/**/*.test.ts",
-    "mtest:worker": "mocha -r ts-node/register -r tsconfig-paths/register --file worker/test/setup.ts worker/test/**/*.test.ts",
+    "mtest:worker": "mocha -r ts-node/register --file worker/test/setup.ts worker/test/**/*.test.ts",
     "coverage:api": "nyc report --reporter=text-lcov > ./api/coverage/lcov.info",
     "coverage:worker": "nyc report --reporter=text-lcov > ./worker/coverage/lcov.info",
     "check-coverage:api": "nyc check-coverage --lines 10 --functions 10 --branches 10",

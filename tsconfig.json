@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "outDir": "out",
-    "target": "es2017",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "sourceMap": true,
     "esModuleInterop": true, //Allows us to compile ES6 modules to CommonJS modules
     "forceConsistentCasingInFileNames": true, //When set to true, enables case sensitive file naming
