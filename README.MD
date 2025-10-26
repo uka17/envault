@@ -21,7 +21,7 @@ RUN apk add --no-cache bash curl
   
 ## How to configure EC2
 
-1. Install docker and docker compose
+1. Install docker and docker compose to EC2
 2. Add to GitHub secrets:
    1. DOCKER_HUB_TOKEN
    2. DOCKER_HUB_USERNAME
