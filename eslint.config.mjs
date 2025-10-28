@@ -37,6 +37,6 @@ export default [
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
-    ignores: ["/coverage/**", "**/out/**", "**/dist/**", "**/node_modules/**"],
+    ignores: ["/coverage/**", "**/dist/**", "**/dist/**", "**/node_modules/**"],
   },
 ];

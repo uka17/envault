@@ -9,20 +9,20 @@
       "request": "launch",
       "name": "Launch API",
       //"runtimeExecutable": "nodemon",
-      "program": "${workspaceFolder}/out/api/index.js",
+      "program": "${workspaceFolder}/dist/api/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/**/*.js"]
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Launch worker",
       //"runtimeExecutable": "nodemon",
-      "program": "${workspaceFolder}/out/worker/index.js",
+      "program": "${workspaceFolder}/dist/worker/index.js",
       "console": "integratedTerminal",
       "preLaunchTask": "tsc: build",
-      "outFiles": ["${workspaceFolder}/out/worker/**/*.js", "${workspaceFolder}/out/**/*.js.map"]
+      "outFiles": ["${workspaceFolder}/dist/worker/**/*.js", "${workspaceFolder}/dist/**/*.js.map"]
     },
     {
       "type": "node",

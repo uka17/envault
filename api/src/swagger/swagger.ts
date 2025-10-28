@@ -12,7 +12,7 @@ const doc = {
   schemes: ["http"],
 };
 
-const routeFolder = "out/api/src/route";
+const routeFolder = "dist/api/src/route";
 const fileList = [];
 const fileExclude = ["validator"];
 fs.readdir(routeFolder, (err, files) => {

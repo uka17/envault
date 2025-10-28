@@ -60,6 +60,6 @@ typings/
 # next.js build output
 .next
 
-out/*
+dist/*
 
 node_modules

@@ -4,22 +4,22 @@
   "description": "",
   "type": "module",
   "imports": {
-    "#service/*": "./out/service/*",
-    "#common/*": "./out/common/*",
-    "#model/*": "./out/model/*",
-    "#di/*": "./out/di/*"
+    "#service/*": "./dist/service/*",
+    "#common/*": "./dist/common/*",
+    "#model/*": "./dist/model/*",
+    "#di/*": "./dist/di/*"
   },
   "main": "index.js",
   "scripts": {
-    "test:api": "npm run build && c8 --exclude=worker --reporter=html --reporter=text --report-dir=api/coverage mocha --file out/api/test/setup.js out/api/test/**/*.test.js",
-    "test:worker": "npm run build && c8 --exclude=api --reporter=html --reporter=text --report-dir=worker/coverage mocha --file out/worker/test/setup.js out/worker/test/**/*.test.js",
-    "mtest:api": "npm run build && mocha --file out/api/test/setup.js out/api/test/**/*.test.js",
-    "mtest:worker": "npm run build && mocha --file out/worker/test/setup.js out/worker/test/**/*.test.js",
+    "test:api": "npm run build && c8 --exclude=worker --reporter=html --reporter=text --report-dir=api/coverage mocha --file dist/api/test/setup.js dist/api/test/**/*.test.js",
+    "test:worker": "npm run build && c8 --exclude=api --reporter=html --reporter=text --report-dir=worker/coverage mocha --file dist/worker/test/setup.js dist/worker/test/**/*.test.js",
+    "mtest:api": "npm run build && mocha --file dist/api/test/setup.js dist/api/test/**/*.test.js",
+    "mtest:worker": "npm run build && mocha --file dist/worker/test/setup.js dist/worker/test/**/*.test.js",
     "coverage:api": "c8 report --temp-directory=api/coverage/tmp --reporter=text-lcov > ./api/coverage/lcov.info",
     "coverage:worker": "c8 report --temp-directory=worker/coverage/tmp --reporter=text-lcov > ./worker/coverage/lcov.info",
     "check-coverage:api": "c8 check-coverage --temp-directory=api/coverage/tmp --lines 10 --functions 10 --branches 10",
     "check-coverage:worker": "c8 check-coverage --temp-directory=worker/coverage/tmp --lines 10 --functions 10 --branches 10",
-    "swagger": "npm run build && node out/api/src/swagger/swagger.js",
+    "swagger": "npm run build && node dist/api/src/swagger/swagger.js",
     "build": "npx tsc && tsc-alias",
     "worker": "nodemon --config nodemon.worker.json",
     "api": "nodemon --config nodemon.api.json"
