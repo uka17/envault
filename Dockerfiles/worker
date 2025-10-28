@@ -12,6 +12,7 @@ FROM node:19-alpine
 WORKDIR /app
 COPY --from=build app/node_modules ./node_modules/
 COPY --from=build app/out ./dist/
+COPY package*.json ./
 ARG GIT_COMMIT_SHA
 ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 CMD node dist/worker/index.js
