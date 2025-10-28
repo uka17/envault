@@ -4,8 +4,9 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   BaseEntity as TypeORMBaseEntity,
+  Relation,
 } from "typeorm";
-import User from "model/User";
+import User from "#model/User.js";
 
 @Entity()
 export default abstract class BaseEntity extends TypeORMBaseEntity {
@@ -19,8 +20,8 @@ export default abstract class BaseEntity extends TypeORMBaseEntity {
     modifiedOn: Date;
 
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
-    createdBy: User;
+    createdBy: Relation<User>;
 
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
-    modifiedBy: User;
+    modifiedBy: Relation<User>;
 }

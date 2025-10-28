@@ -1,9 +1,9 @@
 /* istanbul ignore file */
 import "reflect-metadata";
-import texts from "./data/texts";
-import Text from "../../model/Text";
-import Language from "../../model/Language";
-import Translation from "../../model/Translation";
+import texts from "./data/texts.js";
+import Text from "../../model/Text.js";
+import Language from "../../model/Language.js";
+import Translation from "../../model/Translation.js";
 import chalk from "chalk";
 import { DataSource } from "typeorm";
 

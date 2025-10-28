@@ -1,1 +1,1 @@
-import "api/test/service.stash.test";
+import "api/test/service.stash.test.js";

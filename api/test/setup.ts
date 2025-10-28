@@ -5,19 +5,19 @@ import dotenv from "dotenv";
 import { container } from "tsyringe";
 dotenv.config();
 
-import getAppDataSource from "common/dataSource";
+import getAppDataSource from "#common/dataSource.js";
 
-import config from "api/src/config/config";
-import passportConfig from "api/src/config/passport";
-import LogService from "service/LogService";
-import { TOKENS } from "di/tokens";
+import config from "api/src/config/config.js";
+import passportConfig from "api/src/config/passport.js";
+import LogService from "#service/LogService.js";
+import { TOKENS } from "#di/tokens.js";
 
-import createErrorHandler from "api/src/route/error";
-import initDI from "di/container";
-import initTranslations from "api/scripts/initTranslations";
-import userRoutes from "api/src/route/user";
-import stashRoutes from "api/src/route/stash";
-import TranslationService from "service/TranslationService";
+import createErrorHandler from "api/src/route/error.js";
+import initDI from "#di/container.js";
+import initTranslations from "api/scripts/initTranslations.js";
+import userRoutes from "api/src/route/user.js";
+import stashRoutes from "api/src/route/stash.js";
+import TranslationService from "#service/TranslationService.js";
 
 const dbURL = config.testDbURL;
 globalThis.appDataSource = getAppDataSource(dbURL);

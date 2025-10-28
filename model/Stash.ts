@@ -1,6 +1,6 @@
-import { Entity, Column, ManyToOne } from "typeorm";
-import Base from "model/Base";
-import User from "model/User";
+import { Entity, Column, ManyToOne, Relation } from "typeorm";
+import Base from "#model/Base.js";
+import User from "#model/User.js";
 
 @Entity()
 export default class Stash extends Base {
@@ -24,7 +24,7 @@ export default class Stash extends Base {
     key: string;
 
   @ManyToOne(() => User, (user) => user.stashes)
-    user: User;
+    user: Relation<User>;
 
   @Column("timestamptz")
     sendAt: Date;

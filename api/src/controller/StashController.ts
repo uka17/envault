@@ -1,16 +1,16 @@
 import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
 
-import { TOKENS } from "di/tokens";
-import { CODES, MESSAGES } from "common/constants";
+import { TOKENS } from "#di/tokens.js";
+import { CODES, MESSAGES } from "#common/constants.js";
 
-import Stash from "model/Stash";
+import Stash from "#model/Stash.js";
 
-import TranslationService from "service/TranslationService";
-import StashService from "service/StashService";
-import LogService from "service/LogService";
-import ApiError from "api/src/error/ApiError";
-import User from "model/User";
+import TranslationService from "#service/TranslationService.js";
+import StashService from "#service/StashService.js";
+import LogService from "#service/LogService.js";
+import ApiError from "api/src/error/ApiError.js";
+import User from "#model/User.js";
 
 @injectable()
 export default class StashController {

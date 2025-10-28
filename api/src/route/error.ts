@@ -1,9 +1,9 @@
-import LogService from "service/LogService";
-import TranslationService from "service/TranslationService";
+import LogService from "#service/LogService.js";
+import TranslationService from "#service/TranslationService.js";
 import { Request, Response, NextFunction } from "express";
-import ApiError from "api/src/error/ApiError";
+import ApiError from "api/src/error/ApiError.js";
 import { container } from "tsyringe";
-import { TOKENS } from "di/tokens";
+import { TOKENS } from "#di/tokens.js";
 
 export default function(){
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

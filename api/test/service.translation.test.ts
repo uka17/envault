@@ -1,10 +1,10 @@
 import { expect } from "chai";
 
-import Translation from "model/Translation";
-import Text from "model/Text";
-import Language from "model/Language";
+import Translation from "#model/Translation.js";
+import Text from "#model/Text.js";
+import Language from "#model/Language.js";
 
-import TranslationService from "service/TranslationService";
+import TranslationService from "#service/TranslationService.js";
 
 let translationRepository = globalThis.appDataSource.getRepository(Translation);
 const translationService = new TranslationService(translationRepository);

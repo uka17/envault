@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import UserService from "service/UserService";
-import User from "model/User";
+import UserService from "#service/UserService.js";
+import User from "#model/User.js";
 
 let userService: UserService;
 let userRepositoryStub = globalThis.appDataSource.getRepository(User);

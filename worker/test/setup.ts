@@ -4,14 +4,14 @@ import dotenv from "dotenv";
 import { container } from "tsyringe";
 dotenv.config();
 
-import TranslationService from "service/TranslationService";
-import getAppDataSource from "common/dataSource";
-import LogService from "service/LogService";
-import initDI from "di/container";
-import { TOKENS } from "di/tokens";
-import initTranslations from "api/scripts/initTranslations";
+import TranslationService from "#service/TranslationService.js";
+import getAppDataSource from "#common/dataSource.js";
+import LogService from "#service/LogService.js";
+import initDI from "#di/container.js";
+import { TOKENS } from "#di/tokens.js";
+import initTranslations from "api/scripts/initTranslations.js";
 
-import config from "worker/src/config/config";
+import config from "worker/src/config/config.js";
 
 
 const dbURL = config.testDbURL;

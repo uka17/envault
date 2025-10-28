@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import StashService from "service/StashService";
-import Stash from "model/Stash";
-import SendLog from "model/SendLog";
+import StashService from "#service/StashService.js";
+import Stash from "#model/Stash.js";
+import SendLog from "#model/SendLog.js";
 
 let stashService: StashService;
 let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);

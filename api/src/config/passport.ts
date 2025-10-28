@@ -4,9 +4,9 @@ import local from "passport-local";
 import dotenv from "dotenv";
 dotenv.config();
 
-import User from "../../../model/User";
+import User from "../../../model/User.js";
 import { DataSource } from "typeorm";
-import TranslationService from "service/TranslationService";
+import TranslationService from "#service/TranslationService.js";
 
 import bcrypt from "bcryptjs";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";

@@ -3,11 +3,11 @@ import passport from "passport";
 import dotenv from "dotenv";
 import { container } from "tsyringe";
 
-import { TOKENS } from "di/tokens";
-import { validateRequest } from "api/src/route/validator/common";
+import { TOKENS } from "#di/tokens.js";
+import { validateRequest } from "api/src/route/validator/common.js";
 
-import StashController from "api/src/controller/StashController";
-import StashValidator from "api/src/route/validator/StashValidator";
+import StashController from "api/src/controller/StashController.js";
+import StashValidator from "api/src/route/validator/StashValidator.js";
 
 dotenv.config();
 

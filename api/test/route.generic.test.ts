@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import request from "supertest";
 
-import config from "api/src/config/config";
-import { CODES } from "common/constants";
+import config from "api/src/config/config.js";
+import { CODES } from "#common/constants.js";
 
 describe("Config", () => {
   it("should return valid IP", async() => {

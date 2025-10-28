@@ -2,15 +2,15 @@ import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 
-import { TOKENS } from "di/tokens";
-import { CODES, MESSAGES } from "common/constants";
+import { TOKENS } from "#di/tokens.js";
+import { CODES, MESSAGES } from "#common/constants.js";
 
-import User from "model/User";
+import User from "#model/User.js";
 
-import TranslationService from "service/TranslationService";
-import UserService from "service/UserService";
-import LogService from "service/LogService";
-import ApiError from "api/src/error/ApiError";
+import TranslationService from "#service/TranslationService.js";
+import UserService from "#service/UserService.js";
+import LogService from "#service/LogService.js";
+import ApiError from "api/src/error/ApiError.js";
 
 @injectable()
 export default class UserController {

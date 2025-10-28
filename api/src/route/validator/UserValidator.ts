@@ -1,11 +1,11 @@
 import { body } from "express-validator";
 import { injectable, inject } from "tsyringe";
 
-import config from "api/src/config/config";
-import { TOKENS } from "di/tokens";
+import config from "api/src/config/config.js";
+import { TOKENS } from "#di/tokens.js";
 
-import TranslationService from "service/TranslationService";
-import UserService from "service/UserService";
+import TranslationService from "#service/TranslationService.js";
+import UserService from "#service/UserService.js";
 
 @injectable()
 export default class UserValidator {

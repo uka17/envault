@@ -3,10 +3,10 @@ import jwt from "jsonwebtoken";
 import { injectable, inject } from "tsyringe";
 import { Repository } from "typeorm";
 
-import User from "model/User";
-import LogService from "service/LogService";
-import config from "api/src/config/config";
-import { TOKENS } from "di/tokens";
+import User from "#model/User.js";
+import LogService from "#service/LogService.js";
+import config from "api/src/config/config.js";
+import { TOKENS } from "#di/tokens.js";
 
 @injectable()
 export default class UserService {

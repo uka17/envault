@@ -1,1 +1,1 @@
-import "api/test/service.log.test";
+import "api/test/service.log.test.js";

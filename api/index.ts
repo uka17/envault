@@ -8,21 +8,21 @@ import chalk from "chalk";
 import dotenv from "dotenv";
 dotenv.config();
 
-import getAppDataSource from "../common/dataSource";
-import initTranslations from "./scripts/initTranslations";
-import config from "./src/config/config";
+import getAppDataSource from "../common/dataSource.js";
+import initTranslations from "./scripts/initTranslations.js";
+import config from "./src/config/config.js";
 
-import health from "./src/route/health";
-import user from "api/src/route/user";
-import stash from "./src/route/stash";
-import User from "../model/User";
-import passportConfig from "./src/config/passport";
-import createErrorHandler from "./src/route/error";
-import TranslationService from "service/TranslationService";
-import LogService from "service/LogService";
+import health from "./src/route/health.js";
+import user from "api/src/route/user.js";
+import stash from "./src/route/stash.js";
+import User from "../model/User.js";
+import passportConfig from "./src/config/passport.js";
+import createErrorHandler from "./src/route/error.js";
+import TranslationService from "#service/TranslationService.js";
+import LogService from "#service/LogService.js";
 
-import initDI from "di/container";
-import { TOKENS } from "di/tokens";
+import initDI from "#di/container.js";
+import { TOKENS } from "#di/tokens.js";
 
 
 //Init data source

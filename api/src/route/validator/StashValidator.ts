@@ -1,10 +1,10 @@
 import { body, param } from "express-validator";
 import { injectable, inject } from "tsyringe";
 
-import config from "api/src/config/config";
-import { TOKENS } from "di/tokens";
+import config from "api/src/config/config.js";
+import { TOKENS } from "#di/tokens.js";
 
-import TranslationService from "service/TranslationService";
+import TranslationService from "#service/TranslationService.js";
 
 @injectable()
 export default class StashValidator {

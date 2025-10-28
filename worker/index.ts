@@ -6,19 +6,20 @@ import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 dotenv.config();
 
-import config from "worker/src/config/config";
-import getAppDataSource from "common/dataSource";
-import Stash from "model/Stash";
-import LogService from "service/LogService";
-import { TOKENS } from "di/tokens";
-import initDI from "di/container";
+import config from "worker/src/config/config.js";
+import getAppDataSource from "#common/dataSource.js";
+import Stash from "#model/Stash.js";
+import LogService from "#service/LogService.js";
+import { TOKENS } from "#di/tokens.js";
+import initDI from "#di/container.js";
 
-import StashService from "service/StashService";
-import EmailService from "service/EmailService";
+import StashService from "#service/StashService.js";
+import EmailService from "#service/EmailService.js";
 
 
 async function init() {
   //Init data source
+  console.log(config);
   const dbURL = config.dbURL;
   const appDataSource = getAppDataSource(dbURL);
   await appDataSource.initialize();

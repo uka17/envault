@@ -1,9 +1,9 @@
 import { Repository } from "typeorm";
-import util from "util";
+import * as util from "util";
 import { injectable, inject } from "tsyringe";
 
-import Translation from "model/Translation";
-import { TOKENS } from "di/tokens";
+import Translation from "#model/Translation.js";
+import { TOKENS } from "#di/tokens.js";
 @injectable()
 export default class TranslationService {
   private items: Translation[] = [];

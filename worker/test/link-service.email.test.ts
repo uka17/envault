@@ -1,1 +1,1 @@
-import "api/test/service.email.test";
+import "api/test/service.email.test.js";

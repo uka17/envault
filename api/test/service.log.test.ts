@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import LogService from "service/LogService";
-import { LogLevel } from "service/LogService";
+import LogService from "#service/LogService.js";
+import { LogLevel } from "#service/LogService.js";
 
 const logService = new LogService(false, LogLevel.Info);
 

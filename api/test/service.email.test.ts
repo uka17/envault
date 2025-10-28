@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import EmailService from "service/EmailService";
-import LogService from "service/LogService";
+import EmailService from "#service/EmailService.js";
+import LogService from "#service/LogService.js";
 
 const mockLogger = new LogService();
 const emailService = new EmailService(mockLogger, null);

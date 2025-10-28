@@ -2,8 +2,8 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
-import { CODES } from "common/constants";
-import Stash from "model/Stash";
+import { CODES } from "#common/constants.js";
+import Stash from "#model/Stash.js";
 
 let token: string;
 let stash: Stash;

@@ -5,12 +5,13 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "sourceMap": true,
-    "esModuleInterop": true, //Allows us to compile ES6 modules to CommonJS modules
+    "esModuleInterop": false, //Allows us to compile ES6 modules to CommonJS modules
     "forceConsistentCasingInFileNames": true, //When set to true, enables case sensitive file naming
     "resolveJsonModule": true /* Enable importing .json files */,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "rootDir": ".",
   },
   "include": ["api", "worker", "di", "model", "common", "service"]
 }

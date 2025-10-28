@@ -1,16 +1,16 @@
 import { DeleteResult, Repository } from "typeorm";
-import * as CryptoJS from "crypto-js";
-import Mail from "nodemailer/lib/mailer";
+import AES from "crypto-js/aes.js";
+import nodemailer from "nodemailer";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
 
-import Stash from "model/Stash";
-import SendLog from "model/SendLog";
-import User from "model/User";
-import { TOKENS } from "di/tokens";
+import Stash from "#model/Stash.js";
+import SendLog from "#model/SendLog.js";
+import User from "#model/User.js";
+import { TOKENS } from "#di/tokens.js";
 
-import LogService from "service/LogService";
-import config from "api/src/config/config";
+import LogService from "#service/LogService.js";
+import config from "api/src/config/config.js";
 
 @injectable()
 export default class StashService {
@@ -28,7 +28,7 @@ export default class StashService {
    */
   public async log(
     stashId: number,
-    mailOptions: Mail.Options,
+    mailOptions: nodemailer.SendMailOptions,
     messageId: string,
   ) {
     try {
@@ -147,7 +147,7 @@ export default class StashService {
    * @param key Key to encrypt the stash body
    */
   public encryptBody(body: string, key: string): string {
-    return CryptoJS.AES.encrypt(body, key).toString();
+    return AES.encrypt(body, key).toString();
   }
 
   /**

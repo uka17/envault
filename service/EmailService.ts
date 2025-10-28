@@ -2,11 +2,10 @@ import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
 import { injectable, inject } from "tsyringe";
 import { Transporter } from "nodemailer";
-import Mail from "nodemailer/lib/mailer";
 import { AwsCredentialIdentityProvider } from "@smithy/types";
 
-import LogService from "service/LogService";
-import { TOKENS } from "di/tokens";
+import LogService from "#service/LogService.js";
+import { TOKENS } from "#di/tokens.js";
 
 @injectable()
 export default class EmailService {
@@ -35,7 +34,7 @@ export default class EmailService {
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
    * @returns Message ID of the email received from AWS SES or `null` if error
    */
-  public async send(mailOptions: Mail.Options): Promise<string | null> {
+  public async send(mailOptions: nodemailer.SendMailOptions): Promise<string | null> {
     try {
       this.logger.info(`Sending email to ${mailOptions.to}...`);
       const info = await this.transporter.sendMail(mailOptions);

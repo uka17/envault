@@ -1,9 +1,9 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 
-import { CODES } from "common/constants";
+import { CODES } from "#common/constants.js";
 
-import swaggerDocument from "api/src/swagger/swagger.json";
+import swaggerDocument from "api/src/swagger/swagger.json" with { type: "json" };;
 
 /**
  * Main route. Initiates `GET("/")` and all nested routes

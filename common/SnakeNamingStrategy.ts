@@ -1,7 +1,7 @@
 //This class is used by TypeORM config to convert the camelCase column and table names to snake_case
 
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
-import { snakeCase } from "typeorm/util/StringUtils";
+import { snakeCase } from "typeorm/util/StringUtils.js";
 
 export class SnakeNamingStrategy
   extends DefaultNamingStrategy

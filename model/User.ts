@@ -1,6 +1,6 @@
 import { Entity, Column, OneToMany } from "typeorm";
-import Stash from "model/Stash";
-import Base from "model/Base";
+import Stash from "#model/Stash.js";
+import Base from "#model/Base.js";
 
 @Entity()
 export default class User extends Base {
