@@ -19,4 +19,3 @@ COPY package*.json ./
 ARG GIT_COMMIT_SHA
 ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 CMD node dist/api/index.js
-EXPOSE 9000
