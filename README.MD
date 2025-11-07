@@ -28,7 +28,46 @@ RUN apk add --no-cache bash curl
    3. EC2_HOST
    4. EC2_USER
    5. EC2_SSH_KEY (private key)
-3. Add EC2 public key (generate it from private key) to `~/.ssh/authorized_keys`. This is required for GitHub to be able to access EC2 via ssh
+3. Add EC2 public key (you should have it generated together with private or you can generate it from private key) to `~/.ssh/authorized_keys`. This is required for GitHub to be able to access EC2 via ssh
 4. Generate new ssh key on EC2 and add public key to GitHub Deploy Keys. This is required for EC2 to clone the repo
 5. Clone repo
 6. Copy `.env` file to repo root
+
+
+## Example of `.env` file content
+
+```
+# Database
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+DB_HOST=
+DB_PORT=
+
+# API
+API_HOST=
+API_PORT=
+API_JWT_SECRET=
+API_SILENT_INIT=
+
+# Service
+WORKER_HOST=
+
+# Common
+ENV=
+LOG_LEVEL=
+SHOW_LOGS=
+SUBNET=
+```
+
+Having this `.env` file you can run `api` and `worker` locally with help of commands:
+
+```
+docker run -d \
+  --name envault-api \
+  --network envault_network \
+  --ip 172.19.0.20 \
+  -p 9000:9000 \
+  --env-file .env \
+  uka17/envault-api:latest
+```
