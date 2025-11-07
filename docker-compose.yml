@@ -39,8 +39,6 @@ services:
     networks:
       envault_network:
         ipv4_address: ${API_HOST}
-    ports:
-      - "${API_PORT}:${API_PORT}"
 
   worker:
     image: uka17/envault-worker:latest
