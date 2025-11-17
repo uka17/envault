@@ -41,8 +41,9 @@ logger.info(
 );
 
 const app: Express = express();
-
-app.use(cors(config.cors));
+// Since nginx will expose BE as /api, everything will be under the same domain and we don't need CORS
+// Also in local dev we use vite proxy to avoid CORS issues
+//app.use(cors(config.cors));
 app.use(session(config.session));
 app.use(bodyParser.json());
 
