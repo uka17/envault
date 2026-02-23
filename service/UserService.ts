@@ -57,6 +57,9 @@ export default class UserService {
           id: userId,
         },
       });
+      if (!user) {
+        return null;
+      }
       const result = Object.assign({}, user);
       delete result.password;
       return result;
