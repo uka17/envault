@@ -31,5 +31,14 @@ describe("User service", () => {
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;
     });
+
+    it("should return null when user was not found on getUserById", async() => {
+      sinon.stub(userRepositoryStub, "findOne").resolves(null);
+
+      let result = await userService.getUserById(Number.MAX_SAFE_INTEGER);
+
+      expect(result).to.be.null;
+      expect(loggerStub.error.notCalled).to.be.true;
+    });
   });
 });
