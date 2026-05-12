@@ -1,0 +1,33 @@
+opencollection: 1.0.0
+
+info:
+  name: envault
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5ydSIsImlkIjoxLCJleHAiOjE3NjY2OTU1NjksImlhdCI6MTc2MTUxMTU2OX0.ZugBWRxgfDvlvPzCHtWFz98NSOZKHXZoXZvMUfsM7jI
+  variables:
+    - name: host
+      value: http://192.168.2.102
+    - name: port
+      value: "9000"
+    - name: version
+      value: v1
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

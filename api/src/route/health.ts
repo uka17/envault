@@ -33,6 +33,10 @@ export default function(app: express.Router) {
   app.get("/health", async(req: express.Request, res: express.Response) => {
     return res.status(CODES.API_OK).send();
   });
+  //OpenAPI spec endpoint
+  app.get("/swagger/openapi.json", (req: express.Request, res: express.Response) => {
+    res.json(swaggerDocument);
+  });
   //Swagger
-  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true, swaggerOptions: { url: "/swagger/openapi.json" } }));
 }

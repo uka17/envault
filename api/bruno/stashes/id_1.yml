@@ -1,0 +1,19 @@
+info:
+  name: /:id_1
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{host}}:{{port}}/api/{{version}}/stashes/:id"
+  params:
+    - name: id
+      value: "2"
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

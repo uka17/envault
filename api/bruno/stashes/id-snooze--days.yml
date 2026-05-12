@@ -1,0 +1,22 @@
+info:
+  name: /:id/snooze/:days
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{host}}:{{port}}/api/{{version}}/stashes/:id/snooze/:hours"
+  params:
+    - name: id
+      value: "34"
+      type: path
+    - name: hours
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
