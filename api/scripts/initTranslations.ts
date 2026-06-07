@@ -6,16 +6,17 @@ import Language from "../../model/Language.js";
 import Translation from "../../model/Translation.js";
 import chalk from "chalk";
 import { DataSource } from "typeorm";
+import LogService from "#service/LogService.js";
 
 /**
  * Initializes database (adds translations, languages, etc.)
  * @param silent If true, will not print any logs
  * @param appDataSource Data source to use
  */
-export default async function(appDataSource: DataSource, silent: boolean = true) {
+export default async function(appDataSource: DataSource, logger: LogService, silent: boolean = true) {
   try {
     //if silent === false, print logs
-    console.log(chalk.yellow(`>>>Initializing database... (silent=${silent})`));
+    logger.info(chalk.yellow(`>>> Updating translations in database... (silent=${silent})`));
     //Languages
     const languageRepository = appDataSource.getRepository(Language);
     const textRepository = appDataSource.getRepository(Text);
@@ -25,7 +26,7 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
       const lang = texts[i];
 
       if(!silent) {
-        console.log(chalk.blue(`Processing ${lang.language} translations`));
+        logger.info(chalk.blue(`Processing ${lang.language} translations`));
       }
 
       //Check if language already exists and create if needed
@@ -34,7 +35,7 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
       });
       if (!language) {
         if(!silent) {
-          console.log(
+          logger.info(
             `Language '${lang.language}' does not exists, creating...`,
           );
         }
@@ -43,7 +44,7 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
         language.code = lang.languageCode;
         await languageRepository.manager.save(language);
         if(!silent) {
-          console.log(chalk.green(`Created '${language.language}' language`));
+          logger.info(chalk.green(`Created '${language.language}' language`));
         }
       }
 
@@ -57,13 +58,13 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
         });
         if (!text) {
           if(!silent) {
-            console.log(`Text '${textCode}' does not exists, creating...`);
+            logger.info(`Text '${textCode}' does not exists, creating...`);
           }
           text = new Text();
           text.text = textCode;
           await textRepository.manager.save(text);
           if(!silent) {
-            console.log(chalk.green(`Created text '${textCode}'`));
+            logger.info(chalk.green(`Created text '${textCode}'`));
           }
         }
 
@@ -84,7 +85,7 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
           translationRepository.manager.save(translation);
 
           if(!silent) {
-            console.log(
+            logger.info(
               chalk.green(
                 `Created '${textTranslation}' transaltion for text '${translation.text.text}' 
                 and language '${translation.language.language}'`,
@@ -94,7 +95,7 @@ export default async function(appDataSource: DataSource, silent: boolean = true)
         } else {
           if(!silent
           ) {
-            console.log(
+            logger.info(
               chalk.grey(
                 `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`,
               ),

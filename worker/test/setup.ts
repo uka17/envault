@@ -20,12 +20,13 @@ globalThis.appDataSource = getAppDataSource(dbURL);
 async function startApp() {
   await globalThis.appDataSource.initialize();
   initDI(globalThis.appDataSource);
-  await initTranslations(globalThis.appDataSource, true);
-  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-  await translationService.init();
 
   // Mock/setup dependencies
   globalThis.mockLogService = sinon.createStubInstance(LogService);
+
+  await initTranslations(globalThis.appDataSource, globalThis.mockLogService, true);
+  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
+  await translationService.init();
 
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);

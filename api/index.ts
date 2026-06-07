@@ -56,7 +56,7 @@ appDataSource
   .initialize()
   .then(async() => {
     //Check translations add att to DB if anything is missing from init config files
-    await initTranslations(appDataSource, process.env.API_SILENT_INIT === "TRUE");
+    await initTranslations(appDataSource, logger, process.env.API_SILENT_INIT === "TRUE");
     //Get translationService
     const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
     await translationService.init();
