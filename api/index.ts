@@ -55,6 +55,8 @@ if (!process.env.API_JWT_SECRET) {
 appDataSource
   .initialize()
   .then(async() => {
+    //Check translations add att to DB if anything is missing from init config files
+    await initTranslations(appDataSource, process.env.API_SILENT_INIT === "TRUE");
     //Get translationService
     const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
     await translationService.init();
@@ -74,11 +76,10 @@ appDataSource
     //Add global error handler middleware
     app.use(createErrorHandler());
 
-    initTranslations(appDataSource, process.env.API_SILENT_INIT === "TRUE");
-
     //Start app
     app.listen(config.port, async() => {
       logger.info(`API is live at: http://${config.currentIp()}:${config.port}/`);
+      logger.info(`Swagger UI: http://${config.currentIp()}:${config.port}/swagger/`);
       //TODO: remove this
       let userCount = await appDataSource.getRepository(User).count();
       logger.info(`Users: ${userCount} `);

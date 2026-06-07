@@ -27,15 +27,6 @@ export default class StashController {
    * @param next Next function
    */
   public async create(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Create new stash'
-    /*  #swagger.parameters['body'] = {
-                in: 'body',
-                description: 'Stash',
-                schema: {
-                    $body: 'Stash body text',
-                    $to: 'journalist@fakemail.com',
-                }
-          } */
     try {
       const { body, to, sendAt } = req.body;
       const user = req.user as User;
@@ -65,7 +56,6 @@ export default class StashController {
    * @param next Next function
    */
   public async list(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Get list of stashes for curret user'
     try {
       const userId = (req.user as User).id;
       let stashes = [];
@@ -94,7 +84,6 @@ export default class StashController {
    * @param next Next function
    */
   public async get(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Get stash by id'
     try {
       const id = parseInt(req.params.id);
 
@@ -123,7 +112,6 @@ export default class StashController {
    * @param next Next function
    */
   public async delete(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Delete stash by id'
     try {
       const id = parseInt(req.params.id);
 
@@ -143,7 +131,6 @@ export default class StashController {
    * @param next Next function
    */
   public async snooze(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Snooze stash by id for N hours'
     try {
       const id = parseInt(req.params.id);
       const hours = parseInt(req.params.hours);

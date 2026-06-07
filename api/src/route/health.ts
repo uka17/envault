@@ -17,7 +17,13 @@ export default function(app: express.Router) {
       res: express.Response,
       next: express.NextFunction,
     ) => {
-      // #swagger.summary = 'Check if api is online'
+      // #swagger.summary = 'API root'
+      // #swagger.tags = ['Health']
+      // #swagger.description = 'Returns a plain-text status page confirming the API is online, with the current commit SHA and a link to the Swagger UI.'
+      /* #swagger.responses[200] = {
+            description: 'API is online',
+            schema: { type: 'string', example: 'API is online (TypeORM, Passport, Express.js)' }
+      } */
       try {
         return res.send(
           `API is online (TypeORM, Passport, Express.js)<br/>
@@ -31,6 +37,10 @@ export default function(app: express.Router) {
   );
   //Health endpoint
   app.get("/health", async(req: express.Request, res: express.Response) => {
+    // #swagger.summary = 'Health check'
+    // #swagger.tags = ['Health']
+    // #swagger.description = 'Returns HTTP 200 with an empty body. Used by load balancers and monitoring tools to verify the API is alive.'
+    /* #swagger.responses[200] = { description: 'Service is healthy' } */
     return res.status(CODES.API_OK).send();
   });
   //OpenAPI spec endpoint

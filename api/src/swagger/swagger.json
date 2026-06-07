@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Envault API",
-    "description": "API for envault application",
+    "description": "REST API for the Envault application.",
     "version": "1.0.0"
   },
   "host": "192.168.2.102:9000",
@@ -10,10 +10,61 @@
   "schemes": [
     "http"
   ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "JWT token. Format: **Bearer &lt;token&gt;**"
+    }
+  },
   "paths": {
     "/": {
       "get": {
-        "summary": "Check if api is online",
+        "tags": [
+          "Health"
+        ],
+        "summary": "API root",
+        "description": "Returns a plain-text status page confirming the API is online, with the current commit SHA and a link to the Swagger UI.",
+        "responses": {
+          "200": {
+            "description": "API is online",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "API is online (TypeORM, Passport, Express.js)"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "description": "Returns HTTP 200 with an empty body. Used by load balancers and monitoring tools to verify the API is alive.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy"
+          }
+        }
+      }
+    },
+    "/swagger/openapi.json": {
+      "get": {
         "description": "",
         "responses": {
           "200": {
@@ -22,118 +73,516 @@
         }
       }
     },
-    "/health": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/v1/stashes": {
       "post": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
+        "tags": [
+          "Stash"
+        ],
+        "summary": "Create new stash",
+        "description": "Creates a new stash (encrypted message) for the authenticated user. The message body is encrypted before storage and will be sent to the recipient email at the scheduled time via AWS SES.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Stash data",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StashCreateRequest"
+            }
           }
-        }
+        ],
+        "responses": {
+          "201": {
+            "description": "Stash created successfully",
+            "schema": {
+              "$ref": "#/definitions/StashResponse"
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error — missing or invalid fields",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "get": {
-        "description": "",
+        "tags": [
+          "Stash"
+        ],
+        "summary": "List stashes for current user",
+        "description": "Returns all stashes belonging to the authenticated user, ordered by creation date.",
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "List of stashes",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "array"
+                },
+                "items": {
+                  "$ref": "#/definitions/StashResponse"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/stashes/{id}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Stash"
+        ],
+        "summary": "Get stash by ID",
+        "description": "Returns a single stash by its numeric ID. The stash must belong to the authenticated user.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Stash ID",
+            "example": 42
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "Stash found",
+            "schema": {
+              "$ref": "#/definitions/StashResponse"
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Stash not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
-        "description": "",
+        "tags": [
+          "Stash"
+        ],
+        "summary": "Delete stash by ID",
+        "description": "Permanently deletes a stash by its numeric ID. This action is irreversible.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Stash ID",
+            "example": 42
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "Stash deleted — returns the TypeORM DeleteResult",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "affected": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error — invalid ID format",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/stashes/{id}/snooze/{hours}": {
       "post": {
-        "description": "",
+        "tags": [
+          "Stash"
+        ],
+        "summary": "Snooze stash for N hours",
+        "description": "Postpones the scheduled send time of a stash by the given number of hours. Updates sendAt = current sendAt + hours.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Stash ID",
+            "example": 42
           },
           {
             "name": "hours",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Number of hours to postpone",
+            "example": 24
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "Stash snoozed — returns updated stash",
+            "schema": {
+              "$ref": "#/definitions/StashResponse"
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error — invalid ID or hours format",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Snooze failed (stash not found or service error)",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users": {
       "post": {
-        "description": "",
+        "tags": [
+          "User"
+        ],
+        "summary": "Register new user",
+        "description": "Creates a new user account. Returns the created user object (without password). The email must be unique.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "User registration data",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserCreateRequest"
+            }
+          }
+        ],
         "responses": {
-          "default": {
-            "description": ""
+          "201": {
+            "description": "User created successfully",
+            "schema": {
+              "$ref": "#/definitions/UserResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error — missing or invalid fields",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           }
         }
       }
     },
     "/api/v1/users/login": {
       "post": {
-        "description": "",
+        "tags": [
+          "User"
+        ],
+        "summary": "Login user",
+        "description": "Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "User credentials",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserLoginRequest"
+            }
+          }
+        ],
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "Login successful — JWT token returned",
+            "schema": {
+              "$ref": "#/definitions/TokenResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           }
         }
       }
     },
     "/api/v1/users/whoami": {
       "get": {
-        "description": "",
+        "tags": [
+          "User"
+        ],
+        "summary": "Get current user",
+        "description": "Returns the profile of the currently authenticated user based on the JWT token provided in the Authorization header.",
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "Current user profile",
+            "schema": {
+              "$ref": "#/definitions/UserResponse"
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "UserCreateRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "john@mail.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "secret@123"
+        },
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        }
+      },
+      "required": [
+        "email",
+        "password",
+        "name"
+      ]
+    },
+    "UserLoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "john@mail.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "secret@123"
+        }
+      },
+      "required": [
+        "email",
+        "password"
+      ]
+    },
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "example": 1
+        },
+        "email": {
+          "type": "string",
+          "example": "john@mail.com"
+        },
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "creaetedOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "modifiedOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    "TokenResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      }
+    },
+    "StashCreateRequest": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string",
+          "example": "Secret message to deliver"
+        },
+        "to": {
+          "type": "string",
+          "example": "journalist@fakemail.com"
+        },
+        "sendAt": {
+          "type": "string",
+          "example": "2025-12-31T23:59:59Z"
+        }
+      },
+      "required": [
+        "body",
+        "to",
+        "sendAt"
+      ]
+    },
+    "StashResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "example": 42
+        },
+        "to": {
+          "type": "string",
+          "example": "journalist@fakemail.com"
+        },
+        "body": {
+          "type": "string",
+          "example": "<encrypted>"
+        },
+        "key": {
+          "type": "string",
+          "example": "abc123xyz"
+        },
+        "isSent": {
+          "type": "boolean",
+          "example": false
+        },
+        "sendAt": {
+          "type": "string",
+          "example": "2025-12-31T23:59:59Z"
+        },
+        "creaetedOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "modifiedOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "Unauthorized"
+        }
+      }
+    },
+    "ValidationErrorResponse": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "example": "email"
+              },
+              "message": {
+                "type": "string",
+                "example": "must be a valid email"
+              }
+            }
           }
         }
       }

@@ -27,18 +27,6 @@ export default class UserController {
    * @param next Next function
    */
   public async create(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Register new user'
-    // #swagger.tags = ['User']
-    // #swagger.description = 'Register new user'
-    /*  #swagger.parameters['body'] = {
-          in: 'body',
-          description: 'User',
-          schema: {
-              $email: 'john@mail.com',
-              $password: 'secret@123',
-              $name: 'Jhon Doe',
-          }
-  } */
     try {
       const { email, password, name } = req.body as {
         email: string;
@@ -73,15 +61,6 @@ export default class UserController {
    * @param next Next function
    */
   public async login(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Login user'
-    /*  #swagger.parameters['body'] = {
-            in: 'body',
-            description: 'User',
-            schema: {
-                $email: 'john@mail.com',
-                $password: 'secret@123',
-            }
-      } */
     try {
       // In fact route returns result of callback
       return passport.authenticate(
@@ -115,7 +94,6 @@ export default class UserController {
    * @param next Next function
    */
   public async whoami(req: Request, res: Response, next: NextFunction) {
-    // #swagger.summary = 'Fetch currently current user'
     try {
       const id = (req.user as User).id;
 
