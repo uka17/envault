@@ -34,7 +34,7 @@ const doc = {
       id: 1,
       email: "john@mail.com",
       name: "John Doe",
-      creaetedOn: "2025-01-01T00:00:00Z",
+      createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
     },
     TokenResponse: {
@@ -52,7 +52,7 @@ const doc = {
       key: "abc123xyz",
       isSent: false,
       sendAt: "2025-12-31T23:59:59Z",
-      creaetedOn: "2025-01-01T00:00:00Z",
+      createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
     },
     ErrorResponse: {

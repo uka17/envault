@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Envault API",
-    "description": "REST API for the Envault application.",
+    "description": "REST API for the Envault application — secure stash management with email delivery via AWS SES.",
     "version": "1.0.0"
   },
   "host": "192.168.2.102:9000",
@@ -479,7 +479,7 @@
           "type": "string",
           "example": "John Doe"
         },
-        "creaetedOn": {
+        "createdOn": {
           "type": "string",
           "example": "2025-01-01T00:00:00Z"
         },
@@ -547,7 +547,7 @@
           "type": "string",
           "example": "2025-12-31T23:59:59Z"
         },
-        "creaetedOn": {
+        "createdOn": {
           "type": "string",
           "example": "2025-01-01T00:00:00Z"
         },
