@@ -57,6 +57,9 @@ typings/
 # dotenv environment variables file
 .env*
 
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
 # next.js build output
 .next
 
