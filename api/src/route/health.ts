@@ -1,5 +1,6 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
+import { SwaggerTheme, SwaggerThemeNameEnum } from "swagger-themes";
 
 import { CODES } from "#common/constants.js";
 
@@ -48,5 +49,6 @@ export default function(app: express.Router) {
     res.json(swaggerDocument);
   });
   //Swagger
-  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true, swaggerOptions: { url: "/swagger/openapi.json" } }));
+  const theme = new SwaggerTheme();
+  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true, swaggerOptions: { url: "/swagger/openapi.json" }, customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK) }));
 }
