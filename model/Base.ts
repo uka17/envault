@@ -14,7 +14,7 @@ export default abstract class BaseEntity extends TypeORMBaseEntity {
     id: number;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
-    creaetedOn: Date;
+    createdOn: Date;
 
   @Column({ type: "timestamptz", default: () => "NOW()" })
     modifiedOn: Date;
