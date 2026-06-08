@@ -31,5 +31,16 @@ describe("User service", () => {
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;
     });
+
+    it("should error on getUserByEmail", async() => {
+      sinon
+        .stub(globalThis.appDataSource.manager, "findOne")
+        .throws(new Error("Unexpected error"));
+
+      let result = await userService.getUserByEmail("test@test.com");
+
+      expect(result).to.be.null;
+      expect(loggerStub.error.calledOnce).to.be.true;
+    });
   });
 });

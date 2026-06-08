@@ -12,6 +12,18 @@ describe("Email service", () => {
     sinon.restore();
   });
 
+  describe("Errors", () => {
+    it("should return null and log error when send fails", async() => {
+      sinon.stub((emailService as any).transporter, "sendMail").rejects(new Error("SMTP error"));
+      const errorStub = sinon.stub(mockLogger, "error");
+
+      const result = await emailService.send({ to: "test@test.com" });
+
+      expect(result).to.be.null;
+      expect(errorStub.calledOnce).to.be.true;
+    });
+  });
+
   describe("Regular logic", () => {
     it("should send email", async() => {
       const loggerStub = sinon.stub(mockLogger, "info");

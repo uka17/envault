@@ -1,0 +1,5 @@
+name: DEV
+color: "#2E8A54"
+variables:
+  - secret: true
+    name: JWT

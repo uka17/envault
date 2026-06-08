@@ -17,7 +17,7 @@ config:
 request:
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5ydSIsImlkIjoxLCJleHAiOjE3ODYxMzMyNzcsImlhdCI6MTc4MDk0OTI3Nn0.5YgfvHQW_RRPt93ebIb4fcIm7ph87rbMeJDDwZ6yw1Q
+    token: "{{JWT}}"
   variables:
     - name: host
       value: http://192.168.2.102
