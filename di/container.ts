@@ -10,6 +10,8 @@ import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
 import Translation from "#model/Translation.js";
+import Language from "#model/Language.js";
+import Text from "#model/Text.js";
 
 import StashService from "#service/StashService.js";
 import SendLog from "#model/SendLog.js";
@@ -40,6 +42,12 @@ export default function initDI(appDataSource: DataSource) {
 
   const translationRepository = appDataSource.getRepository(Translation);
   container.registerInstance(TOKENS.TranslationRepository, translationRepository);
+
+  const languageRepository = appDataSource.getRepository(Language);
+  container.registerInstance(TOKENS.LanguageRepository, languageRepository);
+
+  const textRepository = appDataSource.getRepository(Text);
+  container.registerInstance(TOKENS.TextRepository, textRepository);
 
   const emailCredentialsProvider = fromEnv();
   container.registerInstance(TOKENS.EmailCredentialsProvider, emailCredentialsProvider);

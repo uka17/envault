@@ -9,7 +9,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import getAppDataSource from "../common/dataSource.js";
-import initTranslations from "./scripts/initTranslations.js";
 import config from "./src/config/config.js";
 
 import health from "./src/route/health.js";
@@ -55,11 +54,9 @@ if (!process.env.API_JWT_SECRET) {
 appDataSource
   .initialize()
   .then(async() => {
-    //Check translations add att to DB if anything is missing from init config files
-    await initTranslations(appDataSource, logger, process.env.API_SILENT_INIT === "TRUE");
     //Get translationService
     const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-    await translationService.init();
+    await translationService.init(process.env.API_SILENT_INIT === "TRUE");
 
     //Configure passport policies
     passportConfig(appDataSource, translationService);

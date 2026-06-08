@@ -7,7 +7,7 @@ import Language from "#model/Language.js";
 import TranslationService from "#service/TranslationService.js";
 
 let translationRepository = globalThis.appDataSource.getRepository(Translation);
-const translationService = new TranslationService(translationRepository);
+const translationService = new TranslationService(translationRepository, null as any, null as any, null as any);
 //not doing init here, as we want to test empty translationService
 
 describe("Translation service", () => {

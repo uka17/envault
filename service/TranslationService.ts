@@ -1,27 +1,106 @@
 import { Repository } from "typeorm";
 import * as util from "util";
 import { injectable, inject } from "tsyringe";
+import chalk from "chalk";
 
 import Translation from "#model/Translation.js";
+import Language from "#model/Language.js";
+import Text from "#model/Text.js";
 import { TOKENS } from "#di/tokens.js";
+import LogService from "#service/LogService.js";
+import texts from "api/scripts/data/texts.js";
+
 @injectable()
 export default class TranslationService {
   private items: Translation[] = [];
 
   constructor(
     @inject(TOKENS.TranslationRepository) private translationRepository: Repository<Translation>,
+    @inject(TOKENS.LanguageRepository) private languageRepository: Repository<Language>,
+    @inject(TOKENS.TextRepository) private textRepository: Repository<Text>,
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**
-   * Loads translations from the database
+   * Seeds missing languages, texts, and translations from the init config, then loads all translations.
    */
-  public async init(): Promise<void> {
+  public async init(silent: boolean = true): Promise<void> {
+    await this.seed(silent);
     this.items = await this.translationRepository.find({
       relations: {
         language: true,
         text: true,
       },
     });
+  }
+
+  private async seed(silent: boolean): Promise<void> {
+    try {
+      this.logger.info(chalk.yellow(`>>> Updating translations in database... (silent=${silent})`));
+
+      //Languages
+      for (const lang of texts) {
+        //Check if language already exists and create if needed
+        let language = await this.languageRepository.findOneBy({ code: lang.languageCode });
+        if (!language) {
+          if (!silent) {
+            this.logger.info(`Language '${lang.language}' does not exists, creating...`);
+          }
+          language = new Language();
+          language.language = lang.language;
+          language.code = lang.languageCode;
+          await this.languageRepository.manager.save(language);
+          if (!silent) {
+            this.logger.info(chalk.green(`Created '${language.language}' language`));
+          }
+        }
+
+        //Add translations
+        for (const [textCode, textTranslation] of Object.entries(lang.textTranslations)) {
+          //Check if text already exists and create if needed
+          let text = await this.textRepository.findOneBy({ text: textCode });
+          if (!text) {
+            if (!silent) {
+              this.logger.info(`Text '${textCode}' does not exists, creating...`);
+            }
+            text = new Text();
+            text.text = textCode;
+            await this.textRepository.manager.save(text);
+            if (!silent) {
+              this.logger.info(chalk.green(`Created text '${textCode}'`));
+            }
+          }
+
+          //Check if translation already exists and create if needed
+          const translation = await this.translationRepository.findOneBy({
+            text: { id: text.id },
+            language: { id: language.id },
+          });
+          if (!translation) {
+            const newTranslation = new Translation();
+            newTranslation.text = text;
+            newTranslation.language = language;
+            newTranslation.translation = textTranslation as string;
+            await this.translationRepository.manager.save(newTranslation);
+            if (!silent) {
+              this.logger.info(
+                chalk.green(
+                  `Created '${textTranslation}' transaltion for text '${text.text}', language '${language.language}'`,
+                ),
+              );
+            }
+          } else if (!silent) {
+            this.logger.info(
+              chalk.grey(
+                `Skiped '${translation.translation}' transaltion for text '${text.text}' (already exists)`,
+              ),
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   public getText(textCode: string): { translation: string; textCode: string };
@@ -76,7 +155,7 @@ export default class TranslationService {
           }
           translationText = util.format(translation.translation, ...params);
         } else {
-          translationText = util.format(translation.translation, params);  
+          translationText = util.format(translation.translation, params);
         }
         let textCode = translation.text.text;
         return {

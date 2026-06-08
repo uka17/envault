@@ -14,7 +14,6 @@ import { TOKENS } from "#di/tokens.js";
 
 import createErrorHandler from "api/src/route/error.js";
 import initDI from "#di/container.js";
-import initTranslations from "api/scripts/initTranslations.js";
 import userRoutes from "api/src/route/user.js";
 import stashRoutes from "api/src/route/stash.js";
 import TranslationService from "#service/TranslationService.js";
@@ -31,9 +30,8 @@ async function startApp() {
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);
 
-  await initTranslations(globalThis.appDataSource, loggerServiceStub, true);  
   const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-  await translationService.init();
+  await translationService.init(true);
 
   container.registerInstance(TOKENS.LogService, loggerServiceStub);
 

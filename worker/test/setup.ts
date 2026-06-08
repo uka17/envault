@@ -9,7 +9,6 @@ import getAppDataSource from "#common/dataSource.js";
 import LogService from "#service/LogService.js";
 import initDI from "#di/container.js";
 import { TOKENS } from "#di/tokens.js";
-import initTranslations from "api/scripts/initTranslations.js";
 
 import config from "worker/src/config/config.js";
 
@@ -24,9 +23,8 @@ async function startApp() {
   // Mock/setup dependencies
   globalThis.mockLogService = sinon.createStubInstance(LogService);
 
-  await initTranslations(globalThis.appDataSource, globalThis.mockLogService, true);
   const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-  await translationService.init();
+  await translationService.init(true);
 
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);

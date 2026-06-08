@@ -3,6 +3,8 @@ export const TOKENS = {
   UserRepository: Symbol("UserRepository"),
   SendLogRepository: Symbol("SendLogRepository"),
   TranslationRepository: Symbol("TranslationRepository"),
+  LanguageRepository: Symbol("LanguageRepository"),
+  TextRepository: Symbol("TextRepository"),
 
   LogService: Symbol("LogService"),
   Translations: Symbol("Translations"),
