@@ -13,8 +13,9 @@ export default class EmailService {
   private transporter: Transporter;
 
   /**
-   * Creates instance of `SendMail` object which can send emails via sendinblue.com
-   * @param credentials aws credentials provider
+   * Creates instance of `EmailService` object which can send emails via AWS SES
+   * @param logger Logger service
+   * @param credentials AWS credentials provider
    */
   constructor(
     @inject(TOKENS.LogService) private logger: LogService,

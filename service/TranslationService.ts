@@ -14,6 +14,13 @@ import texts from "api/scripts/data/texts.js";
 export default class TranslationService {
   private items: Translation[] = [];
 
+  /**
+   * Creates instance of `TranslationService`
+   * @param translationRepository Translation repository
+   * @param languageRepository Language repository
+   * @param textRepository Text repository
+   * @param logger Logger service
+   */
   constructor(
     @inject(TOKENS.TranslationRepository) private translationRepository: Repository<Translation>,
     @inject(TOKENS.LanguageRepository) private languageRepository: Repository<Language>,
@@ -34,6 +41,10 @@ export default class TranslationService {
     });
   }
 
+  /**
+   * Seeds missing languages, texts, and translations from the init config into the database
+   * @param silent When `true`, suppresses per-item log output
+   */
   private async seed(silent: boolean): Promise<void> {
     try {
       this.logger.info(chalk.yellow(`>>> Updating translations in database... (silent=${silent})`));
@@ -103,6 +114,14 @@ export default class TranslationService {
     }
   }
 
+  /**
+   * Returns translation for the provided text code. Falls back to `textCode` itself if no translation is found.
+   * @param textCode Code of the text entry
+   * @param [params] Parameter or array of parameters to interpolate into the translation (optional)
+   * @param [languageCode] Language code to look up (default is `en`)
+   * @returns Object with `translation` (translated and interpolated string) and `textCode` (original code)
+   * @throws Error if translations were not initialized or `params` is an empty array
+   */
   public getText(textCode: string): { translation: string; textCode: string };
 
   public getText(textCode: string, params:  (string | number)[] | null): { translation: string; textCode: string };
@@ -121,13 +140,6 @@ export default class TranslationService {
     languageCode: string,
   ): { translation: string; textCode: string };
 
-  /**
-   * Returns translation for provided text code, and undefined otherwise
-   * @param textCode Code of text entry
-   * @param [params] Array of parameters to be replaced in the translation (optional)
-   * @param [languageCode] Code of language (default is `en`)
-   * @returns {{ translation: string, textCode: string }}
-   */
   public getText(
     textCode: string,
     params: (string | number)[] | string | number | null = null,

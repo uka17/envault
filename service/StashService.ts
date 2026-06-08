@@ -14,6 +14,12 @@ import config from "api/src/config/config.js";
 
 @injectable()
 export default class StashService {
+  /**
+   * Creates instance of `StashService`
+   * @param stashRepository Stash repository
+   * @param sendLogRepository SendLog repository
+   * @param logger Logger service
+   */
   constructor(
     @inject(TOKENS.StashRepository) private stashRepository: Repository<Stash>,
     @inject(TOKENS.SendLogRepository) private sendLogRepository: Repository<SendLog>,
@@ -25,6 +31,7 @@ export default class StashService {
    * @param stashId ID of the stash
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
    * @param messageId Message ID of the email received from AWS SES
+   * @returns Created `SendLog` object or `null` if error
    */
   public async log(
     stashId: number,
@@ -84,8 +91,8 @@ export default class StashService {
 
   /**
    * Searches for stash object by ID
-   * @param stashId
-   * @returns  Stash object or null if error or not found
+   * @param stashId Stash ID
+   * @returns Stash object or `null` if not found or error
    */
   public async getStash(stashId: number): Promise<Stash | null> {
     try {
@@ -102,8 +109,8 @@ export default class StashService {
 
   /**
    * Deletes stash object by ID
-   * @param stashId
-   * @returns  Number of rows affected or null if error
+   * @param stashId Stash ID
+   * @returns `DeleteResult` or `null` if error
    */
   public async deleteStash(stashId: number): Promise<DeleteResult | null> {
     try {
@@ -145,6 +152,7 @@ export default class StashService {
    * Encrypts the stash body using the key
    * @param body Stash body
    * @param key Key to encrypt the stash body
+   * @returns AES-encrypted string
    */
   public encryptBody(body: string, key: string): string {
     return AES.encrypt(body, key).toString();

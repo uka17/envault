@@ -10,6 +10,11 @@ import { TOKENS } from "#di/tokens.js";
 
 @injectable()
 export default class UserService {
+  /**
+   * Creates instance of `UserService`
+   * @param userRepository User repository
+   * @param logger Logger service
+   */
   constructor(
     @inject(TOKENS.UserRepository) private userRepository: Repository<User>,
     @inject(TOKENS.LogService) private logger: LogService,
@@ -48,7 +53,7 @@ export default class UserService {
   /**
    * Returns user by id
    * @param userId User ID
-   * @returns User or null if not found
+   * @returns User or `null` if not found or error
    */
   public async getUserById(userId: number): Promise<User | null> {
     try {
@@ -68,7 +73,7 @@ export default class UserService {
   /**
    * Returns user by email
    * @param email User email
-   * @returns User or null if not found
+   * @returns User or `null` if not found or error
    */
   public async getUserByEmail(email: string): Promise<User | null> {
     try {

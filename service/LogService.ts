@@ -38,11 +38,10 @@ export default class LogService {
   private winstonLogger: winston.Logger;
 
   /**
-   * Returns singleton instance of `LogService`
-   * @param {boolean} silent Should instance show debug information or not, `false` by default
+   * Creates instance of `LogService`
+   * @param {boolean} silent When `true`, all log output is suppressed; `false` by default
    * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level
    * (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
-   * @returns {LogService} `LogService` instance
    */
   constructor(silent: boolean = false, logLevel: LogLevel = LogLevel.Info) {
     this.winstonLogger = createLogger({
@@ -71,12 +70,15 @@ export default class LogService {
     });
   }
 
+  /** Logs a message at `info` level */
   public info(message: string | object): void {
     this.winstonLogger.info(message);
   }
+  /** Logs a message at `error` level */
   public error(message: string | object): void {
     this.winstonLogger.error(message);
   }
+  /** Logs a message at `warn` level */
   public warn(message: string | object): void {
     this.winstonLogger.warn(message);
   }
