@@ -2,8 +2,11 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
-import { CODES } from "#common/constants.js";
+import { container } from "tsyringe";
+import { CODES, MESSAGES } from "#common/constants.js";
+import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
+import StashService from "#service/StashService.js";
 
 let token: string;
 let stash: Stash;
@@ -49,6 +52,18 @@ describe("Stash Routes", () => {
   });
 
   describe("POST /api/v1/stashes", () => {
+    it("should return 500 when createStash throws", async() => {
+      const stashService = container.resolve<StashService>(TOKENS.StashService);
+      sinon.stub(stashService, "createStash").rejects(new Error("Unexpected error"));
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`)
+        .send(testStash);
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+    });
+
     it("should return error body_required", async() => {
       const testStashNoBody = { ...testStash };
       delete testStashNoBody.body;
@@ -125,6 +140,31 @@ describe("Stash Routes", () => {
     });
   });
   describe("GET /api/v1/stashes", () => {
+    it("should return 401 when userId is falsy", async() => {
+      sinon
+        .stub(globalThis.appDataSource.manager, "findOneBy")
+        .resolves({ id: 0 } as any);
+
+      const response = await request(globalThis.app)
+        .get("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should return 500 when getUserStashes throws", async() => {
+      const stashService = container.resolve<StashService>(TOKENS.StashService);
+      sinon.stub(stashService, "getUserStashes").rejects(new Error("Unexpected error"));
+
+      const response = await request(globalThis.app)
+        .get("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+    });
+
     it("should return stashes", async() => {
       const response = await request(globalThis.app)
         .get("/api/v1/stashes")
@@ -192,6 +232,16 @@ describe("Stash Routes", () => {
       expect(response.body.errors?.[0]?.msg?.textCode).to.equal("should_be_numeric");
       expect(response.body.errors?.[0]?.path).to.equal("hours");
     });
+    it("should return 500 when stash not found for snooze", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/stashes/99999999/snooze/1")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body.message).to.equal(MESSAGES.SERVER_ERROR);
+    });
+
     it("should snooze stash successfully", async() => {
       const id = 1;
       const hours = 100;
@@ -205,6 +255,18 @@ describe("Stash Routes", () => {
   });
 
   describe("DELETE /api/v1/stashes/:id", () => {
+    it("should return 500 when deleteStash throws", async() => {
+      const stashService = container.resolve<StashService>(TOKENS.StashService);
+      sinon.stub(stashService, "deleteStash").rejects(new Error("Unexpected error"));
+
+      const response = await request(globalThis.app)
+        .delete(`/api/v1/stashes/${stash.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+    });
+
     it("should return error id_should_be_numeric", async() => {
       const id = "wrong_id";
       const response = await request(globalThis.app)

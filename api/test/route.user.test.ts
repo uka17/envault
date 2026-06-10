@@ -2,6 +2,12 @@ import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
+import { container } from "tsyringe";
+import passport from "passport";
+import bcrypt from "bcryptjs";
+import { CODES, MESSAGES } from "#common/constants.js";
+import { TOKENS } from "#di/tokens.js";
+import UserService from "#service/UserService.js";
 
 const userId = customAlphabet(
   "1234567890abcdef",
@@ -14,6 +20,22 @@ describe("User Routes", () => {
   });
 
   describe("POST /api/v1/users", () => {
+    it("should return 500 when createUser returns null", async() => {
+      const userService = container.resolve<UserService>(TOKENS.UserService);
+      sinon.stub(userService, "createUser").resolves(null);
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/users")
+        .send({
+          email: `${userId()}@test.com`,
+          password: `Password${userId()}`,
+          name: `user${userId()}`,
+        });
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body.message?.textCode).to.equal("error_500");
+    });
+
     it("should handle unexpected error correctly", async() => {
       const newUser = {
         email: `${userId()}@test.com`,
@@ -262,6 +284,35 @@ describe("User Routes", () => {
       expect(loginResponse.status).to.equal(200);
     });
 
+    it("should return 500 when bcrypt.compare errors", async() => {
+      const creds = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+      await request(globalThis.app).post("/api/v1/users").send(creds);
+
+      sinon.stub(bcrypt, "compare").callsFake((_data: any, _encrypted: any, cb: any) => {
+        cb(new Error("bcrypt error"), false);
+      });
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: creds.email, password: creds.password });
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+    });
+
+    it("should return 500 when passport.authenticate throws", async() => {
+      sinon.stub(passport, "authenticate").throws(new Error("passport error"));
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: "test@test.com", password: "Password123" });
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+    });
+
     it("should fail to login with incorrect credentials", async() => {
       const response = await request(
         globalThis.app,
@@ -303,6 +354,17 @@ describe("User Routes", () => {
         });
 
       token = loginResponse.body.token;
+    });
+
+    it("should return 401 when getUserById returns null", async() => {
+      const userService = container.resolve<UserService>(TOKENS.UserService);
+      sinon.stub(userService, "getUserById").resolves(null);
+
+      const response = await request(globalThis.app)
+        .get("/api/v1/users/whoami")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
     });
 
     it("should fetch the current user with valid token", async() => {
