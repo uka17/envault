@@ -3,6 +3,7 @@ import { container } from "tsyringe";
 import express, { Express } from "express";
 import session from "express-session";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import chalk from "chalk";
 import dotenv from "dotenv";
@@ -44,6 +45,7 @@ const app: Express = express();
 // Also in local dev we use vite proxy to avoid CORS issues
 //app.use(cors(config.cors));
 app.use(session(config.session));
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 //Basic checks

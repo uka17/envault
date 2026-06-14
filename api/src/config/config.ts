@@ -25,7 +25,9 @@ export default {
     alphabet: "1234567890abcdef",
     length: 32,
   },
-  JWTMaxAge: 60, //days
+  JWTAccessMaxAgeMinutes: 15000,
+  JWTRefreshMaxAgeDays: 30,
+  refreshCookieName: "envault_refresh_token",
   currentIp: () => {
     const nets = os.networkInterfaces();
     for (const name of Object.keys(nets)) {

@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import sinon from "sinon";
 import express from "express";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { container } from "tsyringe";
 dotenv.config();
@@ -36,6 +37,7 @@ async function startApp() {
   container.registerInstance(TOKENS.LogService, loggerServiceStub);
 
   globalThis.app = express();
+  globalThis.app.use(cookieParser());
   globalThis.app.use(express.json());
 
   passportConfig(globalThis.appDataSource, translationService);

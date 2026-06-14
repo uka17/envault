@@ -103,4 +103,35 @@ export default function(app: express.Router) {
     } */
     userController.whoami.bind(userController),
   );
+
+  // Issue new access token using refresh token cookie
+  app.post(
+    "/api/v1/token/refresh",
+    /* #swagger.summary = 'Refresh access token' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Issues a new short-lived access token using the refresh token stored in the HttpOnly cookie. Also rotates the refresh token.' */
+    /* #swagger.responses[200] = {
+          description: 'New access token',
+          schema: { $ref: '#/definitions/TokenResponse' }
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid refresh token',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    userController.refresh.bind(userController),
+  );
+
+  // Logout — revoke refresh token
+  app.post(
+    "/api/v1/users/logout",
+    passport.authenticate("jwt", { session: false }),
+    /* #swagger.summary = 'Logout user' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Revokes the refresh token and clears the cookie. Requires a valid access token.' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+          description: 'Logout successful'
+    } */
+    userController.logout.bind(userController),
+  );
 }

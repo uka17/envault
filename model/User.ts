@@ -13,6 +13,9 @@ export default class User extends Base {
   @Column("text")
     name: string;
 
+  @Column({ type: "text", nullable: true })
+    refreshToken: string | null;
+
   @OneToMany(() => Stash, (stash) => stash.user)
     stashes: Stash[];
 }

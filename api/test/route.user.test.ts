@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { CODES, MESSAGES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import UserService from "#service/UserService.js";
+import config from "api/src/config/config.js";
 
 const userId = customAlphabet(
   "1234567890abcdef",
@@ -282,6 +283,12 @@ describe("User Routes", () => {
       expect(loginResponse.body.token).to.not.be
         .undefined;
       expect(loginResponse.status).to.equal(200);
+
+      // Login must set HttpOnly refresh token cookie
+      const setCookie: string[] = loginResponse.headers["set-cookie"] ?? [];
+      const refreshCookie = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
+      expect(refreshCookie).to.not.be.undefined;
+      expect(refreshCookie).to.include("HttpOnly");
     });
 
     it("should return 500 when bcrypt.compare errors", async() => {
@@ -396,6 +403,141 @@ describe("User Routes", () => {
         "Unauthorized",
       );
       expect(response.status).to.equal(401);
+    });
+  });
+
+  describe("POST /api/v1/token/refresh", () => {
+    let refreshCookie: string;
+    let userCredentials: { email: string; password: string; name: string };
+
+    beforeEach(async() => {
+      userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+
+      const setCookie: string[] = loginResponse.headers["set-cookie"] ?? [];
+      refreshCookie = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`)) ?? "";
+    });
+
+    it("should return 401 when no refresh cookie is present", async() => {
+      const response = await request(globalThis.app).post("/api/v1/token/refresh");
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+      expect(response.body.error?.textCode).to.equal("incorrect_token");
+    });
+
+    it("should return 401 and clear cookie for an invalid refresh token", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", `${config.refreshCookieName}=invalidtoken`);
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+      expect(response.body.error?.textCode).to.equal("incorrect_token");
+
+      const setCookie: string[] = response.headers["set-cookie"] ?? [];
+      const cleared = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
+      expect(cleared).to.not.be.undefined;
+      expect(cleared).to.include("Expires=Thu, 01 Jan 1970");
+    });
+
+    it("should return a new access token and rotate refresh cookie for a valid token", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.token).to.not.be.undefined;
+
+      const setCookie: string[] = response.headers["set-cookie"] ?? [];
+      const newRefreshCookie = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
+      expect(newRefreshCookie).to.not.be.undefined;
+      expect(newRefreshCookie).to.include("HttpOnly");
+      expect(newRefreshCookie).to.not.equal(refreshCookie);
+    });
+
+    it("should return 401 after the refresh token has been rotated (replay protection)", async() => {
+      // Consume the token once
+      await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      // Attempt to reuse the original token — must be rejected
+      const response = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should return 401 when verifyRefreshToken returns null", async() => {
+      const userService = container.resolve<UserService>(TOKENS.UserService);
+      sinon.stub(userService, "verifyRefreshToken").resolves(null);
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+  });
+
+  describe("POST /api/v1/users/logout", () => {
+    let token: string;
+    let refreshCookie: string;
+
+    beforeEach(async() => {
+      const newUser = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(newUser);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: newUser.email, password: newUser.password });
+
+      token = loginResponse.body.token;
+      const setCookie: string[] = loginResponse.headers["set-cookie"] ?? [];
+      refreshCookie = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`)) ?? "";
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app).post("/api/v1/users/logout");
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should return 200 and clear the refresh cookie on successful logout", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/logout")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+
+      const setCookie: string[] = response.headers["set-cookie"] ?? [];
+      const cleared = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
+      expect(cleared).to.not.be.undefined;
+      expect(cleared).to.include("Expires=Thu, 01 Jan 1970");
+    });
+
+    it("should invalidate the refresh token after logout", async() => {
+      await request(globalThis.app)
+        .post("/api/v1/users/logout")
+        .set("Authorization", `Bearer ${token}`);
+
+      const refreshResponse = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      expect(refreshResponse.status).to.equal(CODES.API_UNAUTHORIZED);
     });
   });
 });

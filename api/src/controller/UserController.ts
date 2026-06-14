@@ -4,6 +4,7 @@ import passport from "passport";
 
 import { TOKENS } from "#di/tokens.js";
 import { CODES, MESSAGES } from "#common/constants.js";
+import config from "api/src/config/config.js";
 
 import User from "#model/User.js";
 
@@ -11,6 +12,16 @@ import TranslationService from "#service/TranslationService.js";
 import UserService from "#service/UserService.js";
 import LogService from "#service/LogService.js";
 import ApiError from "api/src/error/ApiError.js";
+
+const REFRESH_COOKIE = config.refreshCookieName;
+
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  maxAge: config.JWTRefreshMaxAgeDays * 24 * 60 * 60 * 1000,
+  path: "/",
+};
 
 @injectable()
 export default class UserController {
@@ -35,7 +46,6 @@ export default class UserController {
       };
       const user = req.user as User;
 
-      // Create a new user
       const newUser = new User();
       newUser.name = name;
       newUser.email = email;
@@ -54,28 +64,31 @@ export default class UserController {
       next(e);
     }
   }
+
   /**
-   * Login user
+   * Login user — returns access token in JSON and sets refresh token in HttpOnly cookie
    * @param req Request object
    * @param res Response object
    * @param next Next function
    */
   public async login(req: Request, res: Response, next: NextFunction) {
     try {
-      // In fact route returns result of callback
       return passport.authenticate(
         "local",
         { session: false },
         async(err: Error, passportUser: User) => {
           /* istanbul ignore next */ if (err) {
             this.logger.error(err as object);
-            res
+            return res
               .status(CODES.SERVER_ERROR)
               .send({ error: this.translationService.getText("error_500") });
           }
 
           if (passportUser) {
-            return res.json({ token: this.userService.createToken(passportUser) });
+            const accessToken = this.userService.createToken(passportUser);
+            const refreshToken = await this.userService.createRefreshToken(passportUser);
+            res.cookie(REFRESH_COOKIE, refreshToken, REFRESH_COOKIE_OPTIONS);
+            return res.json({ token: accessToken });
           }
 
           return res.status(CODES.API_UNAUTHORIZED).json({
@@ -87,6 +100,56 @@ export default class UserController {
       next(e);
     }
   }
+
+  /**
+   * Issue new access token using refresh token from HttpOnly cookie
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+      const raw: string | undefined = req.cookies?.[REFRESH_COOKIE];
+      if (!raw) {
+        return res.status(CODES.API_UNAUTHORIZED).json({
+          error: this.translationService.getText("incorrect_token"),
+        });
+      }
+
+      const user = await this.userService.verifyRefreshToken(raw);
+      if (!user) {
+        res.clearCookie(REFRESH_COOKIE, { path: "/" });
+        return res.status(CODES.API_UNAUTHORIZED).json({
+          error: this.translationService.getText("incorrect_token"),
+        });
+      }
+
+      const accessToken = this.userService.createToken(user);
+      const newRefreshToken = await this.userService.createRefreshToken(user);
+      res.cookie(REFRESH_COOKIE, newRefreshToken, REFRESH_COOKIE_OPTIONS);
+      return res.json({ token: accessToken });
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Logout user — revokes refresh token and clears cookie
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User;
+      await this.userService.revokeRefreshToken(user.id);
+      res.clearCookie(REFRESH_COOKIE, { path: "/" });
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
   /**
    * Returns currently logged in user
    * @param req Request object
