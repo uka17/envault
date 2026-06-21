@@ -21,6 +21,13 @@ export default [
         "Oops, something went wrong an server returned status code 500",
       unauthorized: "Unauthorized",
       body_required: "body parameter is required",
+      incorrect_current_password: "Current password is incorrect",
+      email_required: "Email is required",
+      name_required: "Name is required",
+      password_required: "Password is required",
+      name_alphanumeric: "Name should contain only letters and numerals",
+      current_password_required: "Current password is required",
+      new_password_required: "New password is required",
     },
   },
 ];

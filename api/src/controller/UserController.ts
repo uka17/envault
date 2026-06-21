@@ -151,6 +151,48 @@ export default class UserController {
   }
 
   /**
+   * Update the current user's profile (name and/or email)
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = (req.user as User).id;
+      const { name, email } = req.body as { name?: string; email?: string };
+      const updated = await this.userService.updateProfile(id, { name, email });
+      return res.status(CODES.API_OK).json(updated);
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Change the current user's password after verifying the current one
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async updatePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = (req.user as User).id;
+      const { currentPassword, newPassword } = req.body as {
+        currentPassword: string;
+        newPassword: string;
+      };
+      const success = await this.userService.updatePassword(id, currentPassword, newPassword);
+      if (!success) {
+        return res.status(CODES.API_REQUEST_VALIDATION_ERROR).json({
+          error: this.translationService.getText("incorrect_current_password"),
+        });
+      }
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
    * Returns currently logged in user
    * @param req Request object
    * @param res Response object

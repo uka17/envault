@@ -121,6 +121,45 @@ export default function(app: express.Router) {
     userController.refresh.bind(userController),
   );
 
+  // Update current user profile (name and/or email)
+  app.patch(
+    "/api/v1/users/me",
+    passport.authenticate("jwt", { session: false }),
+    validationRules.updateProfile,
+    validateRequest,
+    /* #swagger.summary = 'Update user profile' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+          description: 'Updated user profile',
+          schema: { $ref: '#/definitions/UserResponse' }
+    } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.updateProfile.bind(userController),
+  );
+
+  // Change current user password
+  app.patch(
+    "/api/v1/users/me/password",
+    passport.authenticate("jwt", { session: false }),
+    validationRules.updatePassword,
+    validateRequest,
+    /* #swagger.summary = 'Change user password' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+          description: 'Password changed successfully'
+    } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error or incorrect current password',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.updatePassword.bind(userController),
+  );
+
   // Logout — revoke refresh token
   app.post(
     "/api/v1/users/logout",

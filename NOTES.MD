@@ -71,3 +71,13 @@ docker run -d \
   --env-file .env \
   uka17/envault-api:latest
 ```
+
+# To Have
+
+1. Profile page:
+   1. Registration date
+   2. Chnge email, password
+   3. Delete account
+2. Security
+   1. 2fs
+   2. Active sessions

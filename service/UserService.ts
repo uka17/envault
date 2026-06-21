@@ -126,6 +126,46 @@ export default class UserService {
   }
 
   /**
+   * Updates the name and/or email of a user.
+   * @param userId User ID
+   * @param data Object containing optional name and/or email fields to update
+   * @returns Updated user without password, or null if user not found
+   */
+  public async updateProfile(
+    userId: number,
+    data: { name?: string; email?: string },
+  ): Promise<User | null> {
+    await this.userRepository.update(userId, { ...data, modifiedOn: new Date() });
+    return this.getUserById(userId);
+  }
+
+  /**
+   * Changes a user's password after verifying the current password.
+   * @param userId User ID
+   * @param currentPassword Plain-text current password to verify
+   * @param newPassword Plain-text new password to set
+   * @returns true if password was changed, false if current password is incorrect or user not found
+   */
+  public async updatePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      return false;
+    }
+    if (!bcrypt.compareSync(currentPassword, user.password)) {
+      return false;
+    }
+    await this.userRepository.update(userId, {
+      password: this.getPasswordHash(newPassword),
+      modifiedOn: new Date(),
+    });
+    return true;
+  }
+
+  /**
    * Hashes a password
    * @param password Password to hash
    * @returns Hashed password

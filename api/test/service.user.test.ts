@@ -1,8 +1,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
+import bcrypt from "bcryptjs";
 
 import UserService from "#service/UserService.js";
 import User from "#model/User.js";
+
+const NON_EXISTENT_ID = 2147483647;
 
 let userService: UserService;
 let userRepositoryStub = globalThis.appDataSource.getRepository(User);
@@ -83,6 +86,83 @@ describe("User service", () => {
       await userService.revokeRefreshToken(testUser.id);
       const found = await userService.verifyRefreshToken(raw);
       expect(found).to.be.null;
+    });
+  });
+
+  describe("updateProfile", () => {
+    let profileUser: User;
+
+    before(async() => {
+      userService = new UserService(userRepositoryStub, globalThis.mockLogService);
+
+      const u = new User();
+      u.email = `profile_svc_${Date.now()}@test.com`;
+      u.password = "hashed";
+      u.name = "ProfileSvcUser";
+      profileUser = await userRepositoryStub.save(u);
+    });
+
+    it("should update name and return user without password", async() => {
+      const result = await userService.updateProfile(profileUser.id, { name: "UpdatedName" });
+      expect(result).to.not.be.null;
+      expect(result!.name).to.equal("UpdatedName");
+      expect((result as any).password).to.be.undefined;
+    });
+
+    it("should update email and return user without password", async() => {
+      const newEmail = `updated_${Date.now()}@test.com`;
+      const result = await userService.updateProfile(profileUser.id, { email: newEmail });
+      expect(result).to.not.be.null;
+      expect(result!.email).to.equal(newEmail);
+      expect((result as any).password).to.be.undefined;
+    });
+
+    it("should return object without id for a non-existent user id", async() => {
+      const result = await userService.updateProfile(NON_EXISTENT_ID, { name: "Ghost" });
+      expect(result).to.not.have.property("id");
+    });
+  });
+
+  describe("updatePassword", () => {
+    let passwordUser: User;
+    const originalPassword = "OriginalPass1";
+
+    before(async() => {
+      userService = new UserService(userRepositoryStub, globalThis.mockLogService);
+
+      const u = new User();
+      u.email = `password_svc_${Date.now()}@test.com`;
+      u.password = userService.getPasswordHash(originalPassword);
+      u.name = "PasswordSvcUser";
+      passwordUser = await userRepositoryStub.save(u);
+    });
+
+    it("should return false for a non-existent user id", async() => {
+      const result = await userService.updatePassword(
+        NON_EXISTENT_ID,
+        originalPassword,
+        "NewPass1",
+      );
+      expect(result).to.be.false;
+    });
+
+    it("should return false when current password is wrong", async() => {
+      const result = await userService.updatePassword(
+        passwordUser.id,
+        "WrongPassword1",
+        "NewPass1",
+      );
+      expect(result).to.be.false;
+    });
+
+    it("should return true and update the password when current password is correct", async() => {
+      const newPassword = "NewPass1";
+      const result = await userService.updatePassword(passwordUser.id, originalPassword, newPassword);
+      expect(result).to.be.true;
+
+      // Verify new password is stored
+      const updated = await userRepositoryStub.findOne({ where: { id: passwordUser.id } });
+      expect(bcrypt.compareSync(newPassword, updated!.password)).to.be.true;
     });
   });
 });

@@ -422,6 +422,101 @@
           }
         ]
       }
+    },
+    "/api/v1/token/refresh": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Refresh access token",
+        "description": "Issues a new short-lived access token using the refresh token stored in the HttpOnly cookie. Also rotates the refresh token.",
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "schema": {
+              "$ref": "#/definitions/TokenResponse"
+            }
+          },
+          "401": {
+            "description": "Missing or invalid refresh token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update user profile",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Updated user profile",
+            "schema": {
+              "$ref": "#/definitions/UserResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/password": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Change user password",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "422": {
+            "description": "Validation error or incorrect current password",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/logout": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Logout user",
+        "description": "Revokes the refresh token and clears the cookie. Requires a valid access token.",
+        "responses": {
+          "200": {
+            "description": "Logout successful"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "definitions": {

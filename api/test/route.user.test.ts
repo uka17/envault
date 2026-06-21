@@ -540,4 +540,183 @@ describe("User Routes", () => {
       expect(refreshResponse.status).to.equal(CODES.API_UNAUTHORIZED);
     });
   });
+
+  describe("PATCH /api/v1/users/me", () => {
+    let token: string;
+    let userCredentials: { email: string; password: string; name: string };
+
+    beforeEach(async() => {
+      userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+
+      token = loginResponse.body.token;
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .send({ name: "newname" });
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should update name successfully", async() => {
+      const newName = `user${userId()}`;
+
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ name: newName });
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.name).to.equal(newName);
+      expect(response.body.password).to.be.undefined;
+    });
+
+    it("should update email successfully", async() => {
+      const newEmail = `${userId()}@test.com`;
+
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: newEmail });
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.email).to.equal(newEmail);
+    });
+
+    it("should return 422 for invalid email format", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "notanemail" });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("email_format_incorrect");
+    });
+
+    it("should return 422 for invalid name format", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ name: "invalid name!" });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("name_alphanumeric");
+    });
+
+    it("should return 422 when updating to an already taken email", async() => {
+      const otherUser = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+      await request(globalThis.app).post("/api/v1/users").send(otherUser);
+
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: otherUser.email });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("user_already_exists");
+    });
+  });
+
+  describe("PATCH /api/v1/users/me/password", () => {
+    let token: string;
+    let userCredentials: { email: string; password: string; name: string };
+
+    beforeEach(async() => {
+      userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userId()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+
+      token = loginResponse.body.token;
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .send({ currentPassword: userCredentials.password, newPassword: `NewPass${userId()}` });
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should change password successfully", async() => {
+      const newPassword = `NewPass${userId()}`;
+
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ currentPassword: userCredentials.password, newPassword });
+
+      expect(response.status).to.equal(CODES.API_OK);
+
+      // Verify new password works for login
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: newPassword });
+
+      expect(loginResponse.status).to.equal(CODES.API_OK);
+      expect(loginResponse.body.token).to.not.be.undefined;
+    });
+
+    it("should return 422 for incorrect current password", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ currentPassword: "WrongPassword1", newPassword: `NewPass${userId()}` });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.error?.textCode).to.equal("incorrect_current_password");
+    });
+
+    it("should return 422 for missing currentPassword", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ newPassword: `NewPass${userId()}` });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("current_password_required");
+    });
+
+    it("should return 422 for missing newPassword", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ currentPassword: userCredentials.password });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("new_password_required");
+    });
+
+    it("should return 422 when newPassword does not meet format requirements", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me/password")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ currentPassword: userCredentials.password, newPassword: "weak" });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("password_format_incorrect");
+    });
+  });
 });

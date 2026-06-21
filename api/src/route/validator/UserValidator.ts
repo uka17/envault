@@ -6,6 +6,7 @@ import { TOKENS } from "#di/tokens.js";
 
 import TranslationService from "#service/TranslationService.js";
 import UserService from "#service/UserService.js";
+import User from "#model/User.js";
 
 @injectable()
 export default class UserValidator {
@@ -48,6 +49,32 @@ export default class UserValidator {
         body("password")
           .notEmpty()
           .withMessage(this.translationService.getText("password_required")),
+      ],
+      updateProfile: [
+        body("name")
+          .optional()
+          .matches(config.nameRegExp)
+          .withMessage(this.translationService.getText("name_alphanumeric")),
+        body("email")
+          .optional()
+          .matches(config.emailRegExp)
+          .withMessage(this.translationService.getText("email_format_incorrect"))
+          .custom(async(email, { req }) => {
+            const existing = await this.userService.getUserByEmail(email);
+            if (existing && existing.id !== (req.user as User).id) {
+              return Promise.reject(this.translationService.getText("user_already_exists"));
+            }
+          }),
+      ],
+      updatePassword: [
+        body("currentPassword")
+          .notEmpty()
+          .withMessage(this.translationService.getText("current_password_required")),
+        body("newPassword")
+          .notEmpty()
+          .withMessage(this.translationService.getText("new_password_required"))
+          .matches(config.passwordRegExp)
+          .withMessage(this.translationService.getText("password_format_incorrect")),
       ],
     };
   }
