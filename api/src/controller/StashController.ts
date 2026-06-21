@@ -29,6 +29,7 @@ export default class StashController {
   public async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { body, to, sendAt } = req.body;
+      throw new Error("Everything fucked up!");
       const user = req.user as User;
       const newStash = new Stash();
 
