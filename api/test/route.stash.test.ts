@@ -12,10 +12,11 @@ let token: string;
 let stash: Stash;
 //Use random email and password to create s user for testing
 const userId = customAlphabet("1234567890abcdef", 10);
+const userName = customAlphabet("abcdefghijklmnopqrstuvwxyz", 10);
 const userCredentials = {
   email: `${userId()}@test.com`,
   password: `Password${userId()}`,
-  name: `user${userId()}`,
+  name: `user${userName()}`,
 };
 let testStash = {
   body: "test_body",

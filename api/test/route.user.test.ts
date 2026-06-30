@@ -14,6 +14,10 @@ const userId = customAlphabet(
   "1234567890abcdef",
   10,
 );
+const userName = customAlphabet(
+  "abcdefghijklmnopqrstuvwxyz",
+  10,
+);
 
 describe("User Routes", () => {
   afterEach(() => {
@@ -30,7 +34,7 @@ describe("User Routes", () => {
         .send({
           email: `${userId()}@test.com`,
           password: `Password${userId()}`,
-          name: `user${userId()}`,
+          name: `user${userName()}`,
         });
 
       expect(response.status).to.equal(CODES.SERVER_ERROR);
@@ -41,7 +45,7 @@ describe("User Routes", () => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       sinon
@@ -65,7 +69,7 @@ describe("User Routes", () => {
     it("should return error user_already_exists", async() => {
       const newUser = {
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
         email: `${userId()}@test.com`,
       };
 
@@ -98,7 +102,7 @@ describe("User Routes", () => {
     it("should return error email_required", async() => {
       const newUser = {
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       const response = await request(
@@ -151,7 +155,7 @@ describe("User Routes", () => {
       const newUser = {
         password: `Password${userId()}`,
         email: "test",
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       const response = await request(
@@ -168,7 +172,7 @@ describe("User Routes", () => {
     it("should return error password_required", async() => {
       const newUser = {
         email: `${userId()}@test.com`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       const response = await request(
@@ -186,7 +190,7 @@ describe("User Routes", () => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: "password",
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       const response = await request(
@@ -255,7 +259,7 @@ describe("User Routes", () => {
       const userCredentials = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       //Create user
@@ -295,7 +299,7 @@ describe("User Routes", () => {
       const creds = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
       await request(globalThis.app).post("/api/v1/users").send(creds);
 
@@ -344,7 +348,7 @@ describe("User Routes", () => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       await request(globalThis.app)
@@ -414,7 +418,7 @@ describe("User Routes", () => {
       userCredentials = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       await request(globalThis.app).post("/api/v1/users").send(userCredentials);
@@ -496,7 +500,7 @@ describe("User Routes", () => {
       const newUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       await request(globalThis.app).post("/api/v1/users").send(newUser);
@@ -549,7 +553,7 @@ describe("User Routes", () => {
       userCredentials = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       await request(globalThis.app).post("/api/v1/users").send(userCredentials);
@@ -570,7 +574,7 @@ describe("User Routes", () => {
     });
 
     it("should update name successfully", async() => {
-      const newName = `user${userId()}`;
+      const newName = `user${userName()}`;
 
       const response = await request(globalThis.app)
         .patch("/api/v1/users/me")
@@ -618,7 +622,7 @@ describe("User Routes", () => {
       const otherUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
       await request(globalThis.app).post("/api/v1/users").send(otherUser);
 
@@ -640,7 +644,7 @@ describe("User Routes", () => {
       userCredentials = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
-        name: `user${userId()}`,
+        name: `user${userName()}`,
       };
 
       await request(globalThis.app).post("/api/v1/users").send(userCredentials);
