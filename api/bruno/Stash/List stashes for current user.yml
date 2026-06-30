@@ -1,0 +1,113 @@
+info:
+  name: List stashes for current user
+  type: http
+  seq: 2
+  tags:
+    - Stash
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/stashes"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: List of stashes
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "type": "array",
+            "items": {
+              "id": 42,
+              "to": "journalist@fakemail.com",
+              "body": "<encrypted>",
+              "key": "abc123xyz",
+              "isSent": false,
+              "sendAt": "2025-12-31T23:59:59Z",
+              "createdOn": "2025-01-01T00:00:00Z",
+              "modifiedOn": "2025-01-01T00:00:00Z"
+            }
+          }
+  - name: 200 Response
+    description: List of stashes
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <type>array</type>
+            <items>
+              <id>42</id>
+              <to>journalist@fakemail.com</to>
+              <body><encrypted></body>
+              <key>abc123xyz</key>
+              <isSent>false</isSent>
+              <sendAt>2025-12-31T23:59:59Z</sendAt>
+              <createdOn>2025-01-01T00:00:00Z</createdOn>
+              <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
+            </items>
+          </root>
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Returns all stashes belonging to the authenticated user, ordered by creation date.

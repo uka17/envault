@@ -1,0 +1,263 @@
+info:
+  name: Snooze stash for N hours
+  type: http
+  seq: 5
+  tags:
+    - Stash
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+  params:
+    - name: id
+      value: "42"
+      type: path
+      description: Stash ID
+    - name: hours
+      value: "24"
+      type: path
+      description: Number of hours to postpone
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Stash snoozed — returns updated stash
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 42,
+            "to": "journalist@fakemail.com",
+            "body": "<encrypted>",
+            "key": "abc123xyz",
+            "isSent": false,
+            "sendAt": "2025-12-31T23:59:59Z",
+            "createdOn": "2025-01-01T00:00:00Z",
+            "modifiedOn": "2025-01-01T00:00:00Z"
+          }
+  - name: 200 Response
+    description: Stash snoozed — returns updated stash
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <id>42</id>
+            <to>journalist@fakemail.com</to>
+            <body><encrypted></body>
+            <key>abc123xyz</key>
+            <isSent>false</isSent>
+            <sendAt>2025-12-31T23:59:59Z</sendAt>
+            <createdOn>2025-01-01T00:00:00Z</createdOn>
+            <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
+          </root>
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+  - name: 422 Response
+    description: Validation error — invalid ID or hours format
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "errors": [
+              {
+                "field": "email",
+                "message": "must be a valid email"
+              }
+            ]
+          }
+  - name: 422 Response
+    description: Validation error — invalid ID or hours format
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <errors>[object Object]</errors>
+          </root>
+  - name: 500 Response
+    description: Snooze failed (stash not found or service error)
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 500 Response
+    description: Snooze failed (stash not found or service error)
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+        - name: hours
+          value: "24"
+          type: path
+          description: Number of hours to postpone
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Postpones the scheduled send time of a stash by the given number of hours. Updates sendAt = current sendAt + hours.

@@ -9,26 +9,31 @@ const doc = {
     description: "REST API for the Envault application — secure stash management with email delivery via AWS SES.",
     version: "1.0.0",
   },
-  host: `${config.currentIp()}:${config.port}`,
-  schemes: ["http"],
-  securityDefinitions: {
-    bearerAuth: {
-      type: "apiKey",
-      in: "header",
-      name: "Authorization",
-      description: "JWT token. Format: **Bearer &lt;token&gt;**",
+  servers: [
+    {
+      url: `http://${config.currentIp()}:${config.port}`,
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "JWT token. Format: **Bearer &lt;token&gt;**",
+      },
     },
   },
   definitions: {
     // swagger-autogen shorthand: $ prefix = required field, value = example
     UserCreateRequest: {
       $email: "john@mail.com",
-      $password: "secret@123",
+      $password: "Secret@123",
       $name: "John Doe",
     },
     UserLoginRequest: {
       $email: "john@mail.com",
-      $password: "secret@123",
+      $password: "Secret@123",
     },
     UserResponse: {
       id: 1,
@@ -89,6 +94,6 @@ function readFolder(folder: string, prefix: string, done: () => void) {
 readFolder(routeFolder, "../route", () => {
   readFolder(controllerFolder, "../controller", () => {
     const outputFile = "./swagger.json";
-    swaggerAutogen(outputFile, fileList, doc);
+    swaggerAutogen({ openapi: "3.0.0" })(outputFile, fileList, doc);
   });
 });

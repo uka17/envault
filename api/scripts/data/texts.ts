@@ -25,7 +25,8 @@ export default [
       email_required: "Email is required",
       name_required: "Name is required",
       password_required: "Password is required",
-      name_alphanumeric: "Name should contain only letters and numerals",
+      name_alphanumeric:
+        "Name should contain only letters, with single spaces, hyphens or apostrophes between words (e.g. \"John Doe\")",
       current_password_required: "Current password is required",
       new_password_required: "New password is required",
     },

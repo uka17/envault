@@ -35,11 +35,14 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Register new user' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Creates a new user account. Returns the created user object (without password). The email must be unique.' */
-    /* #swagger.parameters['body'] = {
-          in: 'body',
+    /* #swagger.requestBody = {
           description: 'User registration data',
           required: true,
-          schema: { $ref: '#/definitions/UserCreateRequest' }
+          content: {
+            "application/json": {
+              schema: { $ref: '#/definitions/UserCreateRequest' }
+            }
+          }
     } */
     /* #swagger.responses[201] = {
           description: 'User created successfully',
@@ -64,11 +67,14 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Login user' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.' */
-    /* #swagger.parameters['body'] = {
-          in: 'body',
+    /* #swagger.requestBody = {
           description: 'User credentials',
           required: true,
-          schema: { $ref: '#/definitions/UserLoginRequest' }
+          content: {
+            "application/json": {
+              schema: { $ref: '#/definitions/UserLoginRequest' }
+            }
+          }
     } */
     /* #swagger.responses[200] = {
           description: 'Login successful — JWT token returned',

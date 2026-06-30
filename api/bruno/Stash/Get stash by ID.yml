@@ -1,0 +1,177 @@
+info:
+  name: Get stash by ID
+  type: http
+  seq: 3
+  tags:
+    - Stash
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/stashes/:id"
+  params:
+    - name: id
+      value: "42"
+      type: path
+      description: Stash ID
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Stash found
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 42,
+            "to": "journalist@fakemail.com",
+            "body": "<encrypted>",
+            "key": "abc123xyz",
+            "isSent": false,
+            "sendAt": "2025-12-31T23:59:59Z",
+            "createdOn": "2025-01-01T00:00:00Z",
+            "modifiedOn": "2025-01-01T00:00:00Z"
+          }
+  - name: 200 Response
+    description: Stash found
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <id>42</id>
+            <to>journalist@fakemail.com</to>
+            <body><encrypted></body>
+            <key>abc123xyz</key>
+            <isSent>false</isSent>
+            <sendAt>2025-12-31T23:59:59Z</sendAt>
+            <createdOn>2025-01-01T00:00:00Z</createdOn>
+            <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
+          </root>
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+  - name: 404 Response
+    description: Stash not found
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 404 Response
+    description: Stash not found
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: GET
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Returns a single stash by its numeric ID. The stash must belong to the authenticated user.

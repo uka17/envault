@@ -17,17 +17,20 @@ config:
 request:
   auth:
     type: bearer
-    token: "{{JWT}}"
+    token: "{{accessToken}}"
   variables:
-    - name: host
-      value: http://192.168.2.102
-    - name: port
-      value: "9000"
-    - name: version
-      value: v1
+    - name: baseUrl
+      value: http://192.168.2.102:9000
 bundled: false
 extensions:
   bruno:
     ignore:
       - node_modules
       - .git
+    openapi:
+      - sourceUrl: http://192.168.2.102:9000/swagger/openapi.json
+        groupBy: tags
+        lastSyncDate: 2026-06-30T19:39:32.764Z
+        specHash: 2e65faf423fab64c18c8a4f33190f60f
+        autoCheck: true
+        autoCheckInterval: 5

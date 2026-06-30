@@ -1,0 +1,168 @@
+info:
+  name: Delete stash by ID
+  type: http
+  seq: 4
+  tags:
+    - Stash
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/stashes/:id"
+  params:
+    - name: id
+      value: "42"
+      type: path
+      description: Stash ID
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Stash deleted — returns the TypeORM DeleteResult
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "affected": 1
+          }
+  - name: 200 Response
+    description: Stash deleted — returns the TypeORM DeleteResult
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <affected>1</affected>
+          </root>
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+  - name: 422 Response
+    description: Validation error — invalid ID format
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "errors": [
+              {
+                "field": "email",
+                "message": "must be a valid email"
+              }
+            ]
+          }
+  - name: 422 Response
+    description: Validation error — invalid ID format
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Stash ID
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <errors>[object Object]</errors>
+          </root>
+
+docs: Permanently deletes a stash by its numeric ID. This action is irreversible.

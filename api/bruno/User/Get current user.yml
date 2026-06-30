@@ -1,0 +1,101 @@
+info:
+  name: Get current user
+  type: http
+  seq: 3
+  tags:
+    - User
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/users/whoami"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Current user profile
+    request:
+      url: "{{baseUrl}}/api/v1/users/whoami"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 1,
+            "email": "john@mail.com",
+            "name": "John Doe",
+            "createdOn": "2025-01-01T00:00:00Z",
+            "modifiedOn": "2025-01-01T00:00:00Z"
+          }
+  - name: 200 Response
+    description: Current user profile
+    request:
+      url: "{{baseUrl}}/api/v1/users/whoami"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <id>1</id>
+            <email>john@mail.com</email>
+            <name>John Doe</name>
+            <createdOn>2025-01-01T00:00:00Z</createdOn>
+            <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
+          </root>
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/users/whoami"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Missing or invalid JWT token
+    request:
+      url: "{{baseUrl}}/api/v1/users/whoami"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Returns the profile of the currently authenticated user based on the JWT token provided in the Authorization header.

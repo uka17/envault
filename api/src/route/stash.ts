@@ -26,11 +26,14 @@ export default function(app: express.Router) {
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user. The message body is encrypted before storage and will be sent to the recipient email at the scheduled time via AWS SES.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
-    /* #swagger.parameters['body'] = {
-          in: 'body',
+    /* #swagger.requestBody = {
           description: 'Stash data',
           required: true,
-          schema: { $ref: '#/definitions/StashCreateRequest' }
+          content: {
+            "application/json": {
+              schema: { $ref: '#/definitions/StashCreateRequest' }
+            }
+          }
     } */
     /* #swagger.responses[201] = {
           description: 'Stash created successfully',

@@ -1,0 +1,195 @@
+info:
+  name: Register new user
+  type: http
+  seq: 1
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "john@mail.com",
+        "password": "Secret@123",
+        "name": "John Doe"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: User created successfully
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 1,
+            "email": "john@mail.com",
+            "name": "John Doe",
+            "createdOn": "2025-01-01T00:00:00Z",
+            "modifiedOn": "2025-01-01T00:00:00Z"
+          }
+  - name: 201 Response
+    description: User created successfully
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <id>1</id>
+            <email>john@mail.com</email>
+            <name>John Doe</name>
+            <createdOn>2025-01-01T00:00:00Z</createdOn>
+            <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
+          </root>
+  - name: 422 Response
+    description: Validation error — missing or invalid fields
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "errors": [
+              {
+                "field": "email",
+                "message": "must be a valid email"
+              }
+            ]
+          }
+  - name: 422 Response
+    description: Validation error — missing or invalid fields
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <errors>[object Object]</errors>
+          </root>
+  - name: 500 Response
+    description: Server error
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 500 Response
+    description: Server error
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123",
+            "name": "John Doe"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Creates a new user account. Returns the created user object (without password). The email must be unique.

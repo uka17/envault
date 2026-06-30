@@ -1,0 +1,32 @@
+info:
+  name: Health check
+  type: http
+  seq: 2
+  tags:
+    - Health
+
+http:
+  method: GET
+  url: "{{baseUrl}}/health"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Service is healthy
+    request:
+      url: "{{baseUrl}}/health"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: text
+        data: ""
+
+docs: Returns HTTP 200 with an empty body. Used by load balancers and monitoring tools to verify the API is alive.

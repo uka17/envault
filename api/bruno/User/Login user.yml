@@ -1,0 +1,180 @@
+info:
+  name: Login user
+  type: http
+  seq: 2
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users/login"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "john@mail.com",
+        "password": "Secret@123"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setEnvVar("accessToken", res.body.token)
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Login successful — JWT token returned
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+  - name: 200 Response
+    description: Login successful — JWT token returned
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</token>
+          </root>
+  - name: 401 Response
+    description: Invalid email or password
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 401 Response
+    description: Invalid email or password
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+  - name: 500 Response
+    description: Server error
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "Unauthorized"
+          }
+  - name: 500 Response
+    description: Server error
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "email": "john@mail.com",
+            "password": "Secret@123"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <error>Unauthorized</error>
+          </root>
+
+docs: Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.

@@ -1,0 +1,58 @@
+info:
+  name: API root
+  type: http
+  seq: 1
+  tags:
+    - Health
+
+http:
+  method: GET
+  url: "{{baseUrl}}/"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: API is online
+    request:
+      url: "{{baseUrl}}/"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "type": "string",
+            "example": "API is online (TypeORM, Passport, Express.js)"
+          }
+  - name: 200 Response
+    description: API is online
+    request:
+      url: "{{baseUrl}}/"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/xml
+      body:
+        type: xml
+        data: |-
+          <?xml version="1.0" encoding="UTF-8"?>
+          <root>
+            <type>string</type>
+            <example>API is online (TypeORM, Passport, Express.js)</example>
+          </root>
+
+docs: Returns a plain-text status page confirming the API is online, with the current commit SHA and a link to the Swagger UI.
