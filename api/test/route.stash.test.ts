@@ -137,7 +137,7 @@ describe("Stash Routes", () => {
         .send(testStash);
 
       expect(response.status).to.equal(CODES.API_CREATED);
-      expect(response.body.key).to.not.be.undefined;
+      expect(response.body.key).to.be.undefined;
     });
   });
   describe("GET /api/v1/stashes", () => {
@@ -174,7 +174,7 @@ describe("Stash Routes", () => {
 
       expect(response.status).to.equal(CODES.API_OK);
       expect(response.body.error).to.be.undefined;
-      expect(response.body[0].key).to.not.be.undefined;
+      expect(response.body[0].key).to.be.undefined;
     });
   });
   describe("GET /api/v1/stashes/:id", () => {
@@ -195,7 +195,7 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_OK);
-      expect(response.body.key).to.not.be.undefined;
+      expect(response.body.key).to.be.undefined;
     });
     it("should return stash not found", async() => {
       const response = await request(globalThis.app)

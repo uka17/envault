@@ -1,5 +1,6 @@
 import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
+import { instanceToPlain } from "class-transformer";
 
 import { TOKENS } from "#di/tokens.js";
 import { CODES, MESSAGES } from "#common/constants.js";
@@ -43,7 +44,7 @@ export default class StashController {
       newStash.modifiedBy = user;
 
       const createdStash = await this.stashService.createStash(newStash);
-      return res.status(CODES.API_CREATED).json(createdStash);
+      return res.status(CODES.API_CREATED).json(instanceToPlain(createdStash));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);
@@ -70,7 +71,7 @@ export default class StashController {
         );
       } else {
         stashes = await this.stashService.getUserStashes(userId);
-        return res.status(CODES.API_OK).json(stashes);
+        return res.status(CODES.API_OK).json(instanceToPlain(stashes));
       }
     } catch (e: unknown) {
       /* istanbul ignore next */
@@ -99,7 +100,7 @@ export default class StashController {
           [this.translationService.getText("stash_not_found")],
         );
       }
-      return res.status(200).json(stash);
+      return res.status(200).json(instanceToPlain(stash));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);
@@ -143,7 +144,7 @@ export default class StashController {
           this.translationService.getText("error_500"),
         ]);
       }
-      return res.status(CODES.API_OK).json(result);
+      return res.status(CODES.API_OK).json(instanceToPlain(result));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);

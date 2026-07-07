@@ -6,6 +6,7 @@ import {
   BaseEntity as TypeORMBaseEntity,
   Relation,
 } from "typeorm";
+import { Exclude } from "class-transformer";
 import User from "#model/User.js";
 
 @Entity()
@@ -19,9 +20,11 @@ export default abstract class BaseEntity extends TypeORMBaseEntity {
   @Column({ type: "timestamptz", default: () => "NOW()" })
     modifiedOn: Date;
 
+  @Exclude()
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
     createdBy: Relation<User>;
 
+  @Exclude()
   @ManyToOne(() => User, (user) => user.id, { nullable: true })
     modifiedBy: Relation<User>;
 }

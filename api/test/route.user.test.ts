@@ -83,6 +83,8 @@ describe("User Routes", () => {
         .undefined;
       expect(createResponse.body.name).to.not.be
         .undefined;
+      expect(createResponse.body.password).to.be.undefined;
+      expect(createResponse.body.refreshToken).to.be.undefined;
       expect(createResponse.status).to.equal(201);
 
       const failedCreateResponse = await request(
@@ -388,6 +390,8 @@ describe("User Routes", () => {
       expect(response.body.error).to.be.undefined;
       expect(response.body.email).to.not.be
         .undefined;
+      expect(response.body.password).to.be.undefined;
+      expect(response.body.refreshToken).to.be.undefined;
       expect(response.status).to.equal(200);
     });
 

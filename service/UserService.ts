@@ -27,12 +27,7 @@ export default class UserService {
    * @returns Created user object or null if error
    */
   public async createUser(newUser: User): Promise<User | null> {
-    const createdUser = await this.userRepository.manager.save(newUser);
-
-    const result = Object.assign({}, createdUser);
-    delete result.password;
-
-    return result;
+    return await this.userRepository.manager.save(newUser);
   }
   /**
    * Create access token for user (short-lived)
@@ -89,14 +84,11 @@ export default class UserService {
    */
   public async getUserById(userId: number): Promise<User | null> {
     try {
-      const user = await this.userRepository.findOne({
+      return await this.userRepository.findOne({
         where: {
           id: userId,
         },
       });
-      const result = Object.assign({}, user);
-      delete result.password;
-      return result;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -109,16 +101,11 @@ export default class UserService {
    */
   public async getUserByEmail(email: string): Promise<User | null> {
     try {
-      const user = await this.userRepository.findOne({
+      return await this.userRepository.findOne({
         where: {
           email: email,
         },
       });
-      if (!user) {
-        return null;
-      }
-      delete user.password;
-      return user;
     } catch (error) {
       this.logger.error(error);
       return null;

@@ -102,24 +102,24 @@ describe("User service", () => {
       profileUser = await userRepositoryStub.save(u);
     });
 
-    it("should update name and return user without password", async() => {
+    // Password/refreshToken stripping is done at the response-serialization boundary
+    // (class-transformer's @Exclude()), not by the service — see UserController.
+    it("should update name", async() => {
       const result = await userService.updateProfile(profileUser.id, { name: "UpdatedName" });
       expect(result).to.not.be.null;
       expect(result!.name).to.equal("UpdatedName");
-      expect((result as any).password).to.be.undefined;
     });
 
-    it("should update email and return user without password", async() => {
+    it("should update email", async() => {
       const newEmail = `updated_${Date.now()}@test.com`;
       const result = await userService.updateProfile(profileUser.id, { email: newEmail });
       expect(result).to.not.be.null;
       expect(result!.email).to.equal(newEmail);
-      expect((result as any).password).to.be.undefined;
     });
 
-    it("should return object without id for a non-existent user id", async() => {
+    it("should return null for a non-existent user id", async() => {
       const result = await userService.updateProfile(NON_EXISTENT_ID, { name: "Ghost" });
-      expect(result).to.not.have.property("id");
+      expect(result).to.be.null;
     });
   });
 

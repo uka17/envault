@@ -1,6 +1,7 @@
 import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
+import { instanceToPlain } from "class-transformer";
 
 import { TOKENS } from "#di/tokens.js";
 import { CODES, MESSAGES } from "#common/constants.js";
@@ -56,7 +57,7 @@ export default class UserController {
       const createdUser = await this.userService.createUser(newUser);
 
       if (createdUser !== null) {
-        return res.status(CODES.API_CREATED).json(createdUser);
+        return res.status(CODES.API_CREATED).json(instanceToPlain(createdUser));
       } else {
         throw new Error(MESSAGES.USER_WAS_NOT_CREATED);
       }
@@ -161,7 +162,7 @@ export default class UserController {
       const id = (req.user as User).id;
       const { name, email } = req.body as { name?: string; email?: string };
       const updated = await this.userService.updateProfile(id, { name, email });
-      return res.status(CODES.API_OK).json(updated);
+      return res.status(CODES.API_OK).json(instanceToPlain(updated));
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
     }
@@ -209,7 +210,7 @@ export default class UserController {
           this.translationService.getText("incorrect_token"),
         ]);
       } else {
-        return res.status(CODES.API_OK).json(result);
+        return res.status(CODES.API_OK).json(instanceToPlain(result));
       }
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);

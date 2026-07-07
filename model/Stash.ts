@@ -1,4 +1,5 @@
 import { Entity, Column, ManyToOne, Relation } from "typeorm";
+import { Exclude } from "class-transformer";
 import Base from "#model/Base.js";
 import User from "#model/User.js";
 
@@ -16,6 +17,7 @@ export default class Stash extends Base {
   })
     isSent: boolean;
 
+  @Exclude()
   @Column({
     type: "text",
     unique: true,
