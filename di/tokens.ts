@@ -1,6 +1,7 @@
 export const TOKENS = {
   StashRepository: Symbol("StashRepository"),
   UserRepository: Symbol("UserRepository"),
+  SessionRepository: Symbol("SessionRepository"),
   SendLogRepository: Symbol("SendLogRepository"),
   TranslationRepository: Symbol("TranslationRepository"),
   LanguageRepository: Symbol("LanguageRepository"),

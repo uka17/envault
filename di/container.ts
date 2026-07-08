@@ -9,6 +9,7 @@ import { TOKENS } from "#di/tokens.js";
 
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
+import Session from "#model/Session.js";
 import Translation from "#model/Translation.js";
 import Language from "#model/Language.js";
 import Text from "#model/Text.js";
@@ -39,6 +40,9 @@ export default function initDI(appDataSource: DataSource) {
 
   const userRepository = appDataSource.getRepository(User);
   container.registerInstance(TOKENS.UserRepository, userRepository);
+
+  const sessionRepository = appDataSource.getRepository(Session);
+  container.registerInstance(TOKENS.SessionRepository, sessionRepository);
 
   const translationRepository = appDataSource.getRepository(Translation);
   container.registerInstance(TOKENS.TranslationRepository, translationRepository);

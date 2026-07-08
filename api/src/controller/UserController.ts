@@ -86,9 +86,12 @@ export default class UserController {
           }
 
           if (passportUser) {
-            const accessToken = this.userService.createToken(passportUser);
-            const refreshToken = await this.userService.createRefreshToken(passportUser);
-            res.cookie(REFRESH_COOKIE, refreshToken, REFRESH_COOKIE_OPTIONS);
+            const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
+              userAgent: req.headers["user-agent"],
+              ip: req.ip,
+            });
+            const accessToken = this.userService.createToken(passportUser, sessionId);
+            res.cookie(REFRESH_COOKIE, raw, REFRESH_COOKIE_OPTIONS);
             return res.json({ token: accessToken });
           }
 
@@ -117,17 +120,16 @@ export default class UserController {
         });
       }
 
-      const user = await this.userService.verifyRefreshToken(raw);
-      if (!user) {
+      const result = await this.userService.verifyRefreshToken(raw);
+      if (!result) {
         res.clearCookie(REFRESH_COOKIE, { path: "/" });
         return res.status(CODES.API_UNAUTHORIZED).json({
           error: this.translationService.getText("incorrect_token"),
         });
       }
 
-      const accessToken = this.userService.createToken(user);
-      const newRefreshToken = await this.userService.createRefreshToken(user);
-      res.cookie(REFRESH_COOKIE, newRefreshToken, REFRESH_COOKIE_OPTIONS);
+      const accessToken = this.userService.createToken(result.user, result.session.id);
+      res.cookie(REFRESH_COOKIE, result.raw, REFRESH_COOKIE_OPTIONS);
       return res.json({ token: accessToken });
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
@@ -142,8 +144,10 @@ export default class UserController {
    */
   public async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = req.user as User;
-      await this.userService.revokeRefreshToken(user.id);
+      const user = req.user as User & { sessionId?: number };
+      if (user.sessionId) {
+        await this.userService.revokeRefreshToken(user.sessionId);
+      }
       res.clearCookie(REFRESH_COOKIE, { path: "/" });
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {

@@ -470,11 +470,30 @@ describe("User Routes", () => {
       expect(newRefreshCookie).to.not.equal(refreshCookie);
     });
 
-    it("should return 401 after the refresh token has been rotated (replay protection)", async() => {
+    it("should still accept the previous refresh token within the grace period (race protection)", async() => {
       // Consume the token once
       await request(globalThis.app)
         .post("/api/v1/token/refresh")
         .set("Cookie", refreshCookie);
+
+      // A concurrent request using the just-replaced token must still succeed
+      const response = await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.token).to.not.be.undefined;
+    });
+
+    it("should return 401 for the previous refresh token once grace has expired (replay protection)", async() => {
+      const originalGrace = config.JWTRefreshGraceMinutes;
+
+      // Consume the token once, with the grace deadline already in the past
+      config.JWTRefreshGraceMinutes = -1;
+      await request(globalThis.app)
+        .post("/api/v1/token/refresh")
+        .set("Cookie", refreshCookie);
+      config.JWTRefreshGraceMinutes = originalGrace;
 
       // Attempt to reuse the original token — must be rejected
       const response = await request(globalThis.app)

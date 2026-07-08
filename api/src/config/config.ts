@@ -27,6 +27,7 @@ export default {
   },
   JWTAccessMaxAgeMinutes: 15000,
   JWTRefreshMaxAgeDays: 30,
+  JWTRefreshGraceMinutes: 1,
   refreshCookieName: "envault_refresh_token",
   currentIp: () => {
     const nets = os.networkInterfaces();

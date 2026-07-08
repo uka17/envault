@@ -67,6 +67,7 @@ export default function(
         /* istanbul ignore next */ if (!user) {
           return done(null, false);
         }
+        (user as User & { sessionId?: number }).sessionId = payload.sid;
         return done(null, user);
       },
     ),
