@@ -60,6 +60,16 @@ const doc = {
       createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
     },
+    SessionResponse: {
+      id: 7,
+      expiresAt: "2025-12-31T23:59:59Z",
+      revokedAt: null,
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      ip: "203.0.113.42",
+      createdOn: "2025-01-01T00:00:00Z",
+      modifiedOn: "2025-01-01T00:00:00Z",
+      current: true,
+    },
     ErrorResponse: {
       error: "Unauthorized",
     },

@@ -64,9 +64,11 @@ export default function(
         const user = await userRepository.findOneBy({
           id: payload.sub,
         });
-        /* istanbul ignore next */ if (!user) {
+        /* istanbul ignore next */ 
+        if (!user) {
           return done(null, false);
         }
+        //This is jsut to avoid creation of seprate object where `sessionID` property added to `User`
         (user as User & { sessionId?: number }).sessionId = payload.sid;
         return done(null, user);
       },

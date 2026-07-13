@@ -179,4 +179,76 @@ export default function(app: express.Router) {
     } */
     userController.logout.bind(userController),
   );
+
+  // List active sessions for the current user
+  app.get(
+    "/api/v1/users/sessions",
+    passport.authenticate("jwt", { session: false }),
+    /* #swagger.summary = 'List active sessions' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Returns every active (non-revoked, non-expired) session of the authenticated user, most recently created first. Each entry is flagged with `current: true` if it is the session used for this request.' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+          description: 'List of active sessions',
+          schema: { type: 'array', items: { $ref: '#/definitions/SessionResponse' } }
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid JWT token',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    userController.listSessions.bind(userController),
+  );
+
+  // Terminate every session of the current user except the one currently in use
+  app.delete(
+    "/api/v1/users/sessions",
+    passport.authenticate("jwt", { session: false }),
+    /* #swagger.summary = 'Terminate all other sessions' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Revokes every active session of the authenticated user except the one used for this request (logout from all other devices).' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+          description: 'Other sessions terminated'
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid JWT token',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    userController.revokeOtherSessions.bind(userController),
+  );
+
+  // Terminate a single session by ID
+  app.delete(
+    "/api/v1/users/sessions/:id",
+    passport.authenticate("jwt", { session: false }),
+    validationRules.sessionId,
+    validateRequest,
+    /* #swagger.summary = 'Terminate a session' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Revokes a single session by its numeric ID. The session must belong to the authenticated user.' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.parameters['id'] = {
+          in: 'path',
+          description: 'Session ID',
+          required: true,
+          type: 'integer',
+          example: 42
+    } */
+    /* #swagger.responses[200] = {
+          description: 'Session terminated'
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid JWT token',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[404] = {
+          description: 'Session not found',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error — invalid ID format',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.revokeSession.bind(userController),
+  );
 }

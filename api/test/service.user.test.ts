@@ -143,6 +143,61 @@ describe("User service", () => {
       expect(await userService.verifyRefreshToken(raw)).to.be.null;
       expect(await userService.verifyRefreshToken(rotated!.raw)).to.be.null;
     });
+
+    it("getUserSessions should return only active sessions for the user, most recent first", async() => {
+      const a = await userService.createRefreshToken(testUser);
+      const b = await userService.createRefreshToken(testUser);
+      const c = await userService.createRefreshToken(testUser);
+      await userService.revokeRefreshToken(b.sessionId);
+
+      const sessions = await userService.getUserSessions(testUser.id);
+      const ids = sessions.map((s) => s.id);
+
+      expect(ids).to.include(a.sessionId);
+      expect(ids).to.include(c.sessionId);
+      expect(ids).to.not.include(b.sessionId);
+      expect(sessions[0].id).to.equal(c.sessionId);
+    });
+
+    it("revokeSessionForUser should revoke the session and return true when it belongs to the user", async() => {
+      const { raw, sessionId } = await userService.createRefreshToken(testUser);
+
+      const result = await userService.revokeSessionForUser(testUser.id, sessionId);
+
+      expect(result).to.be.true;
+      expect(await userService.verifyRefreshToken(raw)).to.be.null;
+    });
+
+    it("revokeSessionForUser should return false and leave the session active for another user", async() => {
+      const otherUser = await userRepositoryStub.save(Object.assign(new User(), {
+        email: `other_svc_${Date.now()}@test.com`,
+        password: "hashed",
+        name: "OtherSvcUser",
+      }));
+      const { raw, sessionId } = await userService.createRefreshToken(testUser);
+
+      const result = await userService.revokeSessionForUser(otherUser.id, sessionId);
+
+      expect(result).to.be.false;
+      expect(await userService.verifyRefreshToken(raw)).to.not.be.null;
+    });
+
+    it("revokeSessionForUser should return false for a non-existent session id", async() => {
+      const result = await userService.revokeSessionForUser(testUser.id, NON_EXISTENT_ID);
+      expect(result).to.be.false;
+    });
+
+    it("revokeOtherSessions should revoke every session except the given one", async() => {
+      const kept = await userService.createRefreshToken(testUser);
+      const other1 = await userService.createRefreshToken(testUser);
+      const other2 = await userService.createRefreshToken(testUser);
+
+      await userService.revokeOtherSessions(testUser.id, kept.sessionId);
+
+      expect(await userService.verifyRefreshToken(kept.raw)).to.not.be.null;
+      expect(await userService.verifyRefreshToken(other1.raw)).to.be.null;
+      expect(await userService.verifyRefreshToken(other2.raw)).to.be.null;
+    });
   });
 
   describe("updateProfile", () => {

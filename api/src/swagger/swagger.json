@@ -821,6 +821,184 @@
           }
         ]
       }
+    },
+    "/api/v1/users/sessions": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "List active sessions",
+        "description": "Returns every active (non-revoked, non-expired) session of the authenticated user, most recently created first. Each entry is flagged with `current: true` if it is the session used for this request.",
+        "responses": {
+          "200": {
+            "description": "List of active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/SessionResponse"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "array"
+                    },
+                    "items": {
+                      "$ref": "#/components/schemas/SessionResponse"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Terminate all other sessions",
+        "description": "Revokes every active session of the authenticated user except the one used for this request (logout from all other devices).",
+        "responses": {
+          "200": {
+            "description": "Other sessions terminated"
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Terminate a session",
+        "description": "Revokes a single session by its numeric ID. The session must belong to the authenticated user.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session terminated"
+          },
+          "401": {
+            "description": "Missing or invalid JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -981,6 +1159,43 @@
         },
         "xml": {
           "name": "StashResponse"
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 7
+          },
+          "expiresAt": {
+            "type": "string",
+            "example": "2025-12-31T23:59:59Z"
+          },
+          "revokedAt": {},
+          "userAgent": {
+            "type": "string",
+            "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+          },
+          "ip": {
+            "type": "string",
+            "example": "203.0.113.42"
+          },
+          "createdOn": {
+            "type": "string",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "modifiedOn": {
+            "type": "string",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "current": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "xml": {
+          "name": "SessionResponse"
         }
       },
       "ErrorResponse": {

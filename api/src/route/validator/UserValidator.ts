@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { injectable, inject } from "tsyringe";
 
 import config from "api/src/config/config.js";
@@ -65,6 +65,9 @@ export default class UserValidator {
               return Promise.reject(this.translationService.getText("user_already_exists"));
             }
           }),
+      ],
+      sessionId: [
+        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
       ],
       updatePassword: [
         body("currentPassword")

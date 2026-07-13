@@ -198,6 +198,68 @@ export default class UserController {
   }
 
   /**
+   * List active sessions for the current user, flagging which one is the current session
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async listSessions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User & { sessionId?: number };
+      const sessions = await this.userService.getUserSessions(user.id);
+      const result = sessions.map((session) => ({
+        ...instanceToPlain(session),
+        current: session.id === user.sessionId,
+      }));
+      return res.status(CODES.API_OK).json(result);
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Terminate a single session belonging to the current user
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async revokeSession(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User;
+      const sessionId = parseInt(req.params.id);
+      const revoked = await this.userService.revokeSessionForUser(user.id, sessionId);
+      if (!revoked) {
+        throw new ApiError(
+          CODES.API_NOT_FOUND,
+          this.translationService.getText("session_not_found").translation,
+          [this.translationService.getText("session_not_found")],
+        );
+      }
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Terminate every session of the current user except the one currently in use
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async revokeOtherSessions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User & { sessionId?: number };
+      if (user.sessionId) {
+        await this.userService.revokeOtherSessions(user.id, user.sessionId);
+      }
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
    * Returns currently logged in user
    * @param req Request object
    * @param res Response object

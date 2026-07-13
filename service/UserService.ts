@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { injectable, inject } from "tsyringe";
-import { IsNull, MoreThan, Repository } from "typeorm";
+import { IsNull, MoreThan, Not, Repository } from "typeorm";
 
 import User from "#model/User.js";
 import Session from "#model/Session.js";
@@ -141,6 +141,44 @@ export default class UserService {
       { user: { id: userId }, revokedAt: IsNull() },
       { revokedAt: new Date() },
     );
+  }
+
+  /**
+   * Immediately revoke every active session of a user except the one given (logout from other devices)
+   * @param userId User ID
+   * @param currentSessionId ID of the session to keep active
+   */
+  public async revokeOtherSessions(userId: number, currentSessionId: number): Promise<void> {
+    await this.sessionRepository.update(
+      { user: { id: userId }, revokedAt: IsNull(), id: Not(currentSessionId) },
+      { revokedAt: new Date() },
+    );
+  }
+
+  /**
+   * Immediately revoke a single session, but only if it belongs to the given user
+   * @param userId User ID that must own the session
+   * @param sessionId Session ID
+   * @returns true if an active session was found and revoked, false otherwise
+   */
+  public async revokeSessionForUser(userId: number, sessionId: number): Promise<boolean> {
+    const result = await this.sessionRepository.update(
+      { id: sessionId, user: { id: userId }, revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * Returns every active (non-revoked, non-expired) session for a user, most recently created first
+   * @param userId User ID
+   * @returns Array of active sessions
+   */
+  public async getUserSessions(userId: number): Promise<Session[]> {
+    return this.sessionRepository.find({
+      where: { user: { id: userId }, revokedAt: IsNull(), expiresAt: MoreThan(new Date()) },
+      order: { createdOn: "DESC" },
+    });
   }
   /**
    * Returns user by id

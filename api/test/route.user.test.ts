@@ -746,4 +746,194 @@ describe("User Routes", () => {
       expect(response.body.errors?.[0]?.msg?.textCode).to.equal("password_format_incorrect");
     });
   });
+
+  describe("GET /api/v1/users/sessions", () => {
+    let firstToken: string;
+    let secondToken: string;
+    let userCredentials: { email: string; password: string; name: string };
+
+    beforeEach(async() => {
+      userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const firstLogin = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+      firstToken = firstLogin.body.token;
+
+      const secondLogin = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+      secondToken = secondLogin.body.token;
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app).get("/api/v1/users/sessions");
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should list every active session and flag the one used for the request as current", async() => {
+      const response = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body).to.have.length(2);
+      expect(response.body.every((s: any) => s.refreshTokenHash === undefined)).to.be.true;
+
+      const current = response.body.filter((s: any) => s.current === true);
+      expect(current).to.have.length(1);
+    });
+
+    it("should not include a revoked session in the list", async() => {
+      await request(globalThis.app)
+        .post("/api/v1/users/logout")
+        .set("Authorization", `Bearer ${secondToken}`);
+
+      const response = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body).to.have.length(1);
+      expect(response.body[0].current).to.be.true;
+    });
+  });
+
+  describe("DELETE /api/v1/users/sessions/:id", () => {
+    let firstToken: string;
+
+    beforeEach(async() => {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const firstLogin = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+      firstToken = firstLogin.body.token;
+
+      // A second login creates a separate session used by tests below as "the other device"
+      await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app).delete("/api/v1/users/sessions/1");
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should return 422 for a non-numeric session id", async() => {
+      const response = await request(globalThis.app)
+        .delete("/api/v1/users/sessions/notanumber")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+    });
+
+    it("should terminate the given session belonging to the current user", async() => {
+      const sessionsResponse = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+      const otherSession = sessionsResponse.body.find((s: any) => s.current === false);
+
+      const response = await request(globalThis.app)
+        .delete(`/api/v1/users/sessions/${otherSession.id}`)
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+
+      const afterResponse = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+      expect(afterResponse.body).to.have.length(1);
+      expect(afterResponse.body[0].current).to.be.true;
+    });
+
+    it("should return 404 when the session does not belong to the current user", async() => {
+      const otherUserCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+      await request(globalThis.app).post("/api/v1/users").send(otherUserCredentials);
+      const otherLogin = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: otherUserCredentials.email, password: otherUserCredentials.password });
+      const otherToken = otherLogin.body.token;
+
+      const sessionsResponse = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+      const targetSession = sessionsResponse.body[0];
+
+      const response = await request(globalThis.app)
+        .delete(`/api/v1/users/sessions/${targetSession.id}`)
+        .set("Authorization", `Bearer ${otherToken}`);
+
+      expect(response.status).to.equal(CODES.API_NOT_FOUND);
+      expect(response.body.errors?.[0]?.textCode).to.equal("session_not_found");
+    });
+
+    it("should return 404 for a non-existent session id", async() => {
+      const response = await request(globalThis.app)
+        .delete("/api/v1/users/sessions/2147483647")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_NOT_FOUND);
+    });
+  });
+
+  describe("DELETE /api/v1/users/sessions", () => {
+    let firstToken: string;
+
+    beforeEach(async() => {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const login = () => request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+
+      // Three logins simulate three devices; the first token's session must survive the call below
+      firstToken = (await login()).body.token;
+      await login();
+      await login();
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app).delete("/api/v1/users/sessions");
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should terminate every session except the one used for the request", async() => {
+      const response = await request(globalThis.app)
+        .delete("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+
+      const sessionsResponse = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(sessionsResponse.body).to.have.length(1);
+      expect(sessionsResponse.body[0].current).to.be.true;
+    });
+  });
 });
