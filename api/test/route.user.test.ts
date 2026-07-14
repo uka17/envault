@@ -790,6 +790,16 @@ describe("User Routes", () => {
       expect(current).to.have.length(1);
     });
 
+    it("should strip the IPv4-mapped IPv6 prefix from the stored session ip", async() => {
+      const response = await request(globalThis.app)
+        .get("/api/v1/users/sessions")
+        .set("Authorization", `Bearer ${firstToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      const current = response.body.find((s: any) => s.current === true);
+      expect(current.ip).to.not.include("::ffff:");
+    });
+
     it("should not include a revoked session in the list", async() => {
       await request(globalThis.app)
         .post("/api/v1/users/logout")

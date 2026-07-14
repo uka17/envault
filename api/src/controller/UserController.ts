@@ -16,6 +16,15 @@ import ApiError from "api/src/error/ApiError.js";
 
 const REFRESH_COOKIE = config.refreshCookieName;
 
+/**
+ * Strip the IPv4-mapped IPv6 prefix (e.g. "::ffff:192.168.2.102" -> "192.168.2.102")
+ * @param ip Raw IP address string
+ * @returns Normalized IP address
+ */
+function normalizeIp(ip: string | undefined): string | undefined {
+  return ip?.replace(/^::ffff:/, "");
+}
+
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -88,7 +97,7 @@ export default class UserController {
           if (passportUser) {
             const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
               userAgent: req.headers["user-agent"],
-              ip: req.ip,
+              ip: normalizeIp(req.ip),
             });
             const accessToken = this.userService.createToken(passportUser, sessionId);
             res.cookie(REFRESH_COOKIE, raw, REFRESH_COOKIE_OPTIONS);
