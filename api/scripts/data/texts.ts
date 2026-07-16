@@ -8,6 +8,7 @@ export default [
       email_format_incorrect: "has incorrect email format",
       date_format_incorrect: "has incorrect date format",
       should_be_numeric: "should be numeric",
+      should_be_string: "should be a string",
       password_format_incorrect:
         "Password should have minimum eight characters, at least one capital letter and one number",
       //already exists

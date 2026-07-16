@@ -12,6 +12,12 @@ export default class Stash extends Base {
     body: string;
 
   @Column({
+    type: "text",
+    nullable: true,
+  })
+    subject: string;
+
+  @Column({
     type: "boolean",
     nullable: true,
   })

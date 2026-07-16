@@ -49,10 +49,12 @@ const doc = {
       $body: "Secret message to deliver",
       $to: "journalist@fakemail.com",
       $sendAt: "2025-12-31T23:59:59Z",
+      subject: "Optional subject line",
     },
     StashResponse: {
       id: 42,
       to: "journalist@fakemail.com",
+      subject: "Optional subject line",
       body: "<encrypted>",
       key: "abc123xyz",
       isSent: false,

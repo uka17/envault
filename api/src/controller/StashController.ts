@@ -29,7 +29,7 @@ export default class StashController {
    */
   public async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const { body, to, sendAt } = req.body;
+      const { body, to, sendAt, subject } = req.body;
       //throw new Error("Everything fucked up!");
       const user = req.user as User;
       const newStash = new Stash();
@@ -38,6 +38,7 @@ export default class StashController {
       newStash.body = this.stashService.encryptBody(body, "secret");
       newStash.key = this.stashService.generateStashKey();
       newStash.to = to;
+      newStash.subject = subject ?? null;
       newStash.user = user;
       newStash.sendAt = sendAt;
       newStash.createdBy = user;

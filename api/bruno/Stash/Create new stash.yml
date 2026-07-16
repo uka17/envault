@@ -14,6 +14,7 @@ http:
       {
         "body": "Secret message to deliver",
         "to": "journalist@fakemail.com",
+        "subject": "Optional subject line",
         "sendAt": "2025-12-31T23:59:59Z"
       }
   auth:
@@ -52,6 +53,7 @@ examples:
           {
             "id": 42,
             "to": "journalist@fakemail.com",
+            "subject": "Optional subject line",
             "body": "<encrypted>",
             "key": "abc123xyz",
             "isSent": false,

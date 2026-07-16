@@ -23,6 +23,10 @@ export default class StashValidator {
           .optional()
           .isISO8601()
           .withMessage(this.translationService.getText("date_format_incorrect")),
+        body("subject")
+          .optional({ nullable: true })
+          .isString()
+          .withMessage(this.translationService.getText("should_be_string")),
       ],
       find: [
         param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),

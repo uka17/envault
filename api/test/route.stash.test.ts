@@ -138,6 +138,18 @@ describe("Stash Routes", () => {
 
       expect(response.status).to.equal(CODES.API_CREATED);
       expect(response.body.key).to.be.undefined;
+      expect(response.body.subject).to.be.null;
+    });
+
+    it("should create stash with subject", async() => {
+      const testStashWithSubject = { ...testStash, subject: "test_subject" };
+      const response = await request(globalThis.app)
+        .post("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`)
+        .send(testStashWithSubject);
+
+      expect(response.status).to.equal(CODES.API_CREATED);
+      expect(response.body.subject).to.equal("test_subject");
     });
   });
   describe("GET /api/v1/stashes", () => {
