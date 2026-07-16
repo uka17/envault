@@ -31,6 +31,16 @@ export default class Stash extends Base {
   })
     key: string;
 
+  @Exclude()
+  @Column({
+    name: "public_access_token",
+    type: "varchar",
+    length: 20,
+    unique: true,
+    nullable: true,
+  })
+    publicAccessToken: string;
+
   @ManyToOne(() => User, (user) => user.stashes)
     user: Relation<User>;
 

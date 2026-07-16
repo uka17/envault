@@ -16,6 +16,7 @@ export default [
       //errors
       user_not_found: "User not found",
       stash_not_found: "Stash not found",
+      stash_unlock_failed: "Invalid link or key",
       session_not_found: "Session not found",
       incorrect_token: "Token is incorrect",
       incorrect_password_or_email: "Password or email is incorrect",

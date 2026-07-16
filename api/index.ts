@@ -15,6 +15,7 @@ import config from "./src/config/config.js";
 import health from "./src/route/health.js";
 import user from "api/src/route/user.js";
 import stash from "./src/route/stash.js";
+import publicStash from "./src/route/publicStash.js";
 import User from "../model/User.js";
 import passportConfig from "./src/config/passport.js";
 import createErrorHandler from "./src/route/error.js";
@@ -68,6 +69,7 @@ appDataSource
     health(router);
     user(router);
     stash(router);
+    publicStash(router);
 
     //Attach routes to app
     app.use("/", router);

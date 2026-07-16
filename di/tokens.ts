@@ -16,9 +16,11 @@ export const TOKENS = {
 
   UserController: Symbol("UserController"),
   StashController: Symbol("StashController"),
+  PublicStashController: Symbol("PublicStashController"),
 
   UserValidator: Symbol("UserValidator"),
   StashValidator: Symbol("StashValidator"),
+  PublicStashValidator: Symbol("PublicStashValidator"),
 
   EmailCredentialsProvider: Symbol("EmailCredentialsProvider"),
 };

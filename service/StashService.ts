@@ -1,5 +1,6 @@
 import { DeleteResult, Repository } from "typeorm";
 import AES from "crypto-js/aes.js";
+import Utf8 from "crypto-js/enc-utf8.js";
 import nodemailer from "nodemailer";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
@@ -56,17 +57,39 @@ export default class StashService {
   }
 
   /**
-   * Creates a new stash
+   * Creates a new stash. Generates a unique public access token and retries
+   * with a freshly generated token if (and only if) the token collided with
+   * an existing one.
    * @param newStash Stash object
    * @returns Created stash object or null if error
    */
   public async createStash(newStash: Stash): Promise<Stash | null> {
-    try {
-      return await this.stashRepository.manager.save(newStash);
-    } catch (error) {
-      this.logger.error(error);
-      return null;
+    const maxAttempts = 5;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      newStash.publicAccessToken = this.generatePublicAccessToken();
+      try {
+        return await this.stashRepository.manager.save(newStash);
+      } catch (error) {
+        if (this.isPublicAccessTokenConflict(error) && attempt < maxAttempts) {
+          continue;
+        }
+        this.logger.error(error);
+        return null;
+      }
     }
+    /* istanbul ignore next */
+    return null;
+  }
+
+  /**
+   * Checks whether a database error represents a unique constraint violation
+   * on the `public_access_token` column specifically.
+   * @param error Error thrown by the database driver/ORM
+   * @returns `true` if the error is a token-specific unique violation
+   */
+  private isPublicAccessTokenConflict(error: unknown): boolean {
+    const dbError = error as { code?: string; detail?: string };
+    return dbError?.code === "23505" && !!dbError.detail?.includes("public_access_token");
   }
 
   /**
@@ -99,6 +122,24 @@ export default class StashService {
       return await this.stashRepository.findOne({
         where: {
           id: stashId,
+        },
+      });
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+  /**
+   * Searches for a stash object by its public access token
+   * @param publicAccessToken Public access token
+   * @returns Stash object or `null` if not found or error
+   */
+  public async getStashByPublicAccessToken(publicAccessToken: string): Promise<Stash | null> {
+    try {
+      return await this.stashRepository.findOne({
+        where: {
+          publicAccessToken,
         },
       });
     } catch (error) {
@@ -168,5 +209,33 @@ export default class StashService {
       config.stashNanoId.length,
     );
     return nanoid();
+  }
+
+  /**
+   * Generates a random public access token used to identify a stash
+   * in a public unlock link, without revealing its content
+   * @returns Random public access token
+   */
+  public generatePublicAccessToken(): string {
+    const nanoid = customAlphabet(
+      config.stashPublicAccessToken.alphabet,
+      config.stashPublicAccessToken.length,
+    );
+    return nanoid();
+  }
+
+  /**
+   * Decrypts the stash body using the provided key
+   * @param encryptedBody AES-encrypted stash body
+   * @param key Key to decrypt the stash body
+   * @returns Decrypted plaintext, or `null` if the key is wrong
+   */
+  public decryptBody(encryptedBody: string, key: string): string | null {
+    try {
+      const decrypted = AES.decrypt(encryptedBody, key).toString(Utf8);
+      return decrypted || null;
+    } catch {
+      return null;
+    }
   }
 }

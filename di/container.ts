@@ -22,9 +22,11 @@ import EmailService from "#service/EmailService.js";
 
 import UserController from "api/src/controller/UserController.js";
 import StashController from "api/src/controller/StashController.js";
+import PublicStashController from "api/src/controller/PublicStashController.js";
 
 import UserValidator from "api/src/route/validator/UserValidator.js";
 import StashValidator from "api/src/route/validator/StashValidator.js";
+import PublicStashValidator from "api/src/route/validator/PublicStashValidator.js";
 
 export default function initDI(appDataSource: DataSource) {
   // Register the logger
@@ -65,8 +67,10 @@ export default function initDI(appDataSource: DataSource) {
   // Register controllers
   container.registerSingleton(TOKENS.UserController, UserController);
   container.registerSingleton(TOKENS.StashController, StashController);
+  container.registerSingleton(TOKENS.PublicStashController, PublicStashController);
 
   // Register validators
   container.registerSingleton(TOKENS.UserValidator, UserValidator);
   container.registerSingleton(TOKENS.StashValidator, StashValidator);
+  container.registerSingleton(TOKENS.PublicStashValidator, PublicStashValidator);
 }

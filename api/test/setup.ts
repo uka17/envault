@@ -17,6 +17,7 @@ import createErrorHandler from "api/src/route/error.js";
 import initDI from "#di/container.js";
 import userRoutes from "api/src/route/user.js";
 import stashRoutes from "api/src/route/stash.js";
+import publicStashRoutes from "api/src/route/publicStash.js";
 import TranslationService from "#service/TranslationService.js";
 
 const dbURL = config.testDbURL;
@@ -43,6 +44,7 @@ async function startApp() {
   passportConfig(globalThis.appDataSource, translationService);
   userRoutes(globalThis.app);
   stashRoutes(globalThis.app);
+  publicStashRoutes(globalThis.app);
 
   globalThis.app.use(createErrorHandler());
 }
