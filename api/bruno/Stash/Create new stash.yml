@@ -12,7 +12,7 @@ http:
     type: json
     data: |-
       {
-        "body": "Secret message to deliver",
+        "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
         "to": "journalist@fakemail.com",
         "subject": "Optional subject line",
         "sendAt": "2025-12-31T23:59:59Z"
@@ -37,7 +37,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -55,7 +55,6 @@ examples:
             "to": "journalist@fakemail.com",
             "subject": "Optional subject line",
             "body": "<encrypted>",
-            "key": "abc123xyz",
             "isSent": false,
             "sendAt": "2025-12-31T23:59:59Z",
             "createdOn": "2025-01-01T00:00:00Z",
@@ -70,7 +69,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -88,7 +87,6 @@ examples:
             <id>42</id>
             <to>journalist@fakemail.com</to>
             <body><encrypted></body>
-            <key>abc123xyz</key>
             <isSent>false</isSent>
             <sendAt>2025-12-31T23:59:59Z</sendAt>
             <createdOn>2025-01-01T00:00:00Z</createdOn>
@@ -103,7 +101,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -128,7 +126,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -154,7 +152,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -184,7 +182,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -210,7 +208,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -235,7 +233,7 @@ examples:
         type: json
         data: |-
           {
-            "body": "Secret message to deliver",
+            "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
             "sendAt": "2025-12-31T23:59:59Z"
           }
@@ -253,4 +251,4 @@ examples:
             <error>Unauthorized</error>
           </root>
 
-docs: Creates a new stash (encrypted message) for the authenticated user. The message body is encrypted before storage and will be sent to the recipient email at the scheduled time via AWS SES.
+docs: Creates a new stash (encrypted message) for the authenticated user. The request body must already be encrypted client-side by the sender — the server stores it as an opaque string and never sees the decryption key. The stash will be sent to the recipient email at the scheduled time via AWS SES.

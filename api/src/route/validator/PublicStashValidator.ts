@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { param } from "express-validator";
 import { injectable, inject } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
@@ -18,15 +18,6 @@ export default class PublicStashValidator {
         param("token")
           .isLength({ min: 20, max: 20 })
           .withMessage(this.translationService.getText("stash_unlock_failed")),
-      ],
-      unlock: [
-        param("token")
-          .notEmpty()
-          .withMessage(this.translationService.getText("is_required")),
-        param("token")
-          .isLength({ min: 20, max: 20 })
-          .withMessage(this.translationService.getText("stash_unlock_failed")),
-        body("key").notEmpty().withMessage(this.translationService.getText("is_required")),
       ],
     };
   }

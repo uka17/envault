@@ -35,10 +35,6 @@ export default class StashValidator {
         param("id").notEmpty().withMessage(this.translationService.getText("id_required")),
         param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
       ],
-      decrypt: [
-        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
-        param("key").notEmpty().withMessage(this.translationService.getText("is_required")),
-      ],
       snooze: [
         param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
         param("hours")

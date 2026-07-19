@@ -77,31 +77,6 @@ describe("Stash service", () => {
       expect(result?.publicAccessToken).to.have.lengthOf(20);
     });
 
-    it("should decrypt a body encrypted with the same key", () => {
-      let stashService: StashService = new StashService(
-        stashRepositoryStub,
-        sendLogRepository,
-        globalThis.mockLogService,
-      );
-
-      const encrypted = stashService.encryptBody("hello world", "secret-key");
-      const decrypted = stashService.decryptBody(encrypted, "secret-key");
-
-      expect(decrypted).to.equal("hello world");
-    });
-
-    it("should return null when decrypting with the wrong key", () => {
-      let stashService: StashService = new StashService(
-        stashRepositoryStub,
-        sendLogRepository,
-        globalThis.mockLogService,
-      );
-
-      const encrypted = stashService.encryptBody("hello world", "secret-key");
-      const decrypted = stashService.decryptBody(encrypted, "wrong-key");
-
-      expect(decrypted).to.be.null;
-    });
   });
 
   describe("Errors", () => {

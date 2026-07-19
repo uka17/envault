@@ -21,10 +21,6 @@ export default {
   passwordRegExp: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
   nameRegExp: /^\p{L}+(?:[ '-]\p{L}+)*$/u,
   emailRegExp: /.+@.+\..+/i,
-  stashNanoId: {
-    alphabet: "1234567890abcdef",
-    length: 32,
-  },
   stashPublicAccessToken: {
     alphabet: "23456789abcdefghjkmnpqrstuvwxyz",
     length: 20,
@@ -32,10 +28,6 @@ export default {
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,
     max: 30,
-  },
-  publicStashUnlockRateLimit: {
-    windowMs: 15 * 60 * 1000,
-    max: 10,
   },
   JWTAccessMaxAgeMinutes: 15000,
   JWTRefreshMaxAgeDays: 30,

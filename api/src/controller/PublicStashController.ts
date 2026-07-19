@@ -16,9 +16,8 @@ export default class PublicStashController {
   ) {}
 
   /**
-   * Builds the neutral "invalid link or key" error shared by both public
-   * endpoints, so a caller cannot distinguish an unknown token from a
-   * wrong decryption key.
+   * Builds the neutral "invalid link" error returned when the public
+   * access token does not match any stash.
    * @returns ApiError with a 404 status and a neutral message
    */
   private unlockFailedError(): ApiError {
@@ -30,8 +29,10 @@ export default class PublicStashController {
   }
 
   /**
-   * Checks whether a stash is available for unlock and returns only the
-   * information required to display the key input form.
+   * Returns the public stash content by its access token. The body is
+   * returned exactly as stored (encrypted client-side by the sender) —
+   * decryption happens entirely in the recipient's browser using the key
+   * shared with them out-of-band.
    * @param req Request object
    * @param res Response object
    * @param next Next function
@@ -48,34 +49,7 @@ export default class PublicStashController {
       return res.status(CODES.API_OK).json({
         subject: stash.subject,
         sendAt: stash.sendAt,
-      });
-    } catch (e: unknown) {
-      next(e);
-    }
-  }
-
-  /**
-   * Validates the token and decryption key, and returns the decrypted
-   * stash content on success.
-   * @param req Request object
-   * @param res Response object
-   * @param next Next function
-   */
-  public async unlock(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { token } = req.params;
-      const { key } = req.body;
-      const stash = await this.stashService.getStashByPublicAccessToken(token);
-      const decryptedBody = stash ? this.stashService.decryptBody(stash.body, key) : null;
-
-      if (!stash || decryptedBody === null) {
-        throw this.unlockFailedError();
-      }
-
-      return res.status(CODES.API_OK).json({
-        subject: stash.subject,
-        sendAt: stash.sendAt,
-        body: decryptedBody,
+        body: stash.body,
       });
     } catch (e: unknown) {
       next(e);

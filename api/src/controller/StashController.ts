@@ -34,9 +34,7 @@ export default class StashController {
       const user = req.user as User;
       const newStash = new Stash();
 
-      //TODO: add real secret
-      newStash.body = this.stashService.encryptBody(body, "secret");
-      newStash.key = this.stashService.generateStashKey();
+      newStash.body = body;
       newStash.to = to;
       newStash.subject = subject ?? null;
       newStash.user = user;

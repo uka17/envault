@@ -26,23 +26,16 @@ export default function(app: express.Router) {
     legacyHeaders: false,
   });
 
-  const unlockRateLimiter = rateLimit({
-    windowMs: config.publicStashUnlockRateLimit.windowMs,
-    max: config.publicStashUnlockRateLimit.max,
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
   app.get(
     "/api/public/stashes/:token",
     getRateLimiter,
     validationRules.getByToken,
     validateRequest,
-    /* #swagger.summary = 'Check public stash availability' */
+    /* #swagger.summary = 'Get public stash by token' */
     /* #swagger.tags = ['PublicStash'] */
-    /* #swagger.description = 'Checks whether a stash is available for unlock via its public access
-          token and returns only the information required to display the key input form.
-          Requires no authentication.' */
+    /* #swagger.description = 'Returns a stash by its public access token, including its encrypted
+          body. The body is encrypted client-side by the sender and is decrypted entirely in the
+          recipient browser using the key shared with them out-of-band. Requires no authentication.' */
     /* #swagger.parameters['token'] = {
           in: 'path',
           description: 'Public access token',
@@ -51,8 +44,8 @@ export default function(app: express.Router) {
           example: 'abcdefgh23456789jkmn'
     } */
     /* #swagger.responses[200] = {
-          description: 'Stash is available',
-          schema: { $ref: '#/definitions/PublicStashInfoResponse' }
+          description: 'Stash found',
+          schema: { $ref: '#/definitions/PublicStashResponse' }
     } */
     /* #swagger.responses[404] = {
           description: 'Invalid or unknown token',
@@ -67,49 +60,5 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     publicStashController.getByToken.bind(publicStashController),
-  );
-
-  app.post(
-    "/api/public/stashes/:token/unlock",
-    unlockRateLimiter,
-    validationRules.unlock,
-    validateRequest,
-    /* #swagger.summary = 'Unlock a public stash' */
-    /* #swagger.tags = ['PublicStash'] */
-    /* #swagger.description = 'Validates the public access token and decryption key, and returns
-          the decrypted stash content on success. Requires no authentication.' */
-    /* #swagger.parameters['token'] = {
-          in: 'path',
-          description: 'Public access token',
-          required: true,
-          type: 'string',
-          example: 'abcdefgh23456789jkmn'
-    } */
-    /* #swagger.requestBody = {
-          description: 'Decryption key',
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: '#/definitions/StashUnlockRequest' }
-            }
-          }
-    } */
-    /* #swagger.responses[200] = {
-          description: 'Stash unlocked successfully',
-          schema: { $ref: '#/definitions/StashUnlockResponse' }
-    } */
-    /* #swagger.responses[404] = {
-          description: 'Invalid token or key — neutral error, does not reveal which one failed',
-          schema: { $ref: '#/definitions/ErrorResponse' }
-    } */
-    /* #swagger.responses[422] = {
-          description: 'Validation error — missing or invalid fields',
-          schema: { $ref: '#/definitions/ValidationErrorResponse' }
-    } */
-    /* #swagger.responses[429] = {
-          description: 'Too many requests',
-          schema: { $ref: '#/definitions/ErrorResponse' }
-    } */
-    publicStashController.unlock.bind(publicStashController),
   );
 }

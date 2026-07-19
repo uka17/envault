@@ -47,7 +47,6 @@ examples:
             "id": 42,
             "to": "journalist@fakemail.com",
             "body": "<encrypted>",
-            "key": "abc123xyz",
             "isSent": false,
             "sendAt": "2025-12-31T23:59:59Z",
             "createdOn": "2025-01-01T00:00:00Z",
@@ -77,7 +76,6 @@ examples:
             <id>42</id>
             <to>journalist@fakemail.com</to>
             <body><encrypted></body>
-            <key>abc123xyz</key>
             <isSent>false</isSent>
             <sendAt>2025-12-31T23:59:59Z</sendAt>
             <createdOn>2025-01-01T00:00:00Z</createdOn>

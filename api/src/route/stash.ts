@@ -24,7 +24,9 @@ export default function(app: express.Router) {
     validateRequest,
     /* #swagger.summary = 'Create new stash' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user. The message body is encrypted before storage and will be sent to the recipient email at the scheduled time via AWS SES.' */
+    /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user.
+          The request body must already be encrypted client-side — the server stores it as an
+          opaque string and never sees the decryption key. Sent to the recipient at sendAt via SES.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.requestBody = {
           description: 'Stash data',

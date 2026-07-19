@@ -1,6 +1,4 @@
 import { DeleteResult, Repository } from "typeorm";
-import AES from "crypto-js/aes.js";
-import Utf8 from "crypto-js/enc-utf8.js";
 import nodemailer from "nodemailer";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
@@ -190,28 +188,6 @@ export default class StashService {
   }
 
   /**
-   * Encrypts the stash body using the key
-   * @param body Stash body
-   * @param key Key to encrypt the stash body
-   * @returns AES-encrypted string
-   */
-  public encryptBody(body: string, key: string): string {
-    return AES.encrypt(body, key).toString();
-  }
-
-  /**
-   * Generates a random stash key
-   * @returns Random stash key
-   */
-  public generateStashKey(): string {
-    const nanoid = customAlphabet(
-      config.stashNanoId.alphabet,
-      config.stashNanoId.length,
-    );
-    return nanoid();
-  }
-
-  /**
    * Generates a random public access token used to identify a stash
    * in a public unlock link, without revealing its content
    * @returns Random public access token
@@ -222,20 +198,5 @@ export default class StashService {
       config.stashPublicAccessToken.length,
     );
     return nanoid();
-  }
-
-  /**
-   * Decrypts the stash body using the provided key
-   * @param encryptedBody AES-encrypted stash body
-   * @param key Key to decrypt the stash body
-   * @returns Decrypted plaintext, or `null` if the key is wrong
-   */
-  public decryptBody(encryptedBody: string, key: string): string | null {
-    try {
-      const decrypted = AES.decrypt(encryptedBody, key).toString(Utf8);
-      return decrypted || null;
-    } catch {
-      return null;
-    }
   }
 }

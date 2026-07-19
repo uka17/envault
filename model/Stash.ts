@@ -25,14 +25,6 @@ export default class Stash extends Base {
 
   @Exclude()
   @Column({
-    type: "text",
-    unique: true,
-    nullable: true,
-  })
-    key: string;
-
-  @Exclude()
-  @Column({
     name: "public_access_token",
     type: "varchar",
     length: 20,
