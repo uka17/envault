@@ -74,8 +74,8 @@ describe("Stash Routes", () => {
         .send(testStashNoBody);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("is_required");
-      expect(response.body.errors?.[0]?.path).to.equal("body");
+      expect(response.body.errors?.[0]?.code).to.equal("is_required");
+      expect(response.body.errors?.[0]?.field).to.equal("body");
     });
 
     it("should return error to_required", async() => {
@@ -87,8 +87,8 @@ describe("Stash Routes", () => {
         .send(testStashNoTo);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("is_required");
-      expect(response.body.errors?.[0]?.path).to.equal("to");
+      expect(response.body.errors?.[0]?.code).to.equal("is_required");
+      expect(response.body.errors?.[0]?.field).to.equal("to");
     });
 
     it("should return error send_at_required", async() => {
@@ -100,8 +100,8 @@ describe("Stash Routes", () => {
         .send(testStashNoSendAt);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("is_required");
-      expect(response.body.errors?.[0]?.path).to.equal("sendAt");
+      expect(response.body.errors?.[0]?.code).to.equal("is_required");
+      expect(response.body.errors?.[0]?.field).to.equal("sendAt");
     });
 
     it("should return error date_format_incorrect", async() => {
@@ -113,8 +113,8 @@ describe("Stash Routes", () => {
         .send(testStashWrongSendAt);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("date_format_incorrect");
-      expect(response.body.errors?.[0]?.path).to.equal("sendAt");
+      expect(response.body.errors?.[0]?.code).to.equal("date_format_incorrect");
+      expect(response.body.errors?.[0]?.field).to.equal("sendAt");
     });
 
     it("should return error email_format_incorrect", async() => {
@@ -126,8 +126,8 @@ describe("Stash Routes", () => {
         .send(testStashWrongTo);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("email_format_incorrect");
-      expect(response.body.errors?.[0]?.path).to.equal("to");
+      expect(response.body.errors?.[0]?.code).to.equal("email_format_incorrect");
+      expect(response.body.errors?.[0]?.field).to.equal("to");
     });
 
     it("should create stash", async() => {
@@ -185,8 +185,8 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("should_be_numeric");
-      expect(response.body.errors?.[0]?.path).to.equal("id");
+      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.field).to.equal("id");
     });
     it("should return stash", async() => {
       const response = await request(globalThis.app)
@@ -218,8 +218,8 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("should_be_numeric");
-      expect(response.body.errors?.[0]?.path).to.equal("id");
+      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.field).to.equal("id");
     });
     it("should return error hours_should_be_numeric", async() => {
       const id = 1;
@@ -230,8 +230,8 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("should_be_numeric");
-      expect(response.body.errors?.[0]?.path).to.equal("hours");
+      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.field).to.equal("hours");
     });
     it("should return 500 when stash not found for snooze", async() => {
       const response = await request(globalThis.app)
@@ -276,8 +276,8 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("should_be_numeric");
-      expect(response.body.errors?.[0]?.path).to.equal("id");
+      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.field).to.equal("id");
     });
 
     it("should create and delete stash successfully", async() => {

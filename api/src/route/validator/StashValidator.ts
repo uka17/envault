@@ -1,41 +1,37 @@
 import { body, param } from "express-validator";
-import { injectable, inject } from "tsyringe";
+import { injectable } from "tsyringe";
 
 import config from "api/src/config/config.js";
-import { TOKENS } from "#di/tokens.js";
-
-import TranslationService from "#service/TranslationService.js";
+import { apiErrorPayload } from "#common/errorCodes.js";
 
 @injectable()
 export default class StashValidator {
-  constructor(@inject(TOKENS.TranslationService) private translationService: TranslationService) {}
-
   public getRules() {
     return {
       create: [
-        body("body").notEmpty().withMessage(this.translationService.getText("is_required")),
-        body("to").notEmpty().withMessage(this.translationService.getText("is_required")),
+        body("body").notEmpty().withMessage(apiErrorPayload("is_required")),
+        body("to").notEmpty().withMessage(apiErrorPayload("is_required")),
         body("to")
           .matches(config.emailRegExp)
-          .withMessage(this.translationService.getText("email_format_incorrect")),
-        body("sendAt").notEmpty().withMessage(this.translationService.getText("is_required")),
+          .withMessage(apiErrorPayload("email_format_incorrect")),
+        body("sendAt").notEmpty().withMessage(apiErrorPayload("is_required")),
         body("sendAt")
           .optional()
           .isISO8601()
-          .withMessage(this.translationService.getText("date_format_incorrect")),
+          .withMessage(apiErrorPayload("date_format_incorrect")),
       ],
       find: [
-        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
+        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
       ],
       delete: [
-        param("id").notEmpty().withMessage(this.translationService.getText("id_required")),
-        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
+        param("id").notEmpty().withMessage(apiErrorPayload("id_required")),
+        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
       ],
       snooze: [
-        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
+        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
         param("hours")
           .isNumeric()
-          .withMessage(this.translationService.getText("should_be_numeric")),
+          .withMessage(apiErrorPayload("should_be_numeric")),
       ],
     };
   }

@@ -74,10 +74,13 @@ const doc = {
       current: true,
     },
     ErrorResponse: {
-      error: "Unauthorized",
+      code: "unauthorized",
+      message: "Unauthorized",
     },
     ValidationErrorResponse: {
-      errors: [{ field: "email", message: "must be a valid email" }],
+      code: "validation_error",
+      message: "API request validation error",
+      errors: [{ field: "email", code: "email_format_incorrect", message: "Has incorrect email format" }],
     },
   },
 };

@@ -3,15 +3,10 @@ export const TOKENS = {
   UserRepository: Symbol("UserRepository"),
   SessionRepository: Symbol("SessionRepository"),
   SendLogRepository: Symbol("SendLogRepository"),
-  TranslationRepository: Symbol("TranslationRepository"),
-  LanguageRepository: Symbol("LanguageRepository"),
-  TextRepository: Symbol("TextRepository"),
 
   LogService: Symbol("LogService"),
-  Translations: Symbol("Translations"),
   StashService: Symbol("StashService"),
   UserService: Symbol("UserService"),
-  TranslationService: Symbol("TranslationService"),
   EmailService: Symbol("EmailService"),
 
   UserController: Symbol("UserController"),

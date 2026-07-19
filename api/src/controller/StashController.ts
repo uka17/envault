@@ -7,7 +7,6 @@ import { CODES, MESSAGES } from "#common/constants.js";
 
 import Stash from "#model/Stash.js";
 
-import TranslationService from "#service/TranslationService.js";
 import StashService from "#service/StashService.js";
 import LogService from "#service/LogService.js";
 import ApiError from "api/src/error/ApiError.js";
@@ -17,7 +16,6 @@ import User from "#model/User.js";
 export default class StashController {
   constructor(
     @inject(TOKENS.StashService) private stashService: StashService,
-    @inject(TOKENS.TranslationService) private translationService: TranslationService,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
@@ -62,11 +60,7 @@ export default class StashController {
 
       if (!userId) {
         /* istanbul ignore next */
-        throw new ApiError(
-          CODES.API_UNAUTHORIZED,
-          this.translationService.getText("incorrect_token").translation,
-          [this.translationService.getText("incorrect_token")],
-        );
+        throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       } else {
         stashes = await this.stashService.getUserStashes(userId);
         return res.status(CODES.API_OK).json(instanceToPlain(stashes));
@@ -92,11 +86,7 @@ export default class StashController {
       const stash = await this.stashService.getStash(id);
 
       if (!stash) {
-        throw new ApiError(
-          CODES.API_NOT_FOUND,
-          this.translationService.getText("stash_not_found").translation,
-          [this.translationService.getText("stash_not_found")],
-        );
+        throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }
       return res.status(200).json(instanceToPlain(stash));
     } catch (e: unknown) {
@@ -138,9 +128,7 @@ export default class StashController {
       const result = await this.stashService.snoozeStash(id, hours, user);
       /* istanbul ignore next */
       if (result === null) {
-        throw new ApiError(CODES.SERVER_ERROR, MESSAGES.SERVER_ERROR, [
-          this.translationService.getText("error_500"),
-        ]);
+        throw new ApiError(CODES.SERVER_ERROR, "error_500", MESSAGES.SERVER_ERROR);
       }
       return res.status(CODES.API_OK).json(instanceToPlain(result));
     } catch (e: unknown) {

@@ -3,15 +3,14 @@ import { injectable, inject } from "tsyringe";
 
 import config from "api/src/config/config.js";
 import { TOKENS } from "#di/tokens.js";
+import { apiErrorPayload } from "#common/errorCodes.js";
 
-import TranslationService from "#service/TranslationService.js";
 import UserService from "#service/UserService.js";
 import User from "#model/User.js";
 
 @injectable()
 export default class UserValidator {
   constructor(
-    @inject(TOKENS.TranslationService) private translationService: TranslationService,
     @inject(TOKENS.UserService) private userService: UserService,
   ) {}
 
@@ -20,64 +19,64 @@ export default class UserValidator {
       create: [
         body("email")
           .notEmpty()
-          .withMessage(this.translationService.getText("email_required"))
+          .withMessage(apiErrorPayload("email_required"))
           .matches(config.emailRegExp)
-          .withMessage(this.translationService.getText("email_format_incorrect"))
+          .withMessage(apiErrorPayload("email_format_incorrect"))
           .custom(async(email) => {
             const user = await this.userService.getUserByEmail(email);
             if (user) {
-              return Promise.reject(this.translationService.getText("user_already_exists"));
+              return Promise.reject(apiErrorPayload("user_already_exists"));
             }
           }),
         body("name")
           .notEmpty()
-          .withMessage(this.translationService.getText("name_required"))
+          .withMessage(apiErrorPayload("name_required"))
           .matches(config.nameRegExp)
-          .withMessage(this.translationService.getText("name_alphanumeric")),
+          .withMessage(apiErrorPayload("name_alphanumeric")),
         body("password")
           .notEmpty()
-          .withMessage(this.translationService.getText("password_required"))
+          .withMessage(apiErrorPayload("password_required"))
           .matches(config.passwordRegExp)
-          .withMessage(this.translationService.getText("password_format_incorrect")),
+          .withMessage(apiErrorPayload("password_format_incorrect")),
       ],
       login: [
         body("email")
           .notEmpty()
-          .withMessage(this.translationService.getText("email_required"))
+          .withMessage(apiErrorPayload("email_required"))
           .matches(config.emailRegExp)
-          .withMessage(this.translationService.getText("email_format_incorrect")),
+          .withMessage(apiErrorPayload("email_format_incorrect")),
         body("password")
           .notEmpty()
-          .withMessage(this.translationService.getText("password_required")),
+          .withMessage(apiErrorPayload("password_required")),
       ],
       updateProfile: [
         body("name")
           .optional()
           .matches(config.nameRegExp)
-          .withMessage(this.translationService.getText("name_alphanumeric")),
+          .withMessage(apiErrorPayload("name_alphanumeric")),
         body("email")
           .optional()
           .matches(config.emailRegExp)
-          .withMessage(this.translationService.getText("email_format_incorrect"))
+          .withMessage(apiErrorPayload("email_format_incorrect"))
           .custom(async(email, { req }) => {
             const existing = await this.userService.getUserByEmail(email);
             if (existing && existing.id !== (req.user as User).id) {
-              return Promise.reject(this.translationService.getText("user_already_exists"));
+              return Promise.reject(apiErrorPayload("user_already_exists"));
             }
           }),
       ],
       sessionId: [
-        param("id").isNumeric().withMessage(this.translationService.getText("should_be_numeric")),
+        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
       ],
       updatePassword: [
         body("currentPassword")
           .notEmpty()
-          .withMessage(this.translationService.getText("current_password_required")),
+          .withMessage(apiErrorPayload("current_password_required")),
         body("newPassword")
           .notEmpty()
-          .withMessage(this.translationService.getText("new_password_required"))
+          .withMessage(apiErrorPayload("new_password_required"))
           .matches(config.passwordRegExp)
-          .withMessage(this.translationService.getText("password_format_incorrect")),
+          .withMessage(apiErrorPayload("password_format_incorrect")),
       ],
     };
   }

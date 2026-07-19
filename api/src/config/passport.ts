@@ -6,7 +6,7 @@ dotenv.config();
 
 import User from "../../../model/User.js";
 import { DataSource } from "typeorm";
-import TranslationService from "#service/TranslationService.js";
+import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 
 import bcrypt from "bcryptjs";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
@@ -14,11 +14,9 @@ import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 /**
  * Configure passport `Local` and `JWT` policies
  * @param appDataSource Database connection instance
- * @param translationService Translations instance
  */
 export default function(
   appDataSource: DataSource,
-  translationService: TranslationService,
 ) {
   const userRepository = appDataSource.getRepository(User);
   // Set up Local strategy
@@ -33,9 +31,7 @@ export default function(
           email: username,
         });
         if (!user) {
-          return done(null, false, {
-            message: translationService.getText("incorrect_token").translation,
-          });
+          return done(null, false, { message: API_ERROR_MESSAGES.incorrect_token });
         }
 
         bcrypt.compare(password, user.password, (err, res) => {
@@ -43,10 +39,7 @@ export default function(
             return done(err);
           }
           /* istanbul ignore next */ if (!res) {
-            return done(null, false, {
-              message:
-                translationService.getText("incorrect_token").translation,
-            });
+            return done(null, false, { message: API_ERROR_MESSAGES.incorrect_token });
           }
           return done(null, user);
         });

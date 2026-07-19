@@ -19,7 +19,6 @@ import publicStash from "./src/route/publicStash.js";
 import User from "../model/User.js";
 import passportConfig from "./src/config/passport.js";
 import createErrorHandler from "./src/route/error.js";
-import TranslationService from "#service/TranslationService.js";
 import LogService from "#service/LogService.js";
 
 import initDI from "#di/container.js";
@@ -57,12 +56,8 @@ if (!process.env.API_JWT_SECRET) {
 appDataSource
   .initialize()
   .then(async() => {
-    //Get translationService
-    const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-    await translationService.init(process.env.API_SILENT_INIT === "TRUE");
-
     //Configure passport policies
-    passportConfig(appDataSource, translationService);
+    passportConfig(appDataSource);
 
     //Configure all routes
     const router = express.Router();
