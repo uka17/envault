@@ -47,7 +47,6 @@ export default class PublicStashController {
       }
 
       return res.status(CODES.API_OK).json({
-        subject: stash.subject,
         sendAt: stash.sendAt,
         body: stash.body,
       });

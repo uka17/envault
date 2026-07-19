@@ -49,12 +49,10 @@ const doc = {
       $body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
       $to: "journalist@fakemail.com",
       $sendAt: "2025-12-31T23:59:59Z",
-      subject: "Optional subject line",
     },
     StashResponse: {
       id: 42,
       to: "journalist@fakemail.com",
-      subject: "Optional subject line",
       body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
       isSent: false,
       sendAt: "2025-12-31T23:59:59Z",
@@ -62,7 +60,6 @@ const doc = {
       modifiedOn: "2025-01-01T00:00:00Z",
     },
     PublicStashResponse: {
-      subject: "Optional subject line",
       sendAt: "2025-12-31T23:59:59Z",
       body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
     },

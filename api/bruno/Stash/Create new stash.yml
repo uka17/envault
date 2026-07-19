@@ -14,7 +14,6 @@ http:
       {
         "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
         "to": "journalist@fakemail.com",
-        "subject": "Optional subject line",
         "sendAt": "2025-12-31T23:59:59Z"
       }
   auth:
@@ -53,7 +52,6 @@ examples:
           {
             "id": 42,
             "to": "journalist@fakemail.com",
-            "subject": "Optional subject line",
             "body": "<encrypted>",
             "isSent": false,
             "sendAt": "2025-12-31T23:59:59Z",

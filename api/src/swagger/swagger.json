@@ -87,13 +87,96 @@
         }
       }
     },
+    "/api/public/stashes/{token}": {
+      "get": {
+        "tags": [
+          "PublicStash"
+        ],
+        "summary": "Get public stash by token",
+        "description": "Returns a stash by its public access token, including its encrypted  body. The body is encrypted client-side by the sender and is decrypted entirely in the  recipient browser using the key shared with them out-of-band. Requires no authentication.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public access token",
+            "example": "abcdefgh23456789jkmn"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stash found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStashResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStashResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid or unknown token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error: invalid token format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/stashes": {
       "post": {
         "tags": [
           "Stash"
         ],
         "summary": "Create new stash",
-        "description": "Creates a new stash (encrypted message) for the authenticated user. The message body is encrypted before storage and will be sent to the recipient email at the scheduled time via AWS SES.",
+        "description": "Creates a new stash (encrypted message) for the authenticated user.  The request body must already be encrypted client-side. The server stores it as an  opaque string and never sees the decryption key. Sent to the recipient at sendAt via SES.",
         "responses": {
           "201": {
             "description": "Stash created successfully",
@@ -1101,7 +1184,7 @@
         "properties": {
           "body": {
             "type": "string",
-            "example": "Secret message to deliver"
+            "example": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>"
           },
           "to": {
             "type": "string",
@@ -1134,11 +1217,7 @@
           },
           "body": {
             "type": "string",
-            "example": "<encrypted>"
-          },
-          "key": {
-            "type": "string",
-            "example": "abc123xyz"
+            "example": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>"
           },
           "isSent": {
             "type": "boolean",
@@ -1159,6 +1238,22 @@
         },
         "xml": {
           "name": "StashResponse"
+        }
+      },
+      "PublicStashResponse": {
+        "type": "object",
+        "properties": {
+          "sendAt": {
+            "type": "string",
+            "example": "2025-12-31T23:59:59Z"
+          },
+          "body": {
+            "type": "string",
+            "example": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>"
+          }
+        },
+        "xml": {
+          "name": "PublicStashResponse"
         }
       },
       "SessionResponse": {
