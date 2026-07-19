@@ -25,7 +25,7 @@ settings:
 
 examples:
   - name: 200 Response
-    description: Stash deleted — returns the TypeORM DeleteResult
+    description: Stash deleted, returns the TypeORM DeleteResult
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE
@@ -47,7 +47,7 @@ examples:
             "affected": 1
           }
   - name: 200 Response
-    description: Stash deleted — returns the TypeORM DeleteResult
+    description: Stash deleted, returns the TypeORM DeleteResult
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE
@@ -115,7 +115,7 @@ examples:
             <error>Unauthorized</error>
           </root>
   - name: 422 Response
-    description: Validation error — invalid ID format
+    description: Validation error: invalid ID format
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE
@@ -142,7 +142,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error — invalid ID format
+    description: Validation error: invalid ID format
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE

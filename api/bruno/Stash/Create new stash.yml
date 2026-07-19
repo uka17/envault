@@ -144,7 +144,7 @@ examples:
             <error>Unauthorized</error>
           </root>
   - name: 422 Response
-    description: Validation error — missing or invalid fields
+    description: Validation error: missing or invalid fields
     request:
       url: "{{baseUrl}}/api/v1/stashes"
       method: POST
@@ -174,7 +174,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error — missing or invalid fields
+    description: Validation error: missing or invalid fields
     request:
       url: "{{baseUrl}}/api/v1/stashes"
       method: POST
@@ -251,4 +251,4 @@ examples:
             <error>Unauthorized</error>
           </root>
 
-docs: Creates a new stash (encrypted message) for the authenticated user. The request body must already be encrypted client-side by the sender — the server stores it as an opaque string and never sees the decryption key. The stash will be sent to the recipient email at the scheduled time via AWS SES.
+docs: Creates a new stash (encrypted message) for the authenticated user. The request body must already be encrypted client-side by the sender. The server stores it as an opaque string and never sees the decryption key. The stash will be sent to the recipient email at the scheduled time via AWS SES.

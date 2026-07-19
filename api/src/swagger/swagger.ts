@@ -6,7 +6,7 @@ import config from "api/src/config/config.js";
 const doc = {
   info: {
     title: "Envault API",
-    description: "REST API for the Envault application — secure stash management with email delivery via AWS SES.",
+    description: "REST API for the Envault application: secure stash management with email delivery via AWS SES.",
     version: "1.0.0",
   },
   servers: [

@@ -85,7 +85,7 @@ examples:
             <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
           </root>
   - name: 422 Response
-    description: Validation error — missing or invalid fields
+    description: Validation error: missing or invalid fields
     request:
       url: "{{baseUrl}}/api/v1/users"
       method: POST
@@ -115,7 +115,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error — missing or invalid fields
+    description: Validation error: missing or invalid fields
     request:
       url: "{{baseUrl}}/api/v1/users"
       method: POST

@@ -29,7 +29,7 @@ settings:
 
 examples:
   - name: 200 Response
-    description: Stash snoozed — returns updated stash
+    description: Stash snoozed, returns updated stash
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -61,7 +61,7 @@ examples:
             "modifiedOn": "2025-01-01T00:00:00Z"
           }
   - name: 200 Response
-    description: Stash snoozed — returns updated stash
+    description: Stash snoozed, returns updated stash
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -147,7 +147,7 @@ examples:
             <error>Unauthorized</error>
           </root>
   - name: 422 Response
-    description: Validation error — invalid ID or hours format
+    description: Validation error: invalid ID or hours format
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -178,7 +178,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error — invalid ID or hours format
+    description: Validation error: invalid ID or hours format
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST

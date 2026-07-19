@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Envault API",
-    "description": "REST API for the Envault application — secure stash management with email delivery via AWS SES.",
+    "description": "REST API for the Envault application: secure stash management with email delivery via AWS SES.",
     "version": "1.0.0"
   },
   "servers": [
@@ -126,7 +126,7 @@
             }
           },
           "422": {
-            "description": "Validation error — missing or invalid fields",
+            "description": "Validation error: missing or invalid fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -334,7 +334,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Stash deleted — returns the TypeORM DeleteResult",
+            "description": "Stash deleted, returns the TypeORM DeleteResult",
             "content": {
               "application/json": {
                 "schema": {
@@ -382,7 +382,7 @@
             }
           },
           "422": {
-            "description": "Validation error — invalid ID format",
+            "description": "Validation error: invalid ID format",
             "content": {
               "application/json": {
                 "schema": {
@@ -435,7 +435,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Stash snoozed — returns updated stash",
+            "description": "Stash snoozed, returns updated stash",
             "content": {
               "application/json": {
                 "schema": {
@@ -465,7 +465,7 @@
             }
           },
           "422": {
-            "description": "Validation error — invalid ID or hours format",
+            "description": "Validation error: invalid ID or hours format",
             "content": {
               "application/json": {
                 "schema": {
@@ -526,7 +526,7 @@
             }
           },
           "422": {
-            "description": "Validation error — missing or invalid fields",
+            "description": "Validation error: missing or invalid fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -578,7 +578,7 @@
         "description": "Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.",
         "responses": {
           "200": {
-            "description": "Login successful — JWT token returned",
+            "description": "Login successful: JWT token returned",
             "content": {
               "application/json": {
                 "schema": {
@@ -978,7 +978,7 @@
             }
           },
           "422": {
-            "description": "Validation error — invalid ID format",
+            "description": "Validation error: invalid ID format",
             "content": {
               "application/json": {
                 "schema": {

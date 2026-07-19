@@ -52,7 +52,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — invalid token format',
+          description: 'Validation error: invalid token format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[429] = {

@@ -76,7 +76,7 @@ export default class UserController {
   }
 
   /**
-   * Login user — returns access token in JSON and sets refresh token in HttpOnly cookie
+   * Login user: returns access token in JSON and sets refresh token in HttpOnly cookie
    * @param req Request object
    * @param res Response object
    * @param next Next function
@@ -146,7 +146,7 @@ export default class UserController {
   }
 
   /**
-   * Logout user — revokes refresh token and clears cookie
+   * Logout user: revokes refresh token and clears cookie
    * @param req Request object
    * @param res Response object
    * @param next Next function

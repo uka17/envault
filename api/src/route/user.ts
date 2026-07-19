@@ -49,7 +49,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/UserResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — missing or invalid fields',
+          description: 'Validation error: missing or invalid fields',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[500] = {
@@ -77,7 +77,7 @@ export default function(app: express.Router) {
           }
     } */
     /* #swagger.responses[200] = {
-          description: 'Login successful — JWT token returned',
+          description: 'Login successful: JWT token returned',
           schema: { $ref: '#/definitions/TokenResponse' }
     } */
     /* #swagger.responses[401] = {
@@ -166,7 +166,7 @@ export default function(app: express.Router) {
     userController.updatePassword.bind(userController),
   );
 
-  // Logout — revoke refresh token
+  // Logout: revoke refresh token
   app.post(
     "/api/v1/users/logout",
     passport.authenticate("jwt", { session: false }),
@@ -246,7 +246,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — invalid ID format',
+          description: 'Validation error: invalid ID format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     userController.revokeSession.bind(userController),

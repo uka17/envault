@@ -25,7 +25,7 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Create new stash' */
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user.
-          The request body must already be encrypted client-side — the server stores it as an
+          The request body must already be encrypted client-side. The server stores it as an
           opaque string and never sees the decryption key. Sent to the recipient at sendAt via SES.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.requestBody = {
@@ -46,7 +46,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — missing or invalid fields',
+          description: 'Validation error: missing or invalid fields',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[500] = {
@@ -122,7 +122,7 @@ export default function(app: express.Router) {
           example: 42
     } */
     /* #swagger.responses[200] = {
-          description: 'Stash deleted — returns the TypeORM DeleteResult',
+          description: 'Stash deleted, returns the TypeORM DeleteResult',
           schema: { affected: 1 }
     } */
     /* #swagger.responses[401] = {
@@ -130,7 +130,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — invalid ID format',
+          description: 'Validation error: invalid ID format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     stashController.delete.bind(stashController),
@@ -160,7 +160,7 @@ export default function(app: express.Router) {
           example: 24
     } */
     /* #swagger.responses[200] = {
-          description: 'Stash snoozed — returns updated stash',
+          description: 'Stash snoozed, returns updated stash',
           schema: { $ref: '#/definitions/StashResponse' }
     } */
     /* #swagger.responses[401] = {
@@ -168,7 +168,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error — invalid ID or hours format',
+          description: 'Validation error: invalid ID or hours format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[500] = {

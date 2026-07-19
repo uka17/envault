@@ -30,7 +30,7 @@ settings:
 
 examples:
   - name: 200 Response
-    description: Login successful — JWT token returned
+    description: Login successful: JWT token returned
     request:
       url: "{{baseUrl}}/api/v1/users/login"
       method: POST
@@ -54,7 +54,7 @@ examples:
             "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
   - name: 200 Response
-    description: Login successful — JWT token returned
+    description: Login successful: JWT token returned
     request:
       url: "{{baseUrl}}/api/v1/users/login"
       method: POST

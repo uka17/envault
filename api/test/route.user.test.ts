@@ -495,7 +495,7 @@ describe("User Routes", () => {
         .set("Cookie", refreshCookie);
       config.JWTRefreshGraceMinutes = originalGrace;
 
-      // Attempt to reuse the original token — must be rejected
+      // Attempt to reuse the original token: must be rejected
       const response = await request(globalThis.app)
         .post("/api/v1/token/refresh")
         .set("Cookie", refreshCookie);

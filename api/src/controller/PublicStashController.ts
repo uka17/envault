@@ -30,7 +30,7 @@ export default class PublicStashController {
 
   /**
    * Returns the public stash content by its access token. The body is
-   * returned exactly as stored (encrypted client-side by the sender) —
+   * returned exactly as stored (encrypted client-side by the sender);
    * decryption happens entirely in the recipient's browser using the key
    * shared with them out-of-band.
    * @param req Request object

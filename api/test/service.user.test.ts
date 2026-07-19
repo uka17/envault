@@ -214,7 +214,7 @@ describe("User service", () => {
     });
 
     // Password/refreshToken stripping is done at the response-serialization boundary
-    // (class-transformer's @Exclude()), not by the service — see UserController.
+    // (class-transformer's @Exclude()), not by the service; see UserController.
     it("should update name", async() => {
       const result = await userService.updateProfile(profileUser.id, { name: "UpdatedName" });
       expect(result).to.not.be.null;
