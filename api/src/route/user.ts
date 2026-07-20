@@ -1,6 +1,5 @@
 import express from "express";
 import passport from "passport";
-import dotenv from "dotenv";
 import { container } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
@@ -8,8 +7,6 @@ import { TOKENS } from "#di/tokens.js";
 import UserValidator from "api/src/route/validator/UserValidator.js";
 import { validateRequest } from "api/src/route/validator/common.js";
 import UserController from "api/src/controller/UserController.js";
-
-dotenv.config();
 
 /**
  * User routes
