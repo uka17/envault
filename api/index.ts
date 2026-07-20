@@ -1,3 +1,4 @@
+import "dotenv/config";
 import "reflect-metadata";
 import { container } from "tsyringe";
 import express, { Express } from "express";
@@ -6,8 +7,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import chalk from "chalk";
-import dotenv from "dotenv";
-dotenv.config();
 
 import getAppDataSource from "../common/dataSource.js";
 import config from "./src/config/config.js";
@@ -28,7 +27,7 @@ import { TOKENS } from "#di/tokens.js";
 //Init data source
 const dbURL = config.dbURL;
 const showSQLLogs = config.showSQLLogs;
-const appDataSource = getAppDataSource(dbURL, showSQLLogs);
+const appDataSource = getAppDataSource(dbURL, config.dbName, showSQLLogs);
 
 initDI(appDataSource);
 
@@ -49,7 +48,7 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 
 //Basic checks
-if (!process.env.API_JWT_SECRET) {
+if (!config.jwtSecret) {
   throw "JWT_SECRET is empty or nor found";
 }
 
@@ -57,7 +56,7 @@ appDataSource
   .initialize()
   .then(async() => {
     //Configure passport policies
-    passportConfig(appDataSource);
+    passportConfig(appDataSource, config.jwtSecret);
 
     //Configure all routes
     const router = express.Router();
