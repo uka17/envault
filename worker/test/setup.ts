@@ -1,8 +1,7 @@
+import "dotenv/config";
 import "reflect-metadata";
 import sinon from "sinon";
-import dotenv from "dotenv";
 import { container } from "tsyringe";
-dotenv.config();
 
 import getAppDataSource from "#common/dataSource.js";
 import LogService from "#service/LogService.js";
@@ -13,7 +12,7 @@ import config from "worker/src/config/config.js";
 
 
 const dbURL = config.testDbURL;
-globalThis.appDataSource = getAppDataSource(dbURL);
+globalThis.appDataSource = getAppDataSource(dbURL, config.testDbName);
 
 async function startApp() {
   await globalThis.appDataSource.initialize();
