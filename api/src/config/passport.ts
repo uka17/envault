@@ -1,9 +1,6 @@
 import passport from "passport";
 import local from "passport-local";
 
-import dotenv from "dotenv";
-dotenv.config();
-
 import User from "../../../model/User.js";
 import { DataSource } from "typeorm";
 import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
@@ -14,9 +11,11 @@ import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 /**
  * Configure passport `Local` and `JWT` policies
  * @param appDataSource Database connection instance
+ * @param jwtSecret Secret used to verify JWT access tokens
  */
 export default function(
   appDataSource: DataSource,
+  jwtSecret: string,
 ) {
   const userRepository = appDataSource.getRepository(User);
   // Set up Local strategy
@@ -51,13 +50,13 @@ export default function(
     new JwtStrategy(
       {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        secretOrKey: process.env.API_JWT_SECRET,
+        secretOrKey: jwtSecret,
       },
       async(payload, done) => {
         const user = await userRepository.findOneBy({
           id: payload.sub,
         });
-        /* istanbul ignore next */ 
+        /* istanbul ignore next */
         if (!user) {
           return done(null, false);
         }

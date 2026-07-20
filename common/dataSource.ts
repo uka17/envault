@@ -1,5 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
 import { DataSource } from "typeorm";
 import { SnakeNamingStrategy } from "./SnakeNamingStrategy.js";
 //--Tables
@@ -11,14 +9,19 @@ import Session from "#model/Session.js";
 /**
  *
  * @param dbURL URL to connect to the database
- * @returns Preconfigured DataSource
+ * @param dbName Database name
  * @param showLogs Show SQL logs
+ * @returns Preconfigured DataSource
  */
-function getAppDataSource(dbURL: string, showLogs = false): DataSource {
+function getAppDataSource(
+  dbURL: string,
+  dbName: string,
+  showLogs = false,
+): DataSource {
   return new DataSource({
     type: "postgres",
     url: dbURL,
-    database: process.env.DB_NAME,
+    database: dbName,
     entities: [User, Stash, SendLog, Session],
     synchronize: true,
     logging: showLogs,

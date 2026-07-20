@@ -1,10 +1,9 @@
+import "dotenv/config";
 import "reflect-metadata";
 import { LessThan } from "typeorm";
 import chalk from "chalk";
 import { container } from "tsyringe";
 import { DataSource } from "typeorm";
-import dotenv from "dotenv";
-dotenv.config();
 
 import config from "worker/src/config/config.js";
 import getAppDataSource from "#common/dataSource.js";
@@ -21,7 +20,7 @@ async function init() {
   //Init data source
   console.log(config);
   const dbURL = config.dbURL;
-  const appDataSource = getAppDataSource(dbURL);
+  const appDataSource = getAppDataSource(dbURL, config.dbName);
   await appDataSource.initialize();
   initDI(appDataSource);
 
@@ -31,9 +30,10 @@ async function init() {
 
   //---Play zone
   const emailService = container.resolve<EmailService> (TOKENS.EmailService);
+  const testRecipient = ["ukaoneseven", "gmail.com"].join("@");
   const mailOptions = {
-    to: "ukaoneseven@gmail.com",
-    from: "ukaoneseven@gmail.com",
+    to: testRecipient,
+    from: testRecipient,
     subject: "New stash",
     html: "<h1>New stash</h1>",
     text: "New stash",

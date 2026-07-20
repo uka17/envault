@@ -1,6 +1,5 @@
 import express from "express";
 import { rateLimit } from "express-rate-limit";
-import dotenv from "dotenv";
 import { container } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
@@ -9,8 +8,6 @@ import config from "api/src/config/config.js";
 
 import PublicStashController from "api/src/controller/PublicStashController.js";
 import PublicStashValidator from "api/src/route/validator/PublicStashValidator.js";
-
-dotenv.config();
 
 export default function(app: express.Router) {
   const publicStashController =

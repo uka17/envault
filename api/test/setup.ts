@@ -1,10 +1,9 @@
+import "dotenv/config";
 import "reflect-metadata";
 import sinon from "sinon";
 import express from "express";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
 import { container } from "tsyringe";
-dotenv.config();
 
 import getAppDataSource from "#common/dataSource.js";
 
@@ -20,7 +19,7 @@ import stashRoutes from "api/src/route/stash.js";
 import publicStashRoutes from "api/src/route/publicStash.js";
 
 const dbURL = config.testDbURL;
-globalThis.appDataSource = getAppDataSource(dbURL);
+globalThis.appDataSource = getAppDataSource(dbURL, config.testDbName);
 
 async function startApp() {
   await globalThis.appDataSource.initialize();
@@ -35,7 +34,7 @@ async function startApp() {
   globalThis.app.use(cookieParser());
   globalThis.app.use(express.json());
 
-  passportConfig(globalThis.appDataSource);
+  passportConfig(globalThis.appDataSource, config.jwtSecret);
   userRoutes(globalThis.app);
   stashRoutes(globalThis.app);
   publicStashRoutes(globalThis.app);
