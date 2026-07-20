@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { container } from "tsyringe";
 dotenv.config();
 
-import TranslationService from "#service/TranslationService.js";
 import getAppDataSource from "#common/dataSource.js";
 import LogService from "#service/LogService.js";
 import initDI from "#di/container.js";
@@ -23,14 +22,9 @@ async function startApp() {
   // Mock/setup dependencies
   globalThis.mockLogService = sinon.createStubInstance(LogService);
 
-  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-  await translationService.init(true);
-
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);
   container.registerInstance(TOKENS.LogService, loggerServiceStub);
-
-  globalThis.translationService = translationService;
 }
 
 before(async() => {

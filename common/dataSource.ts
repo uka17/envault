@@ -4,9 +4,6 @@ import { DataSource } from "typeorm";
 import { SnakeNamingStrategy } from "./SnakeNamingStrategy.js";
 //--Tables
 import User from "#model/User.js";
-import Language from "#model/Language.js";
-import Translation from "#model/Translation.js";
-import Text from "#model/Text.js";
 import Stash from "#model/Stash.js";
 import SendLog from "#model/SendLog.js";
 import Session from "#model/Session.js";
@@ -22,7 +19,7 @@ function getAppDataSource(dbURL: string, showLogs = false): DataSource {
     type: "postgres",
     url: dbURL,
     database: process.env.DB_NAME,
-    entities: [User, Language, Text, Translation, Stash, SendLog, Session],
+    entities: [User, Stash, SendLog, Session],
     synchronize: true,
     logging: showLogs,
     connectTimeoutMS: 10000,

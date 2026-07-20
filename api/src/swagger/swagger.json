@@ -1296,7 +1296,11 @@
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "error": {
+          "code": {
+            "type": "string",
+            "example": "unauthorized"
+          },
+          "message": {
             "type": "string",
             "example": "Unauthorized"
           }
@@ -1308,6 +1312,14 @@
       "ValidationErrorResponse": {
         "type": "object",
         "properties": {
+          "code": {
+            "type": "string",
+            "example": "validation_error"
+          },
+          "message": {
+            "type": "string",
+            "example": "API request validation error"
+          },
           "errors": {
             "type": "array",
             "items": {
@@ -1317,9 +1329,13 @@
                   "type": "string",
                   "example": "email"
                 },
+                "code": {
+                  "type": "string",
+                  "example": "email_format_incorrect"
+                },
                 "message": {
                   "type": "string",
-                  "example": "must be a valid email"
+                  "example": "Has incorrect email format"
                 }
               }
             }

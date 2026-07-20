@@ -34,7 +34,6 @@ services:
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
       LOG_LEVEL: ${LOG_LEVEL}
-      API_SILENT_INIT: ${API_SILENT_INIT}   
     depends_on:
       postgres:
         condition: service_healthy

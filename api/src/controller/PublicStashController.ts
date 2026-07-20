@@ -4,7 +4,6 @@ import { Request, Response, NextFunction } from "express";
 import { TOKENS } from "#di/tokens.js";
 import { CODES } from "#common/constants.js";
 
-import TranslationService from "#service/TranslationService.js";
 import StashService from "#service/StashService.js";
 import ApiError from "api/src/error/ApiError.js";
 
@@ -12,7 +11,6 @@ import ApiError from "api/src/error/ApiError.js";
 export default class PublicStashController {
   constructor(
     @inject(TOKENS.StashService) private stashService: StashService,
-    @inject(TOKENS.TranslationService) private translationService: TranslationService,
   ) {}
 
   /**
@@ -21,11 +19,7 @@ export default class PublicStashController {
    * @returns ApiError with a 404 status and a neutral message
    */
   private unlockFailedError(): ApiError {
-    return new ApiError(
-      CODES.API_NOT_FOUND,
-      this.translationService.getText("stash_unlock_failed").translation,
-      [this.translationService.getText("stash_unlock_failed")],
-    );
+    return ApiError.fromCode(CODES.API_NOT_FOUND, "stash_unlock_failed");
   }
 
   /**

@@ -5,7 +5,7 @@ import sinon from "sinon";
 import { container } from "tsyringe";
 import passport from "passport";
 import bcrypt from "bcryptjs";
-import { CODES, MESSAGES } from "#common/constants.js";
+import { CODES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import UserService from "#service/UserService.js";
 import config from "api/src/config/config.js";
@@ -38,7 +38,7 @@ describe("User Routes", () => {
         });
 
       expect(response.status).to.equal(CODES.SERVER_ERROR);
-      expect(response.body.message?.textCode).to.equal("error_500");
+      expect(response.body.code).to.equal("error_500");
     });
 
     it("should handle unexpected error correctly", async() => {
@@ -62,7 +62,7 @@ describe("User Routes", () => {
 
       expect(response.status).to.equal(500);
       expect(
-        response.body.message?.textCode,
+        response.body.code,
       ).to.equal("error_500");
     });
 
@@ -93,8 +93,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        failedCreateResponse.body.errors?.[0]?.msg
-          ?.textCode,
+        failedCreateResponse.body.errors?.[0]?.code,
       ).to.equal("user_already_exists");
       expect(
         failedCreateResponse.status,
@@ -113,7 +112,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("email_required");
       expect(response.status).to.equal(422);
     });
@@ -130,7 +129,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("name_required");
       expect(response.status).to.equal(422);
     });
@@ -148,7 +147,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("name_alphanumeric");
       expect(response.status).to.equal(422);
     });
@@ -166,7 +165,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("email_format_incorrect");
       expect(response.status).to.equal(422);
     });
@@ -183,7 +182,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("password_required");
       expect(response.status).to.equal(422);
     });
@@ -201,7 +200,7 @@ describe("User Routes", () => {
         .post("/api/v1/users")
         .send(newUser);
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("password_format_incorrect");
       expect(response.status).to.equal(422);
     });
@@ -219,7 +218,7 @@ describe("User Routes", () => {
         });
 
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("email_required");
       expect(response.status).to.equal(422);
     });
@@ -235,7 +234,7 @@ describe("User Routes", () => {
         });
 
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("email_format_incorrect");
       expect(response.status).to.equal(422);
     });
@@ -251,7 +250,7 @@ describe("User Routes", () => {
         });
 
       expect(
-        response.body.errors?.[0]?.msg?.textCode,
+        response.body.errors?.[0]?.code,
       ).to.equal("password_required");
       expect(response.status).to.equal(422);
     });
@@ -337,7 +336,7 @@ describe("User Routes", () => {
         });
 
       expect(
-        response.body.error?.textCode,
+        response.body.code,
       ).to.equal("incorrect_password_or_email");
       expect(response.status).to.equal(401);
     });
@@ -438,7 +437,7 @@ describe("User Routes", () => {
     it("should return 401 when no refresh cookie is present", async() => {
       const response = await request(globalThis.app).post("/api/v1/token/refresh");
       expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
-      expect(response.body.error?.textCode).to.equal("incorrect_token");
+      expect(response.body.code).to.equal("incorrect_token");
     });
 
     it("should return 401 and clear cookie for an invalid refresh token", async() => {
@@ -447,7 +446,7 @@ describe("User Routes", () => {
         .set("Cookie", `${config.refreshCookieName}=invalidtoken`);
 
       expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
-      expect(response.body.error?.textCode).to.equal("incorrect_token");
+      expect(response.body.code).to.equal("incorrect_token");
 
       const setCookie: string[] = response.headers["set-cookie"] ?? [];
       const cleared = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
@@ -628,7 +627,7 @@ describe("User Routes", () => {
         .send({ email: "notanemail" });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("email_format_incorrect");
+      expect(response.body.errors?.[0]?.code).to.equal("email_format_incorrect");
     });
 
     it("should return 422 for invalid name format", async() => {
@@ -638,7 +637,7 @@ describe("User Routes", () => {
         .send({ name: "invalid name!" });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("name_alphanumeric");
+      expect(response.body.errors?.[0]?.code).to.equal("name_alphanumeric");
     });
 
     it("should return 422 when updating to an already taken email", async() => {
@@ -655,7 +654,7 @@ describe("User Routes", () => {
         .send({ email: otherUser.email });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("user_already_exists");
+      expect(response.body.errors?.[0]?.code).to.equal("user_already_exists");
     });
   });
 
@@ -713,7 +712,7 @@ describe("User Routes", () => {
         .send({ currentPassword: "WrongPassword1", newPassword: `NewPass${userId()}` });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.error?.textCode).to.equal("incorrect_current_password");
+      expect(response.body.code).to.equal("incorrect_current_password");
     });
 
     it("should return 422 for missing currentPassword", async() => {
@@ -723,7 +722,7 @@ describe("User Routes", () => {
         .send({ newPassword: `NewPass${userId()}` });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("current_password_required");
+      expect(response.body.errors?.[0]?.code).to.equal("current_password_required");
     });
 
     it("should return 422 for missing newPassword", async() => {
@@ -733,7 +732,7 @@ describe("User Routes", () => {
         .send({ currentPassword: userCredentials.password });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("new_password_required");
+      expect(response.body.errors?.[0]?.code).to.equal("new_password_required");
     });
 
     it("should return 422 when newPassword does not meet format requirements", async() => {
@@ -743,7 +742,7 @@ describe("User Routes", () => {
         .send({ currentPassword: userCredentials.password, newPassword: "weak" });
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.msg?.textCode).to.equal("password_format_incorrect");
+      expect(response.body.errors?.[0]?.code).to.equal("password_format_incorrect");
     });
   });
 
@@ -892,7 +891,7 @@ describe("User Routes", () => {
         .set("Authorization", `Bearer ${otherToken}`);
 
       expect(response.status).to.equal(CODES.API_NOT_FOUND);
-      expect(response.body.errors?.[0]?.textCode).to.equal("session_not_found");
+      expect(response.body.code).to.equal("session_not_found");
     });
 
     it("should return 404 for a non-existent session id", async() => {

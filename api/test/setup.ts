@@ -18,11 +18,9 @@ import initDI from "#di/container.js";
 import userRoutes from "api/src/route/user.js";
 import stashRoutes from "api/src/route/stash.js";
 import publicStashRoutes from "api/src/route/publicStash.js";
-import TranslationService from "#service/TranslationService.js";
 
 const dbURL = config.testDbURL;
 globalThis.appDataSource = getAppDataSource(dbURL);
-globalThis.translationService = null;
 
 async function startApp() {
   await globalThis.appDataSource.initialize();
@@ -31,17 +29,13 @@ async function startApp() {
 
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);
-
-  const translationService = container.resolve<TranslationService>(TOKENS.TranslationService);
-  await translationService.init(true);
-
   container.registerInstance(TOKENS.LogService, loggerServiceStub);
 
   globalThis.app = express();
   globalThis.app.use(cookieParser());
   globalThis.app.use(express.json());
 
-  passportConfig(globalThis.appDataSource, translationService);
+  passportConfig(globalThis.appDataSource);
   userRoutes(globalThis.app);
   stashRoutes(globalThis.app);
   publicStashRoutes(globalThis.app);

@@ -10,14 +10,10 @@ import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
 import Session from "#model/Session.js";
-import Translation from "#model/Translation.js";
-import Language from "#model/Language.js";
-import Text from "#model/Text.js";
 
 import StashService from "#service/StashService.js";
 import SendLog from "#model/SendLog.js";
 import UserService from "#service/UserService.js";
-import TranslationService from "#service/TranslationService.js";
 import EmailService from "#service/EmailService.js";
 
 import UserController from "api/src/controller/UserController.js";
@@ -46,20 +42,10 @@ export default function initDI(appDataSource: DataSource) {
   const sessionRepository = appDataSource.getRepository(Session);
   container.registerInstance(TOKENS.SessionRepository, sessionRepository);
 
-  const translationRepository = appDataSource.getRepository(Translation);
-  container.registerInstance(TOKENS.TranslationRepository, translationRepository);
-
-  const languageRepository = appDataSource.getRepository(Language);
-  container.registerInstance(TOKENS.LanguageRepository, languageRepository);
-
-  const textRepository = appDataSource.getRepository(Text);
-  container.registerInstance(TOKENS.TextRepository, textRepository);
-
   const emailCredentialsProvider = fromEnv();
   container.registerInstance(TOKENS.EmailCredentialsProvider, emailCredentialsProvider);
 
   // Register services
-  container.registerSingleton(TOKENS.TranslationService, TranslationService);
   container.registerSingleton(TOKENS.StashService, StashService);
   container.registerSingleton(TOKENS.UserService, UserService);
   container.registerSingleton(TOKENS.EmailService, EmailService);

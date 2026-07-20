@@ -9,7 +9,6 @@ import config from "api/src/config/config.js";
 
 import User from "#model/User.js";
 
-import TranslationService from "#service/TranslationService.js";
 import UserService from "#service/UserService.js";
 import LogService from "#service/LogService.js";
 import ApiError from "api/src/error/ApiError.js";
@@ -37,7 +36,6 @@ const REFRESH_COOKIE_OPTIONS = {
 export default class UserController {
   constructor(
     @inject(TOKENS.UserService) private userService: UserService,
-    @inject(TOKENS.TranslationService) private translationService: TranslationService,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
@@ -89,9 +87,7 @@ export default class UserController {
         async(err: Error, passportUser: User) => {
           /* istanbul ignore next */ if (err) {
             this.logger.error(err as object);
-            return res
-              .status(CODES.SERVER_ERROR)
-              .send({ error: this.translationService.getText("error_500") });
+            return next(ApiError.fromCode(CODES.SERVER_ERROR, "error_500"));
           }
 
           if (passportUser) {
@@ -104,9 +100,7 @@ export default class UserController {
             return res.json({ token: accessToken });
           }
 
-          return res.status(CODES.API_UNAUTHORIZED).json({
-            error: this.translationService.getText("incorrect_password_or_email"),
-          });
+          return next(ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_password_or_email"));
         },
       )(req, res, next);
     } catch (e: unknown) /* istanbul ignore next */ {
@@ -124,17 +118,13 @@ export default class UserController {
     try {
       const raw: string | undefined = req.cookies?.[REFRESH_COOKIE];
       if (!raw) {
-        return res.status(CODES.API_UNAUTHORIZED).json({
-          error: this.translationService.getText("incorrect_token"),
-        });
+        throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       }
 
       const result = await this.userService.verifyRefreshToken(raw);
       if (!result) {
         res.clearCookie(REFRESH_COOKIE, { path: "/" });
-        return res.status(CODES.API_UNAUTHORIZED).json({
-          error: this.translationService.getText("incorrect_token"),
-        });
+        throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       }
 
       const accessToken = this.userService.createToken(result.user, result.session.id);
@@ -196,9 +186,7 @@ export default class UserController {
       };
       const success = await this.userService.updatePassword(id, currentPassword, newPassword);
       if (!success) {
-        return res.status(CODES.API_REQUEST_VALIDATION_ERROR).json({
-          error: this.translationService.getText("incorrect_current_password"),
-        });
+        throw ApiError.fromCode(CODES.API_REQUEST_VALIDATION_ERROR, "incorrect_current_password");
       }
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {
@@ -238,11 +226,7 @@ export default class UserController {
       const sessionId = parseInt(req.params.id);
       const revoked = await this.userService.revokeSessionForUser(user.id, sessionId);
       if (!revoked) {
-        throw new ApiError(
-          CODES.API_NOT_FOUND,
-          this.translationService.getText("session_not_found").translation,
-          [this.translationService.getText("session_not_found")],
-        );
+        throw ApiError.fromCode(CODES.API_NOT_FOUND, "session_not_found");
       }
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {
@@ -281,9 +265,7 @@ export default class UserController {
       const result = await this.userService.getUserById(id);
 
       /* istanbul ignore next */ if (result === null) {
-        throw new ApiError(CODES.API_UNAUTHORIZED, MESSAGES.API_UNAUTHORIZED_ERROR, [
-          this.translationService.getText("incorrect_token"),
-        ]);
+        throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       } else {
         return res.status(CODES.API_OK).json(instanceToPlain(result));
       }
