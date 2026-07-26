@@ -100,6 +100,7 @@ function welcomeMessage() {
       config.showLogs,
     )}`,
   );
+  console.log(`Log transports: ${chalk.yellowBright(logger.getActiveTransports().join(", "))}`);
   console.log(`SHA: ${chalk.blueBright(process.env.GIT_COMMIT_SHA || "DEV")}`);
   console.log("==========================================" + "\n");
 }

@@ -50,4 +50,10 @@ describe("Log service", () => {
       expect(winstonLogger.transports).to.have.lengthOf(2);
     });
   });
+
+  describe("getActiveTransports", () => {
+    it("should list only the file and console transports when Loki is not configured", () => {
+      expect(logService.getActiveTransports()).to.deep.equal(["File", "Console"]);
+    });
+  });
 });

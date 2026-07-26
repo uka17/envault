@@ -90,6 +90,15 @@ export default class LogService {
     });
   }
 
+  /**
+   * Returns the names of the winston transports this logger currently writes to
+   * (e.g. `["File", "Console", "LokiTransport"]`)
+   * @returns {string[]} Names of the active transport classes
+   */
+  public getActiveTransports(): string[] {
+    return this.winstonLogger.transports.map((transport) => transport.constructor.name);
+  }
+
   /** Logs a message at `info` level */
   public info(message: string | object): void {
     this.winstonLogger.info(message);
