@@ -26,6 +26,8 @@ async function startApp() {
   // Mock/setup dependencies
   initDI(globalThis.appDataSource);
 
+  globalThis.mockLogService = sinon.createStubInstance(LogService);
+
   //Suppress logs
   const loggerServiceStub = sinon.createStubInstance(LogService);
   container.registerInstance(TOKENS.LogService, loggerServiceStub);

@@ -1,4 +1,4 @@
-import { DeleteResult, Repository } from "typeorm";
+import { DeleteResult, In, Repository, UpdateResult } from "typeorm";
 import nodemailer from "nodemailer";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
@@ -181,6 +181,98 @@ export default class StashService {
       stash.modifiedBy = modifiedBy;
       stash.modifiedOn = new Date(Date.now());
       return await this.stashRepository.manager.save(stash);
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+  /**
+   * Atomically claims up to `batchSize` stashes that are due to be sent
+   * (`sendAt` in the past), not yet sent, and not currently claimed by
+   * another worker (or whose claim has gone stale). Claiming is done via a
+   * single `UPDATE ... WHERE id IN (SELECT ... FOR UPDATE SKIP LOCKED)`
+   * statement so that concurrent callers (overlapping ticks, or multiple
+   * worker processes) can never claim the same stash twice.
+   * @param batchSize Maximum number of stashes to claim in one call
+   * @param staleLockThresholdMs Age in milliseconds after which an existing
+   * claim is considered abandoned and can be reclaimed
+   * @returns Array of claimed stashes (empty if none are due), or `null` if error
+   */
+  public async claimDueStashes(
+    batchSize: number,
+    staleLockThresholdMs: number,
+  ): Promise<Stash[] | null> {
+    try {
+      const now = new Date();
+      const staleCutoff = new Date(now.getTime() - staleLockThresholdMs);
+
+      // For UPDATE/DELETE statements, TypeORM's Postgres driver returns a
+      // `[rows, rowCount]` tuple rather than the rows array directly.
+      const [claimedRows]: [{ id: number }[], number] = await this.stashRepository.manager.query(
+        `
+          UPDATE stash
+          SET locked_at = $1
+          WHERE id IN (
+            SELECT id FROM stash
+            WHERE send_at <= $1
+              AND is_sent IS NOT TRUE
+              AND (locked_at IS NULL OR locked_at < $2)
+            ORDER BY send_at ASC
+            LIMIT $3
+            FOR UPDATE SKIP LOCKED
+          )
+          AND is_sent IS NOT TRUE
+          AND (locked_at IS NULL OR locked_at < $2)
+          RETURNING id
+        `,
+        [now, staleCutoff, batchSize],
+      );
+
+      if (claimedRows.length === 0) {
+        return [];
+      }
+
+      const claimedIds = claimedRows.map((row) => row.id);
+      return await this.stashRepository.find({ where: { id: In(claimedIds) } });
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+  /**
+   * Marks a stash as successfully sent and releases its claim.
+   * @param stashId ID of the stash
+   * @returns `UpdateResult` or `null` if error
+   */
+  public async markStashSent(stashId: number): Promise<UpdateResult | null> {
+    try {
+      return await this.stashRepository.manager.update(
+        Stash,
+        { id: stashId },
+        { isSent: true, lockedAt: null },
+      );
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+  /**
+   * Releases a stash's claim without marking it as sent, so it becomes
+   * eligible to be claimed and retried on a later tick. Used when a send
+   * attempt fails.
+   * @param stashId ID of the stash
+   * @returns `UpdateResult` or `null` if error
+   */
+  public async releaseStashLock(stashId: number): Promise<UpdateResult | null> {
+    try {
+      return await this.stashRepository.manager.update(
+        Stash,
+        { id: stashId },
+        { lockedAt: null },
+      );
     } catch (error) {
       this.logger.error(error);
       return null;

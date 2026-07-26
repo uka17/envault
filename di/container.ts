@@ -10,6 +10,7 @@ import User from "#model/User.js";
 import Session from "#model/Session.js";
 
 import StashService from "#service/StashService.js";
+import StashSenderService from "#service/StashSenderService.js";
 import SendLog from "#model/SendLog.js";
 import UserService from "#service/UserService.js";
 import EmailService from "#service/EmailService.js";
@@ -68,6 +69,7 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
 
   // Register services
   container.registerSingleton(TOKENS.StashService, StashService);
+  container.registerSingleton(TOKENS.StashSenderService, StashSenderService);
   container.registerSingleton(TOKENS.UserService, UserService);
   container.registerSingleton(TOKENS.EmailService, EmailService);
 

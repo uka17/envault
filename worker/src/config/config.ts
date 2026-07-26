@@ -14,6 +14,8 @@ export default {
     apiKey: process.env.LOKI_API_KEY || "",
   },
   runInterval: 1000, //ms
-  sendFrom: { name: "envault.me", email: "donotreply@envault.me" },
+  stashBatchSize: Number(process.env.STASH_BATCH_SIZE) || 25,
+  staleLockThresholdMs: Number(process.env.STALE_LOCK_THRESHOLD_MS) || 5 * 60 * 1000, // 5 minutes
+  sendFrom: { name: "envault.me", email: ["ukaoneseven", "gmail.com"].join("@") },
   readMessageUrl: "localhost/getMessage",
 };

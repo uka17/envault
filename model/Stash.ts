@@ -14,8 +14,16 @@ export default class Stash extends Base {
   @Column({
     type: "boolean",
     nullable: true,
+    default: false,
   })
     isSent: boolean;
+
+  @Column({
+    name: "locked_at",
+    type: "timestamptz",
+    nullable: true,
+  })
+    lockedAt: Date | null;
 
   @Exclude()
   @Column({

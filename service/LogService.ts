@@ -3,7 +3,7 @@ import winston, { createLogger } from "winston";
 import LokiTransport from "winston-loki";
 import Transport from "winston-transport";
 import { injectable } from "tsyringe";
-const { combine, timestamp, colorize, printf, json } = winston.format;
+const { combine, timestamp, colorize, printf, json, errors } = winston.format;
 
 enum LogLevel {
   Info = "info",
@@ -86,6 +86,15 @@ export default class LogService {
     this.winstonLogger = createLogger({
       level: logLevel,
       silent: !silent,
+      // Normalizes `Error` instances into a plain object with enumerable
+      // `message`/`stack` properties *before* any transport-level format
+      // runs. Each transport below has its own `format`, which makes
+      // winston-transport clone `info` via `Object.assign({}, info)`
+      // before formatting it; since `Error.prototype.message`/`.stack`
+      // are non-enumerable, that clone silently drops them unless this
+      // logger-level format has already copied them onto enumerable
+      // properties first.
+      format: errors({ stack: true }),
       transports,
     });
   }

@@ -6,6 +6,7 @@ export const TOKENS = {
 
   LogService: Symbol("LogService"),
   StashService: Symbol("StashService"),
+  StashSenderService: Symbol("StashSenderService"),
   UserService: Symbol("UserService"),
   EmailService: Symbol("EmailService"),
 

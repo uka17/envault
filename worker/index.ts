@@ -1,24 +1,22 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { LessThan } from "typeorm";
-import chalk from "chalk";
 import { container } from "tsyringe";
-import { DataSource } from "typeorm";
 
 import config from "worker/src/config/config.js";
 import getAppDataSource from "#common/dataSource.js";
-import Stash from "#model/Stash.js";
 import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 import initDI from "#di/container.js";
 
-import StashService from "#service/StashService.js";
-import EmailService from "#service/EmailService.js";
+import StashSenderService from "#service/StashSenderService.js";
 
-
+/**
+ * Initializes the worker process: sets up the database connection and DI
+ * container, immediately catches up on any already-due stashes, then starts
+ * the periodic send loop.
+ */
 async function init() {
   //Init data source
-  console.log(config);
   const dbURL = config.dbURL;
   const appDataSource = getAppDataSource(dbURL, config.dbName);
   await appDataSource.initialize();
@@ -30,39 +28,28 @@ async function init() {
   });
 
   const logger = container.resolve<LogService>(TOKENS.LogService);
-  
+  const stashSenderService = container.resolve<StashSenderService>(TOKENS.StashSenderService);
+
   logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
-  //---Play zone
-  const emailService = container.resolve<EmailService> (TOKENS.EmailService);
-  const testRecipient = ["ukaoneseven", "gmail.com"].join("@");
-  const mailOptions = {
-    to: testRecipient,
-    from: testRecipient,
-    subject: "New stash",
-    html: "<h1>New stash</h1>",
-    text: "New stash",
+  /**
+   * Runs one claim-and-send pass, logging (but never throwing) on
+   * unexpected errors so a single bad tick cannot crash the worker process.
+   * @returns Nothing
+   */
+  const tick = async() => {
+    try {
+      await stashSenderService.processDueStashes(config.stashBatchSize, config.staleLockThresholdMs);
+    } catch (error) {
+      logger.error(error);
+    }
   };
-  const messageId = await emailService.send(mailOptions);
-  let stashService = container.resolve<StashService>(TOKENS.StashService);
-  await stashService.log(3, mailOptions, messageId);
 
-  //---End of play zone
+  // Catch-up: process any stashes that are already due before waiting for the first tick.
+  await tick();
 
-  //Init watch function to check for stashes to send
-  setInterval(function() {
-    main(appDataSource);
-  }, config.runInterval);
-}
-
-async function main(appDataSource: DataSource) {
-  const stashRepository = appDataSource.getRepository(Stash);
-  const result = await stashRepository.find({
-    where: { sendAt: LessThan(new Date(Date.now())) },
-  });
-  console.log(
-    chalk.yellow(result[0] ? result[0].body : "Was DB init? No stahes found."),
-  );
+  // Periodic watch loop.
+  setInterval(tick, config.runInterval);
 }
 
 init();
