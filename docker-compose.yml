@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:latest
     container_name: envault-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -22,8 +23,9 @@ services:
       retries: 3        
   
   api:
-    image: uka17/envault-api:latest   
+    image: uka17/envault-api:latest
     container_name: envault-api
+    restart: unless-stopped
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -47,6 +49,7 @@ services:
   worker:
     image: uka17/envault-worker:latest
     container_name: envault-worker
+    restart: unless-stopped
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
