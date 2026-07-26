@@ -29,7 +29,12 @@ const dbURL = config.dbURL;
 const showSQLLogs = config.showSQLLogs;
 const appDataSource = getAppDataSource(dbURL, config.dbName, showSQLLogs);
 
-initDI(appDataSource);
+initDI(appDataSource, {
+  service: "api",
+  showLogs: config.showLogs,
+  logLevel: config.logLevel,
+  loki: config.loki.host ? config.loki : undefined,
+});
 
 const logger = container.resolve<LogService>(TOKENS.LogService);
 

@@ -13,6 +13,11 @@ export default {
   logLevel: process.env.LOG_LEVEL == "INFO" ? "info" : "warn",
   showSQLLogs: process.env.SHOW_SQL_LOGS == "TRUE",
   showLogs: process.env.SHOW_LOGS == "TRUE",
+  loki: {
+    host: process.env.LOKI_HOST || "",
+    user: process.env.LOKI_USER || "",
+    apiKey: process.env.LOKI_API_KEY || "",
+  },
   cors: { origin: "http://localhost:8080" },
   session: {
     secret: "biteme",

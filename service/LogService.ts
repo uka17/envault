@@ -1,8 +1,9 @@
 
 import winston, { createLogger } from "winston";
+import LokiTransport from "winston-loki";
+import Transport from "winston-transport";
 import { injectable } from "tsyringe";
-const { combine, timestamp, colorize, printf } = winston.format;
-//import Transport from "winston-transport";
+const { combine, timestamp, colorize, printf, json } = winston.format;
 
 enum LogLevel {
   Info = "info",
@@ -13,25 +14,25 @@ enum LogLevel {
   Debug = "debug",
   Silly = "silly",
 }
-/*
-class databaseTransport extends Transport {
-  constructor(opts?) {
-    super(opts);
-  }
 
-  log(info, callback) {
-    setImmediate(() => {
-      this.emit("logged", info);
-    });
-
-    // Perform the writing to the remote service
-    //---
-    //Log stash connect here
-    //---
-    callback();
-  }
+/** Grafana Cloud Loki connection details used to ship logs off-box */
+interface LokiConfig {
+  host: string;
+  user: string;
+  apiKey: string;
 }
-*/
+
+/** Human-readable format shared by the file and console transports */
+const humanReadableFormat = combine(
+  timestamp(),
+  colorize({
+    colors: { info: "blue", error: "red", warning: "orange" },
+  }),
+  /* istanbul ignore next */
+  printf(({ level, message, timestamp, stack }) => {
+    return `${timestamp} [${level}]: ${stack || message}`;
+  }),
+);
 
 @injectable()
 export default class LogService {
@@ -39,34 +40,53 @@ export default class LogService {
 
   /**
    * Creates instance of `LogService`
+   * @param {string} service Name of the process emitting the logs (e.g. `"api"`, `"worker"`), attached as the
+   * Loki `service` label so streams from different processes can be told apart in Grafana; `"unknown"` by default
    * @param {boolean} silent When `true`, all log output is suppressed; `false` by default
    * @param {LogLevel} logLevel Log only if `info.level` is less than or equal to this level
    * (see https://github.com/winstonjs/winston#logging-levels), `LogLevel.Info` by default
+   * @param {LokiConfig} [loki] Grafana Cloud Loki connection details; when omitted (e.g. in local dev or tests),
+   * logs are not shipped anywhere and only the file/console transports are used
    */
-  constructor(silent: boolean = false, logLevel: LogLevel = LogLevel.Info) {
+  constructor(
+    service: string = "unknown",
+    silent: boolean = false,
+    logLevel: LogLevel = LogLevel.Info,
+    loki?: LokiConfig,
+  ) {
+    const transports: Transport[] = [
+      new winston.transports.File({
+        filename: "./log/app.log",
+        maxFiles: 10,
+        maxsize: 1024,
+        tailable: true,
+        format: humanReadableFormat,
+      }),
+      new winston.transports.Console({
+        format: humanReadableFormat,
+      }),
+    ];
+
+    if (loki?.host) {
+      transports.push(
+        new LokiTransport({
+          host: loki.host,
+          basicAuth: `${loki.user}:${loki.apiKey}`,
+          labels: { service, environment: process.env.ENV || "unknown" },
+          json: true,
+          format: combine(timestamp(), json()),
+          replaceTimestamp: true,
+          gracefulShutdown: true,
+          /* istanbul ignore next */
+          onConnectionError: (error) => console.error("Loki connection error:", error),
+        }),
+      );
+    }
+
     this.winstonLogger = createLogger({
       level: logLevel,
       silent: !silent,
-      format: combine(
-        colorize({
-          colors: { info: "blue", error: "red", warning: "orange" },
-        }),
-
-        timestamp(),
-        /* istanbul ignore next */
-        printf(({ level, message, timestamp, stack }) => {
-          return `${timestamp} [${level}]: ${stack || message}`;
-        }),
-      ),
-      transports: [
-        new winston.transports.File({
-          filename: "./log/app.log",
-          maxFiles: 10,
-          maxsize: 1024,
-          tailable: true,
-        }),
-        new winston.transports.Console(),
-      ],
+      transports,
     });
   }
 

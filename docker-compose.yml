@@ -34,6 +34,9 @@ services:
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
       LOG_LEVEL: ${LOG_LEVEL}
+      LOKI_HOST: ${LOKI_HOST}
+      LOKI_USER: ${LOKI_USER}
+      LOKI_API_KEY: ${LOKI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,13 +55,16 @@ services:
       DB_PORT: ${DB_PORT}
       ENV: ${ENV}
       SHOW_LOGS: ${SHOW_LOGS}
-      LOG_LEVEL: ${LOG_LEVEL}      
+      LOG_LEVEL: ${LOG_LEVEL}
+      LOKI_HOST: ${LOKI_HOST}
+      LOKI_USER: ${LOKI_USER}
+      LOKI_API_KEY: ${LOKI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       envault_network:
-        ipv4_address: ${WORKER_HOST}                
+        ipv4_address: ${WORKER_HOST}
 
 volumes:
   postgres_data:

@@ -57,6 +57,11 @@ ENV=
 LOG_LEVEL=
 SHOW_LOGS=
 SUBNET=
+
+# Logging (Grafana Cloud Loki, optional - logs are only shipped when LOKI_HOST is set)
+LOKI_HOST=
+LOKI_USER=
+LOKI_API_KEY=
 ```
 
 Having this `.env` file you can run `api` and `worker` locally with help of commands:

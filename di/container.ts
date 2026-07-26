@@ -2,8 +2,6 @@ import { container } from "tsyringe";
 import { DataSource } from "typeorm";
 import { fromEnv } from "@aws-sdk/credential-providers";
 
-//TODO Problem, as this file should be service agnostic, we should not import config from api
-import config from "api/src/config/config.js";
 import LogService, { LogLevel } from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 
@@ -24,9 +22,32 @@ import UserValidator from "api/src/route/validator/UserValidator.js";
 import StashValidator from "api/src/route/validator/StashValidator.js";
 import PublicStashValidator from "api/src/route/validator/PublicStashValidator.js";
 
-export default function initDI(appDataSource: DataSource) {
+/** Options controlling how the `LogService` registered by {@link initDI} behaves */
+export interface LoggerOptions {
+  /** Name of the calling process (e.g. `"api"`, `"worker"`), used as the Loki `service` label */
+  service?: string;
+  /** When `true`, log output is not suppressed */
+  showLogs?: boolean;
+  /** Minimum log level to emit */
+  logLevel?: string;
+  /** Grafana Cloud Loki connection details; when omitted, logs are not shipped to Loki */
+  loki?: { host: string; user: string; apiKey: string };
+}
+
+/**
+ * Initializes the dependency injection container, registering repositories, services,
+ * controllers and validators shared by both the `api` and `worker` processes.
+ * @param appDataSource Initialized TypeORM data source
+ * @param loggerOptions Options for the `LogService` instance registered under `TOKENS.LogService`
+ */
+export default function initDI(appDataSource: DataSource, loggerOptions: LoggerOptions = {}) {
   // Register the logger
-  const logger = new LogService(config.showLogs, config.logLevel as LogLevel);
+  const logger = new LogService(
+    loggerOptions.service,
+    loggerOptions.showLogs,
+    loggerOptions.logLevel as LogLevel,
+    loggerOptions.loki,
+  );
   container.registerInstance(TOKENS.LogService, logger);
 
   // Register repositories

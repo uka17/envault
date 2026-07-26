@@ -22,7 +22,12 @@ async function init() {
   const dbURL = config.dbURL;
   const appDataSource = getAppDataSource(dbURL, config.dbName);
   await appDataSource.initialize();
-  initDI(appDataSource);
+  initDI(appDataSource, {
+    service: "worker",
+    showLogs: config.showLogs,
+    logLevel: config.logLevel,
+    loki: config.loki.host ? config.loki : undefined,
+  });
 
   const logger = container.resolve<LogService>(TOKENS.LogService);
   
