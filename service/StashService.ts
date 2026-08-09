@@ -238,6 +238,7 @@ export default class StashService {
       return await this.stashRepository.find({
         where: { id: In(claimedIds) },
         relations: { user: true },
+        order: { scheduledAt: "ASC" },
       });
     } catch (error) {
       this.logger.error(error);
