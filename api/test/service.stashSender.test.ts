@@ -5,6 +5,7 @@ import StashSenderService from "#service/StashSenderService.js";
 import StashService from "#service/StashService.js";
 import EmailService from "#service/EmailService.js";
 import Stash from "#model/Stash.js";
+import config from "worker/src/config/config.js";
 
 /**
  * Builds a minimal, valid `Stash` object for use in these tests.
@@ -20,6 +21,7 @@ function buildStash(overrides: Partial<Stash> = {}): Stash {
     lockedAt: new Date(),
     publicAccessToken: "token1234567890abcd",
     scheduledAt: new Date(Date.now() - 1000),
+    user: { name: "Jordan Smith" },
     ...overrides,
   } as Stash;
 }
@@ -107,6 +109,36 @@ describe("Stash sender service", () => {
 
       expect(stashServiceStub.releaseStashLock.calledOnceWith(failingStash.id)).to.be.true;
       expect(stashServiceStub.markStashSent.calledOnceWith(succeedingStash.id)).to.be.true;
+    });
+
+    it("should render the notification email from the stash's sender name and unlock link", async() => {
+      const stash = buildStash({ user: { name: "Jordan Smith" } as Stash["user"] });
+      stashServiceStub.claimDueStashes.resolves([stash]);
+      emailServiceStub.send.resolves("message-id-1");
+
+      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
+
+      const mailOptions = emailServiceStub.send.firstCall.args[0];
+      const expectedUnlockUrl = `${config.readMessageUrl}/${stash.publicAccessToken}`;
+
+      expect(mailOptions.subject).to.equal("A message from Jordan Smith is ready for you");
+      expect(mailOptions.html).to.include("Jordan Smith");
+      expect(mailOptions.html).to.include(expectedUnlockUrl);
+      expect(mailOptions.html).to.include(config.faqUrl);
+      expect(mailOptions.text).to.include(expectedUnlockUrl);
+    });
+
+    it("should HTML-escape the sender's name so it cannot inject markup into the email", async() => {
+      const stash = buildStash({ user: { name: "<img src=x onerror=alert(1)>" } as Stash["user"] });
+      stashServiceStub.claimDueStashes.resolves([stash]);
+      emailServiceStub.send.resolves("message-id-1");
+
+      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
+
+      const mailOptions = emailServiceStub.send.firstCall.args[0];
+
+      expect(mailOptions.html).to.not.include("<img src=x onerror=alert(1)>");
+      expect(mailOptions.html).to.include("&lt;img src=x onerror=alert(1)&gt;");
     });
   });
 });

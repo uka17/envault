@@ -8,6 +8,7 @@ import StashService from "#service/StashService.js";
 import EmailService from "#service/EmailService.js";
 import LogService from "#service/LogService.js";
 import config from "worker/src/config/config.js";
+import { renderStashReadyEmail } from "worker/src/templates/stashReady.js";
 
 @injectable()
 export default class StashSenderService {
@@ -76,19 +77,25 @@ export default class StashSenderService {
   }
 
   /**
-   * Builds the nodemailer-shaped mail options for a due stash notification email.
-   * @param stash Stash entity that is due to be sent
+   * Builds the nodemailer-shaped mail options for a due stash notification
+   * email, rendering the subject and body from the stash-ready MJML template.
+   * @param stash Stash entity that is due to be sent, with its `user` relation loaded
    * @returns Mail options object suitable for `EmailService.send`
    */
   private buildMailOptions(stash: Stash): nodemailer.SendMailOptions {
     const unlockUrl = `${config.readMessageUrl}/${stash.publicAccessToken}`;
     const testRecipient = ["ukaoneseven", "gmail.com"].join("@");
+    const { subject, html, text } = renderStashReadyEmail({
+      senderName: stash.user.name,
+      unlockUrl,
+      faqUrl: config.faqUrl,
+    });
     return {
       to: testRecipient,//stash.to,
       from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
-      subject: "You have a new stash waiting",
-      html: `<p>Someone left you a secret message.</p><p><a href="${unlockUrl}">Click here to open it</a>.</p>`,
-      text: `Someone left you a secret message. Open it here: ${unlockUrl}`,
+      subject,
+      html,
+      text,
     };
   }
 }

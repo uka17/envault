@@ -1,5 +1,8 @@
 /* istanbul ignore next */
+const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+
 export default {
+  baseUrl,
   dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}` +
     `@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   dbName: process.env.DB_NAME || "",
@@ -17,5 +20,7 @@ export default {
   stashBatchSize: Number(process.env.STASH_BATCH_SIZE) || 25,
   staleLockThresholdMs: Number(process.env.STALE_LOCK_THRESHOLD_MS) || 5 * 60 * 1000, // 5 minutes
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
-  readMessageUrl: "localhost/getMessage",
+  readMessageUrl: [baseUrl, "/unlock"].join(""),
+  // TODO: replace with the real FAQ page once it exists in envault_fe.
+  faqUrl: "https://envault.me/faq",
 };

@@ -197,7 +197,8 @@ export default class StashService {
    * @param batchSize Maximum number of stashes to claim in one call
    * @param staleLockThresholdMs Age in milliseconds after which an existing
    * claim is considered abandoned and can be reclaimed
-   * @returns Array of claimed stashes (empty if none are due), or `null` if error
+   * @returns Array of claimed stashes with their `user` relation loaded
+   * (empty if none are due), or `null` if error
    */
   public async claimDueStashes(
     batchSize: number,
@@ -234,7 +235,10 @@ export default class StashService {
       }
 
       const claimedIds = claimedRows.map((row) => row.id);
-      return await this.stashRepository.find({ where: { id: In(claimedIds) } });
+      return await this.stashRepository.find({
+        where: { id: In(claimedIds) },
+        relations: { user: true },
+      });
     } catch (error) {
       this.logger.error(error);
       return null;
