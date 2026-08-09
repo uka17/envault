@@ -34,6 +34,48 @@ describe("Log service", () => {
       expect(stub.calledOnce).to.be.true;
     });
 
+    it("should not throw when logging an object with a circular reference", () => {
+      const winstonLogger = (logService as any).winstonLogger;
+      const stub = sinon.stub(winstonLogger, "info");
+      const circular: any = { name: "circular" };
+      circular.self = circular;
+
+      expect(() => logService.info(circular)).to.not.throw();
+
+      const passed = stub.firstCall.args[0];
+      expect(() => JSON.stringify(passed)).to.not.throw();
+      expect(passed.self).to.equal("[Circular]");
+    });
+
+    it("should not throw when logging an object containing a BigInt", () => {
+      const winstonLogger = (logService as any).winstonLogger;
+      const stub = sinon.stub(winstonLogger, "info");
+
+      expect(() => logService.info({ big: BigInt(42) })).to.not.throw();
+
+      const passed = stub.firstCall.args[0];
+      expect(passed.big).to.equal("42");
+    });
+
+    it("should preserve custom enumerable properties of an Error", () => {
+      const winstonLogger = (logService as any).winstonLogger;
+      const stub = sinon.stub(winstonLogger, "error");
+
+      class CustomError extends Error {
+        code: string;
+        constructor(message: string, code: string) {
+          super(message);
+          this.code = code;
+        }
+      }
+      logService.error(new CustomError("boom", "E_BOOM"));
+
+      const passed = stub.firstCall.args[0];
+      expect(passed.message).to.equal("boom");
+      expect(passed.code).to.equal("E_BOOM");
+      expect(passed.stack).to.be.a("string");
+    });
+
     it("should include the actual message and stack when logging an Error instance", async() => {
       // Note the inverted `silent` naming (see LogService's constructor
       // JSDoc): passing `true` here actually makes winston non-silent, so
@@ -75,6 +117,30 @@ describe("Log service", () => {
       });
       const winstonLogger = (noHostLogService as any).winstonLogger;
       expect(winstonLogger.transports).to.have.lengthOf(2);
+    });
+
+    it("should drop a rejected batch instead of requeuing it forever", async function() {
+      // winston-loki's Batcher#close() only short-circuits the wait between batches if
+      // it runs *after* the send loop has reached it; closing right after construction
+      // can race that and fall back to waiting out the full default interval (5s).
+      this.timeout(7000);
+      const lokiLogService = new LogService("api", false, LogLevel.Info, {
+        host: "https://loki.example.com",
+        user: "test-user",
+        apiKey: "test-api-key",
+      });
+      const winstonLogger = (lokiLogService as any).winstonLogger;
+      const lokiTransport = winstonLogger.transports.find(
+        (transport: any) => transport.constructor.name === "LokiTransport",
+      );
+
+      try {
+        expect((lokiTransport as any).batcher.options.clearOnError).to.be.true;
+      } finally {
+        // The batcher starts a real background send loop on construction; close it so it
+        // doesn't keep a timer alive past this test (mocha here runs without `--exit`).
+        await (lokiTransport as any).batcher.close();
+      }
     });
   });
 
