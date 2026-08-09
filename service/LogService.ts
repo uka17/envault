@@ -53,23 +53,42 @@ function toJsonSafe(value: unknown): unknown {
 }
 
 /**
+ * Stringifies every own-enumerable value of an already JSON-safe object (JSON-encoding
+ * anything that isn't already a string). winston-loki ships any field beyond
+ * `message`/`timestamp`/`label`/`labels` as Loki "structured metadata", and Grafana
+ * Loki's push API rejects the *entire batch* if a metadata value isn't a string (e.g.
+ * AWS SDK errors carry boolean fields like `tryNextLink`), so every extra field must be
+ * guaranteed to be a string before it ever reaches that transport.
+ * @param {Record<string, unknown>} obj Object whose values should all become strings
+ * @returns {Record<string, string>} Same keys, all values coerced to strings
+ */
+function toFlatStringFields(obj: Record<string, unknown>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = typeof value === "string" ? value : JSON.stringify(value);
+  }
+  return result;
+}
+
+/**
  * Normalizes a value passed to `info`/`warn`/`error` into a form safe to hand to
  * winston. `Error` instances are flattened into a plain object up front, since their
  * `message`/`stack` are non-enumerable and would otherwise be silently dropped by any
  * transport-level format that clones `info` via `Object.assign` (see the comment on the
- * logger `format` below). The result is then deep-cloned through {@link toJsonSafe} so a
+ * logger `format` below). Every field is then deep-cloned through {@link toJsonSafe} so a
  * single malformed value (circular reference, `BigInt`, ...) can never break JSON
- * encoding downstream and corrupt an entire batch shipped to Loki.
+ * encoding, and every extra field is flattened to a string via {@link toFlatStringFields}
+ * so a non-string field can never corrupt a batch shipped to Loki.
  * @param {string | object} input Value passed to a logging method
  * @returns {string | object} Value safe to pass to the underlying winston logger
  */
 function sanitizeLogInput(input: string | object): string | object {
   if (input instanceof Error) {
     const { message, stack, ...rest } = input as Error & Record<string, unknown>;
-    return toJsonSafe({ message, stack, ...rest }) as object;
+    return { message, stack, ...toFlatStringFields(toJsonSafe(rest) as Record<string, unknown>) };
   }
   if (typeof input === "object" && input !== null) {
-    return toJsonSafe(input) as object;
+    return toFlatStringFields(toJsonSafe(input) as Record<string, unknown>);
   }
   return input;
 }

@@ -76,6 +76,30 @@ describe("Log service", () => {
       expect(passed.stack).to.be.a("string");
     });
 
+    it("should stringify non-string custom properties of an Error", () => {
+      // Real-world trigger: AWS SDK's CredentialsProviderError carries a boolean
+      // `tryNextLink` field. winston-loki ships every extra field as Loki "structured
+      // metadata", which Grafana Loki's push API only accepts as string values - a
+      // non-string value there makes Loki reject the whole batch.
+      const winstonLogger = (logService as any).winstonLogger;
+      const stub = sinon.stub(winstonLogger, "error");
+
+      class CredentialsProviderError extends Error {
+        tryNextLink: boolean;
+        attempt: number;
+        constructor(message: string) {
+          super(message);
+          this.tryNextLink = true;
+          this.attempt = 3;
+        }
+      }
+      logService.error(new CredentialsProviderError("Unable to find environment variable credentials."));
+
+      const passed = stub.firstCall.args[0];
+      expect(passed.tryNextLink).to.equal("true");
+      expect(passed.attempt).to.equal("3");
+    });
+
     it("should include the actual message and stack when logging an Error instance", async() => {
       // Note the inverted `silent` naming (see LogService's constructor
       // JSDoc): passing `true` here actually makes winston non-silent, so
