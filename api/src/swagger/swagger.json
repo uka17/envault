@@ -176,7 +176,7 @@
           "Stash"
         ],
         "summary": "Create new stash",
-        "description": "Creates a new stash (encrypted message) for the authenticated user.  The request body must already be encrypted client-side. The server stores it as an  opaque string and never sees the decryption key. Sent to the recipient at sendAt via SES.",
+        "description": "Creates a new stash (encrypted message) for the authenticated user.  The request body must already be encrypted client-side. The server stores it as an  opaque string and never sees the decryption key. Sent to the recipient at scheduledAt via SES.",
         "responses": {
           "201": {
             "description": "Stash created successfully",
@@ -493,7 +493,7 @@
           "Stash"
         ],
         "summary": "Snooze stash for N hours",
-        "description": "Postpones the scheduled send time of a stash by the given number of hours. Updates sendAt = current sendAt + hours.",
+        "description": "Postpones the scheduled send time of a stash by the given number of hours. Updates scheduledAt = current scheduledAt + hours.",
         "parameters": [
           {
             "name": "id",
@@ -1190,7 +1190,7 @@
             "type": "string",
             "example": "journalist@fakemail.com"
           },
-          "sendAt": {
+          "scheduledAt": {
             "type": "string",
             "example": "2025-12-31T23:59:59Z"
           }
@@ -1198,7 +1198,7 @@
         "required": [
           "body",
           "to",
-          "sendAt"
+          "scheduledAt"
         ],
         "xml": {
           "name": "StashCreateRequest"
@@ -1223,10 +1223,11 @@
             "type": "boolean",
             "example": false
           },
-          "sendAt": {
+          "scheduledAt": {
             "type": "string",
             "example": "2025-12-31T23:59:59Z"
           },
+          "sentAt": {},
           "createdOn": {
             "type": "string",
             "example": "2025-01-01T00:00:00Z"
@@ -1243,7 +1244,7 @@
       "PublicStashResponse": {
         "type": "object",
         "properties": {
-          "sendAt": {
+          "scheduledAt": {
             "type": "string",
             "example": "2025-12-31T23:59:59Z"
           },

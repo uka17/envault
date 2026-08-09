@@ -41,7 +41,7 @@ export default class PublicStashController {
       }
 
       return res.status(CODES.API_OK).json({
-        sendAt: stash.sendAt,
+        scheduledAt: stash.scheduledAt,
         body: stash.body,
       });
     } catch (e: unknown) {

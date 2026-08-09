@@ -27,7 +27,7 @@ export default class StashController {
    */
   public async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const { body, to, sendAt } = req.body;
+      const { body, to, scheduledAt } = req.body;
       //throw new Error("Everything fucked up!");
       const user = req.user as User;
       const newStash = new Stash();
@@ -35,7 +35,7 @@ export default class StashController {
       newStash.body = body;
       newStash.to = to;
       newStash.user = user;
-      newStash.sendAt = sendAt;
+      newStash.scheduledAt = scheduledAt;
       newStash.createdBy = user;
       newStash.modifiedBy = user;
 

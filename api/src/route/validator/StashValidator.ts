@@ -14,8 +14,8 @@ export default class StashValidator {
         body("to")
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect")),
-        body("sendAt").notEmpty().withMessage(apiErrorPayload("is_required")),
-        body("sendAt")
+        body("scheduledAt").notEmpty().withMessage(apiErrorPayload("is_required")),
+        body("scheduledAt")
           .optional()
           .isISO8601()
           .withMessage(apiErrorPayload("date_format_incorrect")),

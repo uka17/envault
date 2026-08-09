@@ -22,7 +22,7 @@ let testStash = {
   body: "test_body",
   secret: "test_secret",
   to: "test@testmail.com",
-  sendAt: "2023-04-27T20:04:30.446+0200",
+  scheduledAt: "2023-04-27T20:04:30.446+0200",
 };
 
 describe("Stash Routes", () => {
@@ -91,30 +91,30 @@ describe("Stash Routes", () => {
       expect(response.body.errors?.[0]?.field).to.equal("to");
     });
 
-    it("should return error send_at_required", async() => {
-      const testStashNoSendAt = { ...testStash };
-      delete testStashNoSendAt.sendAt;
+    it("should return error scheduled_at_required", async() => {
+      const testStashNoScheduledAt = { ...testStash };
+      delete testStashNoScheduledAt.scheduledAt;
       const response = await request(globalThis.app)
         .post("/api/v1/stashes")
         .set("Authorization", `Bearer ${token}`)
-        .send(testStashNoSendAt);
+        .send(testStashNoScheduledAt);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("is_required");
-      expect(response.body.errors?.[0]?.field).to.equal("sendAt");
+      expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
     });
 
     it("should return error date_format_incorrect", async() => {
-      const testStashWrongSendAt = { ...testStash };
-      testStashWrongSendAt.sendAt = "wrong_date_time_format";
+      const testStashWrongScheduledAt = { ...testStash };
+      testStashWrongScheduledAt.scheduledAt = "wrong_date_time_format";
       const response = await request(globalThis.app)
         .post("/api/v1/stashes")
         .set("Authorization", `Bearer ${token}`)
-        .send(testStashWrongSendAt);
+        .send(testStashWrongScheduledAt);
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("date_format_incorrect");
-      expect(response.body.errors?.[0]?.field).to.equal("sendAt");
+      expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
     });
 
     it("should return error email_format_incorrect", async() => {

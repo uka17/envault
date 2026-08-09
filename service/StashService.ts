@@ -161,7 +161,7 @@ export default class StashService {
   }
 
   /**
-   * Snoozes the stash by changing the sendAt date
+   * Snoozes the stash by changing the scheduledAt date
    * @param stashId Stash ID
    * @param hours Number of hours to snooze
    * @param modifiedBy User who modified the stash
@@ -177,7 +177,7 @@ export default class StashService {
       if (!stash) {
         return null;
       }
-      stash.sendAt.setHours(stash.sendAt.getHours() + hours);
+      stash.scheduledAt.setHours(stash.scheduledAt.getHours() + hours);
       stash.modifiedBy = modifiedBy;
       stash.modifiedOn = new Date(Date.now());
       return await this.stashRepository.manager.save(stash);
@@ -189,7 +189,7 @@ export default class StashService {
 
   /**
    * Atomically claims up to `batchSize` stashes that are due to be sent
-   * (`sendAt` in the past), not yet sent, and not currently claimed by
+   * (`scheduledAt` in the past), not yet sent, and not currently claimed by
    * another worker (or whose claim has gone stale). Claiming is done via a
    * single `UPDATE ... WHERE id IN (SELECT ... FOR UPDATE SKIP LOCKED)`
    * statement so that concurrent callers (overlapping ticks, or multiple
@@ -215,10 +215,10 @@ export default class StashService {
           SET locked_at = $1
           WHERE id IN (
             SELECT id FROM stash
-            WHERE send_at <= $1
+            WHERE scheduled_at <= $1
               AND is_sent IS NOT TRUE
               AND (locked_at IS NULL OR locked_at < $2)
-            ORDER BY send_at ASC
+            ORDER BY scheduled_at ASC
             LIMIT $3
             FOR UPDATE SKIP LOCKED
           )
@@ -251,7 +251,7 @@ export default class StashService {
       return await this.stashRepository.manager.update(
         Stash,
         { id: stashId },
-        { isSent: true, lockedAt: null },
+        { isSent: true, lockedAt: null, sentAt: new Date() },
       );
     } catch (error) {
       this.logger.error(error);

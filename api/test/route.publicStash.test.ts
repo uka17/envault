@@ -20,7 +20,7 @@ const userCredentials = {
 const testStash = {
   body: "v1.c2FsdA==.aXY=.public_stash_test_ciphertext",
   to: "public-test@testmail.com",
-  sendAt: "2023-04-27T20:04:30.446+0200",
+  scheduledAt: "2023-04-27T20:04:30.446+0200",
 };
 
 describe("Public Stash Routes", () => {
@@ -72,7 +72,7 @@ describe("Public Stash Routes", () => {
         .get(`/api/public/stashes/${publicAccessToken}`);
 
       expect(response.status).to.equal(CODES.API_OK);
-      expect(response.body.sendAt).to.exist;
+      expect(response.body.scheduledAt).to.exist;
       expect(response.body.body).to.equal(testStash.body);
       expect(response.body.key).to.be.undefined;
       expect(response.body.publicAccessToken).to.be.undefined;

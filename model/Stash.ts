@@ -39,5 +39,12 @@ export default class Stash extends Base {
     user: Relation<User>;
 
   @Column("timestamptz")
-    sendAt: Date;
+    scheduledAt: Date;
+
+  @Column({
+    name: "sent_at",
+    type: "timestamptz",
+    nullable: true,
+  })
+    sentAt: Date | null;
 }

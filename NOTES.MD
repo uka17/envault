@@ -6,6 +6,8 @@
 
 Before you start using ECS Exec, make sure that you have completed these actions:
 
+OUTDATE
+
 1. Install and configure the AWS CLI. For more information, see Get started with the AWS CLI.
 2. Install Session Manager plugin for the AWS CLI. For more information, see [Install the Session Manager plugin for the AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html).
 3. You must use a task role with the [appropriate permissions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html#ecs-exec-required-iam-permissions) for ECS Exec. Basically you need to:

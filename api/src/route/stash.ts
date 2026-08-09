@@ -23,7 +23,7 @@ export default function(app: express.Router) {
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user.
           The request body must already be encrypted client-side. The server stores it as an
-          opaque string and never sees the decryption key. Sent to the recipient at sendAt via SES.' */
+          opaque string and never sees the decryption key. Sent to the recipient at scheduledAt via SES.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.requestBody = {
           description: 'Stash data',
@@ -140,7 +140,7 @@ export default function(app: express.Router) {
     validateRequest,
     /* #swagger.summary = 'Snooze stash for N hours' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Postpones the scheduled send time of a stash by the given number of hours. Updates sendAt = current sendAt + hours.' */
+    /* #swagger.description = 'Postpones the scheduled send time of a stash by the given number of hours. Updates scheduledAt = current scheduledAt + hours.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',

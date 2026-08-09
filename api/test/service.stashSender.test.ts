@@ -19,7 +19,7 @@ function buildStash(overrides: Partial<Stash> = {}): Stash {
     isSent: false,
     lockedAt: new Date(),
     publicAccessToken: "token1234567890abcd",
-    sendAt: new Date(Date.now() - 1000),
+    scheduledAt: new Date(Date.now() - 1000),
     ...overrides,
   } as Stash;
 }

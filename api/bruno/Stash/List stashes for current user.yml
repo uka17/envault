@@ -40,7 +40,7 @@ examples:
               "to": "journalist@fakemail.com",
               "body": "<encrypted>",
               "isSent": false,
-              "sendAt": "2025-12-31T23:59:59Z",
+              "scheduledAt": "2025-12-31T23:59:59Z",
               "createdOn": "2025-01-01T00:00:00Z",
               "modifiedOn": "2025-01-01T00:00:00Z"
             }
@@ -67,7 +67,7 @@ examples:
               <to>journalist@fakemail.com</to>
               <body><encrypted></body>
               <isSent>false</isSent>
-              <sendAt>2025-12-31T23:59:59Z</sendAt>
+              <scheduledAt>2025-12-31T23:59:59Z</scheduledAt>
               <createdOn>2025-01-01T00:00:00Z</createdOn>
               <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
             </items>

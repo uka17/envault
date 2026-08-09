@@ -48,19 +48,20 @@ const doc = {
     StashCreateRequest: {
       $body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
       $to: "journalist@fakemail.com",
-      $sendAt: "2025-12-31T23:59:59Z",
+      $scheduledAt: "2025-12-31T23:59:59Z",
     },
     StashResponse: {
       id: 42,
       to: "journalist@fakemail.com",
       body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
       isSent: false,
-      sendAt: "2025-12-31T23:59:59Z",
+      scheduledAt: "2025-12-31T23:59:59Z",
+      sentAt: null,
       createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
     },
     PublicStashResponse: {
-      sendAt: "2025-12-31T23:59:59Z",
+      scheduledAt: "2025-12-31T23:59:59Z",
       body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
     },
     SessionResponse: {

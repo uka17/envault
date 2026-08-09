@@ -86,10 +86,10 @@ describe("Stash service", () => {
 
     /**
      * Persists a stash directly to the test database with sensible defaults,
-     * tracking its ID so it gets cleaned up in `afterEach`. `sendAt` defaults
+     * tracking its ID so it gets cleaned up in `afterEach`. `scheduledAt` defaults
      * to the Unix epoch (long before any pre-existing fixture data in the
      * shared test database), so these tests stay deterministic under
-     * `ORDER BY send_at ASC` regardless of other leftover "due" stashes.
+     * `ORDER BY scheduled_at ASC` regardless of other leftover "due" stashes.
      * @param overrides Fields to override on the created stash
      * @returns The persisted stash, including its generated ID
      */
@@ -97,7 +97,7 @@ describe("Stash service", () => {
       const stash = await stashRepositoryStub.save({
         to: "recipient@example.com",
         body: "encrypted-body",
-        sendAt: new Date(0),
+        scheduledAt: new Date(0),
         ...overrides,
       });
       createdStashIds.push(stash.id);
@@ -122,9 +122,9 @@ describe("Stash service", () => {
 
     it("should claim a due, unsent, unlocked stash and ignore one that isn't due yet", async() => {
       const dueStash = await createTestStash();
-      await createTestStash({ sendAt: new Date(Date.now() + 60 * 60 * 1000) });
+      await createTestStash({ scheduledAt: new Date(Date.now() + 60 * 60 * 1000) });
 
-      // batchSize=1: dueStash.sendAt (epoch) sorts before any other row in
+      // batchSize=1: dueStash.scheduledAt (epoch) sorts before any other row in
       // the (possibly non-empty, shared) test database, so it is
       // deterministically the one claimed.
       const claimed = await stashService.claimDueStashes(1, 5 * 60 * 1000);
@@ -161,9 +161,9 @@ describe("Stash service", () => {
     });
 
     it("should respect batchSize when more stashes are due than requested", async() => {
-      const first = await createTestStash({ sendAt: new Date(1) });
-      const second = await createTestStash({ sendAt: new Date(2) });
-      await createTestStash({ sendAt: new Date(3) });
+      const first = await createTestStash({ scheduledAt: new Date(1) });
+      const second = await createTestStash({ scheduledAt: new Date(2) });
+      await createTestStash({ scheduledAt: new Date(3) });
 
       const claimed = await stashService.claimDueStashes(2, 5 * 60 * 1000);
 
@@ -174,7 +174,7 @@ describe("Stash service", () => {
     it("should let only one of two concurrent claims win the same due stash", async() => {
       const dueStash = await createTestStash();
 
-      // batchSize=1 and an epoch sendAt guarantee both concurrent calls
+      // batchSize=1 and an epoch scheduledAt guarantee both concurrent calls
       // compete for this exact row first. Whichever call loses the race for
       // it may still claim some other unrelated due stash (there can be
       // other eligible rows in the shared test database) instead of
@@ -190,23 +190,26 @@ describe("Stash service", () => {
       expect(occurrences).to.equal(1);
     });
 
-    it("should mark a claimed stash as sent and release its lock", async() => {
+    it("should mark a claimed stash as sent, record sentAt and release its lock", async() => {
       const stash = await createTestStash({
-        sendAt: new Date(Date.now() - 1000),
+        scheduledAt: new Date(Date.now() - 1000),
         lockedAt: new Date(),
       });
 
+      const beforeMark = Date.now();
       const result = await stashService.markStashSent(stash.id);
       expect(result?.affected).to.equal(1);
 
       const updated = await stashRepositoryStub.findOne({ where: { id: stash.id } });
       expect(updated?.isSent).to.be.true;
       expect(updated?.lockedAt).to.be.null;
+      expect(updated?.sentAt).to.not.be.null;
+      expect(updated!.sentAt!.getTime()).to.be.at.least(beforeMark);
     });
 
     it("should release a stash's lock without marking it as sent", async() => {
       const stash = await createTestStash({
-        sendAt: new Date(Date.now() - 1000),
+        scheduledAt: new Date(Date.now() - 1000),
         lockedAt: new Date(),
       });
 
