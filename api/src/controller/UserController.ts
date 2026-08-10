@@ -10,6 +10,7 @@ import config from "api/src/config/config.js";
 import User from "#model/User.js";
 
 import UserService from "#service/UserService.js";
+import EmailVerificationService from "#service/EmailVerificationService.js";
 import LogService from "#service/LogService.js";
 import ApiError from "api/src/error/ApiError.js";
 
@@ -36,6 +37,7 @@ const REFRESH_COOKIE_OPTIONS = {
 export default class UserController {
   constructor(
     @inject(TOKENS.UserService) private userService: UserService,
+    @inject(TOKENS.EmailVerificationService) private emailVerificationService: EmailVerificationService,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
@@ -58,12 +60,14 @@ export default class UserController {
       newUser.name = name;
       newUser.email = email;
       newUser.password = this.userService.getPasswordHash(password);
+      newUser.emailVerifiedAt = null;
       newUser.createdBy = user;
       newUser.modifiedBy = user;
 
       const createdUser = await this.userService.createUser(newUser);
 
       if (createdUser !== null) {
+        await this.emailVerificationService.createAndSend(createdUser);
         return res.status(CODES.API_CREATED).json(instanceToPlain(createdUser));
       } else {
         throw new Error(MESSAGES.USER_WAS_NOT_CREATED);
@@ -91,6 +95,10 @@ export default class UserController {
           }
 
           if (passportUser) {
+            if (!passportUser.emailVerifiedAt) {
+              return next(ApiError.fromCode(CODES.API_FORBIDDEN, "email_not_verified"));
+            }
+
             const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
               userAgent: req.headers["user-agent"],
               ip: normalizeIp(req.ip),
@@ -246,6 +254,43 @@ export default class UserController {
       if (user.sessionId) {
         await this.userService.revokeOtherSessions(user.id, user.sessionId);
       }
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Verify a user's email using a code received by email. Activates the account
+   * so it can subsequently log in.
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code } = req.body as { code: string };
+      const user = await this.emailVerificationService.verify(code);
+      if (!user) {
+        throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "verification_code_invalid");
+      }
+      return res.status(CODES.API_OK).json({});
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Resend a verification email. Always responds with success regardless of whether
+   * the address is registered or already verified, to avoid leaking account existence.
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async resendVerification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body as { email: string };
+      await this.emailVerificationService.resend(email);
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);

@@ -7,6 +7,7 @@ import { CODES, MESSAGES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import StashService from "#service/StashService.js";
+import { registerAndVerifyUser } from "./helpers.js";
 
 let token: string;
 let stash: Stash;
@@ -27,9 +28,8 @@ let testStash = {
 
 describe("Stash Routes", () => {
   before(async() => {
-    //Create user
-    await request(globalThis.app).post("/api/v1/users")
-      .send(userCredentials);
+    //Create and verify user
+    await registerAndVerifyUser(userCredentials);
     //get token
     const loginResponse = await request(globalThis.app).post("/api/v1/users/login")
       .send({

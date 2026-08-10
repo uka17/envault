@@ -32,6 +32,9 @@ const API_ERROR_MESSAGES = {
   current_password_required: "Current password is required",
   new_password_required: "New password is required",
   id_required: "ID is required",
+  email_not_verified: "Please verify your email before logging in",
+  verification_code_invalid: "This verification code is invalid or has expired",
+  verification_code_required: "Verification code is required",
 } as const;
 
 type ApiErrorCode = keyof typeof API_ERROR_MESSAGES;

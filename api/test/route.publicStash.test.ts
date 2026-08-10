@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 
 import { CODES } from "#common/constants.js";
 import Stash from "#model/Stash.js";
+import { registerAndVerifyUser } from "./helpers.js";
 
 let token: string;
 let stashId: number;
@@ -25,9 +26,8 @@ const testStash = {
 
 describe("Public Stash Routes", () => {
   before(async() => {
-    //Create user
-    await request(globalThis.app).post("/api/v1/users")
-      .send(userCredentials);
+    //Create and verify user
+    await registerAndVerifyUser(userCredentials);
     //get token
     const loginResponse = await request(globalThis.app).post("/api/v1/users/login")
       .send({

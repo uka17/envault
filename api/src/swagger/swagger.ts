@@ -35,10 +35,17 @@ const doc = {
       $email: "john@mail.com",
       $password: "Secret@123",
     },
+    VerifyEmailRequest: {
+      $code: "3f7k9xq2",
+    },
+    ResendVerificationRequest: {
+      $email: "john@mail.com",
+    },
     UserResponse: {
       id: 1,
       email: "john@mail.com",
       name: "John Doe",
+      emailVerifiedAt: "2025-01-01T00:00:00Z",
       createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
     },

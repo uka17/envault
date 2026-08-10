@@ -8,7 +8,9 @@ import bcrypt from "bcryptjs";
 import { CODES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import UserService from "#service/UserService.js";
+import EmailService from "#service/EmailService.js";
 import config from "api/src/config/config.js";
+import { registerAndVerifyUser } from "./helpers.js";
 
 const userId = customAlphabet(
   "1234567890abcdef",
@@ -263,12 +265,8 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      //Create user
-      const createResponse = await request(
-        globalThis.app,
-      )
-        .post("/api/v1/users")
-        .send(userCredentials);
+      //Create and verify user
+      const createResponse = await registerAndVerifyUser(userCredentials);
 
       expect(createResponse.body.error).to.be
         .undefined;
@@ -294,6 +292,23 @@ describe("User Routes", () => {
       const refreshCookie = setCookie.find((c: string) => c.startsWith(`${config.refreshCookieName}=`));
       expect(refreshCookie).to.not.be.undefined;
       expect(refreshCookie).to.include("HttpOnly");
+    });
+
+    it("should return 403 when logging in with an unverified email", async() => {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send(userCredentials);
+
+      expect(loginResponse.status).to.equal(CODES.API_FORBIDDEN);
+      expect(loginResponse.body.code).to.equal("email_not_verified");
     });
 
     it("should return 500 when bcrypt.compare errors", async() => {
@@ -352,9 +367,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app)
-        .post("/api/v1/users")
-        .send(newUser);
+      await registerAndVerifyUser(newUser);
 
       const loginResponse = await request(
         globalThis.app,
@@ -424,7 +437,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const loginResponse = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -525,7 +538,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(newUser);
+      await registerAndVerifyUser(newUser);
 
       const loginResponse = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -578,7 +591,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const loginResponse = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -669,7 +682,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const loginResponse = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -758,7 +771,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const firstLogin = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -824,7 +837,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const firstLogin = await request(globalThis.app)
         .post("/api/v1/users/login")
@@ -875,7 +888,7 @@ describe("User Routes", () => {
         password: `Password${userId()}`,
         name: `user${userName()}`,
       };
-      await request(globalThis.app).post("/api/v1/users").send(otherUserCredentials);
+      await registerAndVerifyUser(otherUserCredentials);
       const otherLogin = await request(globalThis.app)
         .post("/api/v1/users/login")
         .send({ email: otherUserCredentials.email, password: otherUserCredentials.password });
@@ -913,7 +926,7 @@ describe("User Routes", () => {
         name: `user${userName()}`,
       };
 
-      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      await registerAndVerifyUser(userCredentials);
 
       const login = () => request(globalThis.app)
         .post("/api/v1/users/login")
@@ -943,6 +956,167 @@ describe("User Routes", () => {
 
       expect(sessionsResponse.body).to.have.length(1);
       expect(sessionsResponse.body[0].current).to.be.true;
+    });
+  });
+
+  describe("POST /api/v1/users/verify-email", () => {
+    /**
+     * Registers a new user without verifying it, capturing the raw verification code
+     * sent by email so tests can exercise the verify-email endpoint directly.
+     * @returns Registration credentials and the raw verification code
+     */
+    async function registerUnverified() {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      const emailService = container.resolve<EmailService>(TOKENS.EmailService);
+      let capturedText: string | undefined;
+      const sendStub = sinon.stub(emailService, "send").callsFake(async(mailOptions) => {
+        capturedText = mailOptions.text?.toString();
+        return "test-message-id";
+      });
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      sendStub.restore();
+
+      const code = capturedText?.match(/verification page: (\S+)/)?.[1] ?? "";
+      return { userCredentials, code };
+    }
+
+    it("should return 422 for a missing code", async() => {
+      const response = await request(globalThis.app).post("/api/v1/users/verify-email").send({});
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.code).to.equal("verification_code_required");
+    });
+
+    it("should return 401 for an unknown code", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code: "doesnotexist" });
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+      expect(response.body.code).to.equal("verification_code_invalid");
+    });
+
+    it("should verify the account and allow login with a correct code", async() => {
+      const { userCredentials, code } = await registerUnverified();
+
+      const verifyResponse = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code });
+
+      expect(verifyResponse.status).to.equal(CODES.API_OK);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send(userCredentials);
+
+      expect(loginResponse.status).to.equal(CODES.API_OK);
+      expect(loginResponse.body.token).to.not.be.undefined;
+    });
+
+    it("should return 401 when the same code is used twice", async() => {
+      const { code } = await registerUnverified();
+
+      await request(globalThis.app).post("/api/v1/users/verify-email").send({ code });
+      const secondAttempt = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code });
+
+      expect(secondAttempt.status).to.equal(CODES.API_UNAUTHORIZED);
+      expect(secondAttempt.body.code).to.equal("verification_code_invalid");
+    });
+
+    it("should return 401 for an expired code", async() => {
+      const { code } = await registerUnverified();
+
+      const clock = sinon.useFakeTimers({ now: Date.now(), toFake: ["Date"] });
+      clock.tick((config.emailVerification.expiresInMinutes + 1) * 60 * 1000);
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code });
+
+      clock.restore();
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+      expect(response.body.code).to.equal("verification_code_invalid");
+    });
+  });
+
+  describe("POST /api/v1/users/verify-email/resend", () => {
+    it("should return 422 for a missing email", async() => {
+      const response = await request(globalThis.app).post("/api/v1/users/verify-email/resend").send({});
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.code).to.equal("email_required");
+    });
+
+    it("should return 200 for an unknown email, without revealing it doesn't exist", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/verify-email/resend")
+        .send({ email: `${userId()}@test.com` });
+
+      expect(response.status).to.equal(CODES.API_OK);
+    });
+
+    it("should return 200 for an already-verified email, without sending a new code", async() => {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+      await registerAndVerifyUser(userCredentials);
+
+      const emailService = container.resolve<EmailService>(TOKENS.EmailService);
+      const sendStub = sinon.stub(emailService, "send").resolves("test-message-id");
+
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/verify-email/resend")
+        .send({ email: userCredentials.email });
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(sendStub.called).to.be.false;
+    });
+
+    it("should send a new code that supersedes the previous one for an unverified email", async() => {
+      const userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      const emailService = container.resolve<EmailService>(TOKENS.EmailService);
+      let capturedText: string | undefined;
+      const sendStub = sinon.stub(emailService, "send").callsFake(async(mailOptions) => {
+        capturedText = mailOptions.text?.toString();
+        return "test-message-id";
+      });
+
+      await request(globalThis.app).post("/api/v1/users").send(userCredentials);
+      const firstCode = capturedText?.match(/verification page: (\S+)/)?.[1] ?? "";
+
+      await request(globalThis.app)
+        .post("/api/v1/users/verify-email/resend")
+        .send({ email: userCredentials.email });
+      const secondCode = capturedText?.match(/verification page: (\S+)/)?.[1] ?? "";
+      sendStub.restore();
+
+      expect(secondCode).to.not.equal(firstCode);
+
+      const oldCodeAttempt = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code: firstCode });
+      expect(oldCodeAttempt.status).to.equal(CODES.API_UNAUTHORIZED);
+
+      const newCodeAttempt = await request(globalThis.app)
+        .post("/api/v1/users/verify-email")
+        .send({ code: secondCode });
+      expect(newCodeAttempt.status).to.equal(CODES.API_OK);
     });
   });
 });

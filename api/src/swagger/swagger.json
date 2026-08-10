@@ -690,6 +690,21 @@
               }
             }
           },
+          "403": {
+            "description": "Email not verified yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server error",
             "content": {
@@ -713,6 +728,101 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UserLoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/verify-email": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Verify email",
+        "description": "Activates a user account using the code sent by email at registration.",
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          },
+          "401": {
+            "description": "Verification code is invalid, expired or already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error: missing code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "description": "Verification code",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/verify-email/resend": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Resend verification email",
+        "description": "Resends the verification code. Always succeeds, to avoid leaking account existence.",
+        "responses": {
+          "200": {
+            "description": "Verification email resent (if applicable)"
+          },
+          "422": {
+            "description": "Validation error: missing or invalid email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "description": "Email address to resend the verification code to",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationRequest"
               }
             }
           }
@@ -1139,6 +1249,36 @@
           "name": "UserLoginRequest"
         }
       },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "3f7k9xq2"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "xml": {
+          "name": "VerifyEmailRequest"
+        }
+      },
+      "ResendVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@mail.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "xml": {
+          "name": "ResendVerificationRequest"
+        }
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1153,6 +1293,10 @@
           "name": {
             "type": "string",
             "example": "John Doe"
+          },
+          "emailVerifiedAt": {
+            "type": "string",
+            "example": "2025-01-01T00:00:00Z"
           },
           "createdOn": {
             "type": "string",

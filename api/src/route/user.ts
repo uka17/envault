@@ -1,8 +1,10 @@
 import express from "express";
 import passport from "passport";
+import { rateLimit } from "express-rate-limit";
 import { container } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
+import config from "api/src/config/config.js";
 
 import UserValidator from "api/src/route/validator/UserValidator.js";
 import { validateRequest } from "api/src/route/validator/common.js";
@@ -23,6 +25,13 @@ export default function(app: express.Router) {
     );
   const validationRules =
     userValidator.getRules();
+
+  const emailVerificationRateLimiter = rateLimit({
+    windowMs: config.emailVerificationRateLimit.windowMs,
+    max: config.emailVerificationRateLimit.max,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
   // Register a new user
   app.post(
@@ -81,11 +90,75 @@ export default function(app: express.Router) {
           description: 'Invalid email or password',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
+    /* #swagger.responses[403] = {
+          description: 'Email not verified yet',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     /* #swagger.responses[500] = {
           description: 'Server error',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     userController.login.bind(userController),
+  );
+
+  // Verify a user's email using the code received by email
+  app.post(
+    "/api/v1/users/verify-email",
+    emailVerificationRateLimiter,
+    validationRules.verifyEmail,
+    validateRequest,
+    /* #swagger.summary = 'Verify email' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Activates a user account using the code sent by email at registration.' */
+    /* #swagger.requestBody = {
+          description: 'Verification code',
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: '#/definitions/VerifyEmailRequest' }
+            }
+          }
+    } */
+    /* #swagger.responses[200] = {
+          description: 'Email verified successfully'
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Verification code is invalid, expired or already used',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error: missing code',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.verifyEmail.bind(userController),
+  );
+
+  // Resend the email verification code
+  app.post(
+    "/api/v1/users/verify-email/resend",
+    emailVerificationRateLimiter,
+    validationRules.resendVerification,
+    validateRequest,
+    /* #swagger.summary = 'Resend verification email' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Resends the verification code. Always succeeds, to avoid leaking account existence.' */
+    /* #swagger.requestBody = {
+          description: 'Email address to resend the verification code to',
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: '#/definitions/ResendVerificationRequest' }
+            }
+          }
+    } */
+    /* #swagger.responses[200] = {
+          description: 'Verification email resent (if applicable)'
+    } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error: missing or invalid email',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.resendVerification.bind(userController),
   );
 
   // Get a protected resource with current user

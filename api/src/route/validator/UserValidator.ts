@@ -68,6 +68,18 @@ export default class UserValidator {
       sessionId: [
         param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
       ],
+      verifyEmail: [
+        body("code")
+          .notEmpty()
+          .withMessage(apiErrorPayload("verification_code_required")),
+      ],
+      resendVerification: [
+        body("email")
+          .notEmpty()
+          .withMessage(apiErrorPayload("email_required"))
+          .matches(config.emailRegExp)
+          .withMessage(apiErrorPayload("email_format_incorrect")),
+      ],
       updatePassword: [
         body("currentPassword")
           .notEmpty()

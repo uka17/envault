@@ -37,6 +37,17 @@ export default {
     windowMs: 15 * 60 * 1000,
     max: 30,
   },
+  baseUrl: process.env.BASE_URL || "http://localhost:5173",
+  sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
+  emailVerification: {
+    codeAlphabet: "23456789abcdefghjkmnpqrstuvwxyz",
+    codeLength: 8,
+    expiresInMinutes: 30,
+  },
+  emailVerificationRateLimit: {
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+  },
   JWTAccessMaxAgeMinutes: 15000,
   JWTRefreshMaxAgeDays: 30,
   JWTRefreshGraceMinutes: 1,

@@ -8,12 +8,14 @@ import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
 import Session from "#model/Session.js";
+import EmailVerification from "#model/EmailVerification.js";
 
 import StashService from "#service/StashService.js";
 import StashSenderService from "#service/StashSenderService.js";
 import SendLog from "#model/SendLog.js";
 import UserService from "#service/UserService.js";
 import EmailService from "#service/EmailService.js";
+import EmailVerificationService from "#service/EmailVerificationService.js";
 
 import UserController from "api/src/controller/UserController.js";
 import StashController from "api/src/controller/StashController.js";
@@ -64,6 +66,9 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   const sessionRepository = appDataSource.getRepository(Session);
   container.registerInstance(TOKENS.SessionRepository, sessionRepository);
 
+  const emailVerificationRepository = appDataSource.getRepository(EmailVerification);
+  container.registerInstance(TOKENS.EmailVerificationRepository, emailVerificationRepository);
+
   const emailCredentialsProvider = fromEnv();
   container.registerInstance(TOKENS.EmailCredentialsProvider, emailCredentialsProvider);
 
@@ -72,6 +77,7 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   container.registerSingleton(TOKENS.StashSenderService, StashSenderService);
   container.registerSingleton(TOKENS.UserService, UserService);
   container.registerSingleton(TOKENS.EmailService, EmailService);
+  container.registerSingleton(TOKENS.EmailVerificationService, EmailVerificationService);
 
   // Register controllers
   container.registerSingleton(TOKENS.UserController, UserController);

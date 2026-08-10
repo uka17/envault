@@ -16,6 +16,9 @@ export default class User extends Base {
   @Column("text")
     name: string;
 
+  @Column({ type: "timestamptz", nullable: true, default: () => "NOW()" })
+    emailVerifiedAt: Date | null;
+
   @OneToMany(() => Stash, (stash) => stash.user)
     stashes: Stash[];
 
