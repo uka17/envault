@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Swagger"
+  short_description: "Refresh backend OpenAPI documentation"
+  default_prompt: "Use $update-swagger to update and regenerate the backend Swagger documentation."
