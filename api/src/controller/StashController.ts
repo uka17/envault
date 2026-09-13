@@ -76,14 +76,14 @@ export default class StashController {
    * @param req Request object
    * @param res Response object
    * @param next Next function
+   * @returns The owner's stash or a neutral not-found error
    */
   public async get(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
 
-      //TODO test for not found behavior
-
-      const stash = await this.stashService.getStash(id);
+      const userId = (req.user as User).id;
+      const stash = await this.stashService.getStash(id, userId);
 
       if (!stash) {
         throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
@@ -96,16 +96,24 @@ export default class StashController {
   }
 
   /**
-   * Update stash by id
+   * Delete a stash belonging to the authenticated user.
    * @param req Request object
    * @param res Response object
    * @param next Next function
+   * @returns The deletion result or a neutral not-found error
    */
   public async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
 
-      const result = await this.stashService.deleteStash(id);
+      const userId = (req.user as User).id;
+      const result = await this.stashService.deleteStash(id, userId);
+      if (result === null) {
+        throw new ApiError(CODES.SERVER_ERROR, "error_500", MESSAGES.SERVER_ERROR);
+      }
+      if (!result.affected) {
+        throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
+      }
 
       return res.status(CODES.API_OK).json(result);
     } catch (e: unknown) {
@@ -119,6 +127,7 @@ export default class StashController {
    * @param req Request object
    * @param res Response object
    * @param next Next function
+   * @returns The owner's updated stash or a neutral not-found error
    */
   public async snooze(req: Request, res: Response, next: NextFunction) {
     try {
@@ -126,9 +135,8 @@ export default class StashController {
       const hours = parseInt(req.params.hours);
       const user = req.user as User;
       const result = await this.stashService.snoozeStash(id, hours, user);
-      /* istanbul ignore next */
       if (result === null) {
-        throw new ApiError(CODES.SERVER_ERROR, "error_500", MESSAGES.SERVER_ERROR);
+        throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }
       return res.status(CODES.API_OK).json(instanceToPlain(result));
     } catch (e: unknown) {

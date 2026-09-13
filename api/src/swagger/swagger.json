@@ -331,7 +331,7 @@
           "Stash"
         ],
         "summary": "Get stash by ID",
-        "description": "Returns a single stash by its numeric ID. The stash must belong to the authenticated user.",
+        "description": "Returns a stash belonging to the authenticated user.  Missing stashes and stashes owned by another user return the same 404 stash_not_found response.",
         "parameters": [
           {
             "name": "id",
@@ -376,7 +376,7 @@
             }
           },
           "404": {
-            "description": "Stash not found",
+            "description": "Stash does not exist or belongs to another user (stash_not_found)",
             "content": {
               "application/json": {
                 "schema": {
@@ -402,7 +402,7 @@
           "Stash"
         ],
         "summary": "Delete stash by ID",
-        "description": "Permanently deletes a stash by its numeric ID. This action is irreversible.",
+        "description": "Permanently deletes a stash belonging to the authenticated user.  Ownership is checked in the delete query. Missing and foreign stashes return 404 stash_not_found.",
         "parameters": [
           {
             "name": "id",
@@ -464,6 +464,21 @@
               }
             }
           },
+          "404": {
+            "description": "Stash does not exist or belongs to another user (stash_not_found)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation error: invalid ID format",
             "content": {
@@ -475,6 +490,21 @@
               "application/xml": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database deletion failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -493,7 +523,7 @@
           "Stash"
         ],
         "summary": "Snooze stash for N hours",
-        "description": "Postpones the scheduled send time of a stash by the given number of hours. Updates scheduledAt = current scheduledAt + hours.",
+        "description": "Postpones a stash belonging to the authenticated user by the given number of hours.  Ownership is checked in both the lookup and update.  Missing and foreign stashes return 404 stash_not_found.",
         "parameters": [
           {
             "name": "id",
@@ -547,6 +577,21 @@
               }
             }
           },
+          "404": {
+            "description": "Stash does not exist or belongs to another user (stash_not_found)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation error: invalid ID or hours format",
             "content": {
@@ -563,7 +608,7 @@
             }
           },
           "500": {
-            "description": "Snooze failed (stash not found or service error)",
+            "description": "Snooze update failed",
             "content": {
               "application/json": {
                 "schema": {

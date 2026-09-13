@@ -111,15 +111,17 @@ export default class StashService {
   }
 
   /**
-   * Searches for stash object by ID
+   * Searches for a stash belonging to the specified user.
    * @param stashId Stash ID
+   * @param userId Authenticated owner's user ID
    * @returns Stash object or `null` if not found or error
    */
-  public async getStash(stashId: number): Promise<Stash | null> {
+  public async getStash(stashId: number, userId: number): Promise<Stash | null> {
     try {
       return await this.stashRepository.findOne({
         where: {
           id: stashId,
+          user: { id: userId },
         },
       });
     } catch (error) {
@@ -147,13 +149,14 @@ export default class StashService {
   }
 
   /**
-   * Deletes stash object by ID
+   * Deletes a stash only if it belongs to the authenticated user.
    * @param stashId Stash ID
+   * @param userId Authenticated owner's user ID
    * @returns `DeleteResult` or `null` if error
    */
-  public async deleteStash(stashId: number): Promise<DeleteResult | null> {
+  public async deleteStash(stashId: number, userId: number): Promise<DeleteResult | null> {
     try {
-      return await this.stashRepository.delete({ id: stashId });
+      return await this.stashRepository.delete({ id: stashId, user: { id: userId } });
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -161,11 +164,12 @@ export default class StashService {
   }
 
   /**
-   * Snoozes the stash by changing the scheduledAt date
+   * Snoozes a stash with an owner-scoped update that cannot recreate a deleted row.
    * @param stashId Stash ID
    * @param hours Number of hours to snooze
-   * @param modifiedBy User who modified the stash
-   * @returns  Updated stash object or null if error or not found
+   * @param modifiedBy Authenticated user who must own the stash
+   * @returns Updated stash or null if it no longer belongs to the user or does not exist
+   * @throws Error when the database update fails
    */
   public async snoozeStash(
     stashId: number,
@@ -173,17 +177,22 @@ export default class StashService {
     modifiedBy: User,
   ): Promise<Stash | null> {
     try {
-      const stash = await this.getStash(stashId);
+      const stash = await this.getStash(stashId, modifiedBy.id);
       if (!stash) {
         return null;
       }
       stash.scheduledAt.setHours(stash.scheduledAt.getHours() + hours);
-      stash.modifiedBy = modifiedBy;
-      stash.modifiedOn = new Date(Date.now());
-      return await this.stashRepository.manager.save(stash);
+      const result = await this.stashRepository.update(
+        { id: stashId, user: { id: modifiedBy.id } },
+        { scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: new Date() },
+      );
+      if (!result.affected) {
+        return null;
+      }
+      return await this.getStash(stashId, modifiedBy.id);
     } catch (error) {
       this.logger.error(error);
-      return null;
+      throw error;
     }
   }
 

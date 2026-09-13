@@ -5,6 +5,7 @@ import { In } from "typeorm";
 import StashService from "#service/StashService.js";
 import Stash from "#model/Stash.js";
 import SendLog from "#model/SendLog.js";
+import User from "#model/User.js";
 
 let stashService: StashService;
 let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);
@@ -78,6 +79,63 @@ describe("Stash service", () => {
       expect(result?.publicAccessToken).to.have.lengthOf(20);
     });
 
+  });
+
+  describe("Owner-scoped snooze mutations", () => {
+    let owner: User;
+    let other: User;
+    let stash: Stash;
+
+    before(async() => {
+      const users = globalThis.appDataSource.getRepository(User);
+      owner = await users.save({ name: "Owner", email: "snooze-owner@example.com", password: "test-only" });
+      other = await users.save({ name: "Other", email: "snooze-other@example.com", password: "test-only" });
+    });
+
+    beforeEach(async() => {
+      stashService = new StashService(stashRepositoryStub, sendLogRepository, globalThis.mockLogService);
+      stash = await stashRepositoryStub.save({
+        user: owner, to: "recipient@example.com", body: "ciphertext", scheduledAt: new Date("2030-01-01T12:00:00Z"),
+      });
+    });
+
+    afterEach(async() => {
+      sinon.restore();
+      await stashRepositoryStub.delete(stash.id);
+    });
+
+    after(async() => {
+      await globalThis.appDataSource.getRepository(User).delete([owner.id, other.id]);
+    });
+
+    it("should not update a stash whose owner changed after the initial read", async() => {
+      const originalDate = stash.scheduledAt.getTime();
+      sinon.stub(stashService, "getStash").callsFake(async() => {
+        await stashRepositoryStub.update(stash.id, { user: other });
+        return stash;
+      });
+
+      const result = await stashService.snoozeStash(stash.id, 24, owner);
+
+      expect(result).to.be.null;
+      const persisted = await stashRepositoryStub.findOneOrFail({
+        where: { id: stash.id }, relations: { user: true },
+      });
+      expect(persisted.user.id).to.equal(other.id);
+      expect(persisted.scheduledAt.getTime()).to.equal(originalDate);
+    });
+
+    it("should not recreate a stash deleted after the initial read", async() => {
+      sinon.stub(stashService, "getStash").callsFake(async() => {
+        await stashRepositoryStub.delete(stash.id);
+        return stash;
+      });
+
+      const result = await stashService.snoozeStash(stash.id, 24, owner);
+
+      expect(result).to.be.null;
+      expect(await stashRepositoryStub.findOneBy({ id: stash.id })).to.be.null;
+    });
   });
 
   describe("Claiming due stashes", () => {
@@ -291,7 +349,7 @@ describe("Stash service", () => {
     it("should error on getStash", async() => {
       sinon.stub(globalThis.appDataSource.manager, "findOne").throws(new Error("Unexpected error"));
 
-      let result = await stashService.getStash(Number.MAX_SAFE_INTEGER);
+      let result = await stashService.getStash(Number.MAX_SAFE_INTEGER, 1);
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;
@@ -300,18 +358,23 @@ describe("Stash service", () => {
     it("should error on deleteStash", async() => {
       sinon.stub(globalThis.appDataSource.manager, "delete").throws(new Error("Unexpected error"));
 
-      let result = await stashService.deleteStash(Number.MAX_SAFE_INTEGER);
+      let result = await stashService.deleteStash(Number.MAX_SAFE_INTEGER, 1);
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
     it("should error on snoozeStash", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "findOne").returns({});
+      const error = new Error("Update failed");
+      sinon.stub(stashService, "getStash").resolves({ scheduledAt: new Date() } as Stash);
+      sinon.stub(stashRepositoryStub, "update").rejects(error);
 
-      let result = await stashService.snoozeStash(1, 1, {} as never);
-
-      expect(result).to.be.null;
+      try {
+        await stashService.snoozeStash(1, 1, { id: 1 } as any);
+        expect.fail("Expected the update failure to propagate");
+      } catch (caught) {
+        expect(caught).to.equal(error);
+      }
       expect(loggerStub.error.calledOnce).to.be.true;
     });
 
