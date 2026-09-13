@@ -69,7 +69,7 @@ export default class StashSenderService {
 
       await this.stashService.log(stash.id, mailOptions, messageId);
       await this.stashService.markStashSent(stash.id);
-      this.logger.info(`Sent stash ${stash.id} to ${stash.to} (messageId=${messageId}).`);
+      this.logger.info(`Sent stash ${stash.id} to ${mailOptions.to} (messageId=${messageId}).`);
     } catch (error) {
       this.logger.error(error);
       await this.stashService.releaseStashLock(stash.id);
@@ -79,6 +79,8 @@ export default class StashSenderService {
   /**
    * Builds the nodemailer-shaped mail options for a due stash notification
    * email, rendering the subject and body from the stash-ready MJML template.
+   * Uses the real recipient only when ENV is exactly PROD; all other values
+   * redirect notifications to the fixed test recipient.
    * @param stash Stash entity that is due to be sent, with its `user` relation loaded
    * @returns Mail options object suitable for `EmailService.send`
    */
@@ -90,8 +92,11 @@ export default class StashSenderService {
       unlockUrl,
       faqUrl: config.faqUrl,
     });
+    if(config.environment !== "PROD") {
+      this.logger.warn(`Non-PROD env, replacing ${stash.to} with testRecipient email`);
+    }
     return {
-      to: testRecipient,//stash.to,
+      to: config.environment === "PROD" ? stash.to : testRecipient,
       from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
       subject,
       html,

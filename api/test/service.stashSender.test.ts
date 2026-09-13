@@ -4,6 +4,7 @@ import sinon from "sinon";
 import StashSenderService from "#service/StashSenderService.js";
 import StashService from "#service/StashService.js";
 import EmailService from "#service/EmailService.js";
+import LogService from "#service/LogService.js";
 import Stash from "#model/Stash.js";
 import config from "worker/src/config/config.js";
 
@@ -29,21 +30,57 @@ function buildStash(overrides: Partial<Stash> = {}): Stash {
 describe("Stash sender service", () => {
   let stashServiceStub: sinon.SinonStubbedInstance<StashService>;
   let emailServiceStub: sinon.SinonStubbedInstance<EmailService>;
+  let loggerStub: sinon.SinonStubbedInstance<LogService>;
   let stashSenderService: StashSenderService;
 
-  beforeEach(() => {
-    stashServiceStub = sinon.createStubInstance(StashService);
-    emailServiceStub = sinon.createStubInstance(EmailService);
-    stashSenderService = new StashSenderService(
+  beforeEach(/**
+   * Creates isolated service dependencies for each test.
+   * @returns Nothing
+   */ () => {
+      stashServiceStub = sinon.createStubInstance(StashService);
+      emailServiceStub = sinon.createStubInstance(EmailService);
+      loggerStub = sinon.createStubInstance(LogService);
+      stashSenderService = new StashSenderService(
       stashServiceStub as unknown as StashService,
       emailServiceStub as unknown as EmailService,
-      globalThis.mockLogService,
-    );
-  });
+      loggerStub,
+      );
+    });
 
   afterEach(() => {
     sinon.restore();
   });
+
+  describe("recipient routing", 
+    function() {
+      const cases = [
+        { env: "PROD", recipient: "recipient@example.com" },
+        { env: "DEV", recipient: "ukaoneseven@gmail.com" },
+        { env: "prod", recipient: "ukaoneseven@gmail.com" },
+        { env: "production", recipient: "ukaoneseven@gmail.com" },
+        { env: " PROD ", recipient: "ukaoneseven@gmail.com" },
+        { env: "", recipient: "ukaoneseven@gmail.com" },
+        { env: undefined, recipient: "ukaoneseven@gmail.com" },
+      ];
+
+      for (const { env, recipient } of cases) {
+        it(`should send to ${recipient} when ENV is ${JSON.stringify(env)}`, 
+          async function() {
+            sinon.stub(config, "environment").value(env);
+            const stash = buildStash();
+            stashServiceStub.claimDueStashes.resolves([stash]);
+            emailServiceStub.send.resolves("message-id-1");
+
+            await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
+
+            expect(emailServiceStub.send.calledOnce).to.be.true;
+            expect(emailServiceStub.send.firstCall.args[0].to).to.equal(recipient);
+            expect(stashServiceStub.log.firstCall.args[1].to).to.equal(recipient);
+            expect(loggerStub.info.lastCall.args[0])
+              .to.equal(`Sent stash ${stash.id} to ${recipient} (messageId=message-id-1).`);
+          });
+      }
+    });
 
   describe("processDueStashes", () => {
     it("should do nothing when there are no due stashes", async() => {
