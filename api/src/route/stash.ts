@@ -8,6 +8,11 @@ import { validateRequest } from "api/src/route/validator/common.js";
 import StashController from "api/src/controller/StashController.js";
 import StashValidator from "api/src/route/validator/StashValidator.js";
 
+/**
+ * Registers authenticated stash endpoints.
+ * @param app Router receiving the stash routes
+ * @returns Nothing
+ */
 export default function(app: express.Router) {
   const stashController = container.resolve<StashController>(TOKENS.StashController);
   const stashValidator = container.resolve<StashValidator>(TOKENS.StashValidator);
@@ -78,7 +83,8 @@ export default function(app: express.Router) {
     validateRequest,
     /* #swagger.summary = 'Get stash by ID' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Returns a single stash by its numeric ID. The stash must belong to the authenticated user.' */
+    /* #swagger.description = 'Returns a stash belonging to the authenticated user.
+          Missing stashes and stashes owned by another user return the same 404 stash_not_found response.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
@@ -96,7 +102,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[404] = {
-          description: 'Stash not found',
+          description: 'Stash does not exist or belongs to another user (stash_not_found)',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.get.bind(stashController),
@@ -109,7 +115,8 @@ export default function(app: express.Router) {
     validateRequest,
     /* #swagger.summary = 'Delete stash by ID' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Permanently deletes a stash by its numeric ID. This action is irreversible.' */
+    /* #swagger.description = 'Permanently deletes a stash belonging to the authenticated user.
+          Ownership is checked in the delete query. Missing and foreign stashes return 404 stash_not_found.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
@@ -126,6 +133,14 @@ export default function(app: express.Router) {
           description: 'Missing or invalid JWT token',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
+    /* #swagger.responses[404] = {
+          description: 'Stash does not exist or belongs to another user (stash_not_found)',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[500] = {
+          description: 'Database deletion failed',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     /* #swagger.responses[422] = {
           description: 'Validation error: invalid ID format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
@@ -140,7 +155,9 @@ export default function(app: express.Router) {
     validateRequest,
     /* #swagger.summary = 'Snooze stash for N hours' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Postpones the scheduled send time of a stash by the given number of hours. Updates scheduledAt = current scheduledAt + hours.' */
+    /* #swagger.description = 'Postpones a stash belonging to the authenticated user by the given number of hours.
+          Ownership is checked in both the lookup and update.
+          Missing and foreign stashes return 404 stash_not_found.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
@@ -168,8 +185,12 @@ export default function(app: express.Router) {
           description: 'Validation error: invalid ID or hours format',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
+    /* #swagger.responses[404] = {
+          description: 'Stash does not exist or belongs to another user (stash_not_found)',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     /* #swagger.responses[500] = {
-          description: 'Snooze failed (stash not found or service error)',
+          description: 'Snooze update failed',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.snooze.bind(stashController),

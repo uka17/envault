@@ -126,8 +126,8 @@ examples:
           <root>
             <error>Unauthorized</error>
           </root>
-  - name: 404 Response
-    description: Stash not found
+  - name: 404 Missing or foreign stash
+    description: Missing and other users' stashes return the same neutral response
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: GET
@@ -135,7 +135,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Missing stash ID or an ID owned by another account
     response:
       status: 404
       statusText: Not Found
@@ -146,30 +146,18 @@ examples:
         type: json
         data: |-
           {
-            "error": "Unauthorized"
+            "code": "stash_not_found",
+            "message": "Stash not found",
+            "errors": []
           }
-  - name: 404 Response
-    description: Stash not found
-    request:
-      url: "{{baseUrl}}/api/v1/stashes/:id"
-      method: GET
-      params:
-        - name: id
-          value: "42"
-          type: path
-          description: Stash ID
-    response:
-      status: 404
-      statusText: Not Found
-      headers:
-        - name: Content-Type
-          value: application/xml
-      body:
-        type: xml
-        data: |-
-          <?xml version="1.0" encoding="UTF-8"?>
-          <root>
-            <error>Unauthorized</error>
-          </root>
 
-docs: Returns a single stash by its numeric ID. The stash must belong to the authenticated user.
+docs: |-
+  Only the authenticated owner can perform this operation. The owner comes from
+  the access token, never from the request body. Missing and foreign stash IDs
+  both return HTTP 404 with code stash_not_found.
+
+  Manual ownership check: create a stash with account A. Set accessToken to the
+  token of a second verified account B and use A's stash ID in this request.
+  Expect 404; repeat with a missing ID and compare the same response. Switch back
+  to A and verify that the recipient, ciphertext and schedule remain unchanged.
+  Without an access token expect 401. With A's token the operation succeeds.

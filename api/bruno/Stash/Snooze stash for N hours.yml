@@ -147,7 +147,7 @@ examples:
             <error>Unauthorized</error>
           </root>
   - name: 422 Response
-    description: Validation error: invalid ID or hours format
+    description: "Validation error: invalid ID or hours format"
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -178,7 +178,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error: invalid ID or hours format
+    description: "Validation error: invalid ID or hours format"
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -205,7 +205,7 @@ examples:
             <errors>[object Object]</errors>
           </root>
   - name: 500 Response
-    description: Snooze failed (stash not found or service error)
+    description: Snooze update failed
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -231,7 +231,7 @@ examples:
             "error": "Unauthorized"
           }
   - name: 500 Response
-    description: Snooze failed (stash not found or service error)
+    description: Snooze update failed
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
       method: POST
@@ -257,5 +257,41 @@ examples:
           <root>
             <error>Unauthorized</error>
           </root>
+  - name: 404 Missing or foreign stash
+    description: Missing and other users' stashes return the same neutral response
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id/snooze/:hours"
+      method: POST
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Missing stash ID or an ID owned by another account
+        - name: hours
+          value: "24"
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "stash_not_found",
+            "message": "Stash not found",
+            "errors": []
+          }
 
-docs: Postpones the scheduled send time of a stash by the given number of hours. Updates scheduledAt = current scheduledAt + hours.
+docs: |-
+  Only the authenticated owner can perform this operation. The owner comes from
+  the access token, never from the request body. Missing and foreign stash IDs
+  both return HTTP 404 with code stash_not_found.
+
+  Manual ownership check: create a stash with account A. Set accessToken to the
+  token of a second verified account B and use A's stash ID in this request.
+  Expect 404; repeat with a missing ID and compare the same response. Switch back
+  to A and verify that the recipient, ciphertext and schedule remain unchanged.
+  Without an access token expect 401. With A's token the operation succeeds.

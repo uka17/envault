@@ -115,7 +115,7 @@ examples:
             <error>Unauthorized</error>
           </root>
   - name: 422 Response
-    description: Validation error: invalid ID format
+    description: "Validation error: invalid ID format"
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE
@@ -142,7 +142,7 @@ examples:
             ]
           }
   - name: 422 Response
-    description: Validation error: invalid ID format
+    description: "Validation error: invalid ID format"
     request:
       url: "{{baseUrl}}/api/v1/stashes/:id"
       method: DELETE
@@ -164,5 +164,38 @@ examples:
           <root>
             <errors>[object Object]</errors>
           </root>
+  - name: 404 Missing or foreign stash
+    description: Missing and other users' stashes return the same neutral response
+    request:
+      url: "{{baseUrl}}/api/v1/stashes/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "42"
+          type: path
+          description: Missing stash ID or an ID owned by another account
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "stash_not_found",
+            "message": "Stash not found",
+            "errors": []
+          }
 
-docs: Permanently deletes a stash by its numeric ID. This action is irreversible.
+docs: |-
+  Only the authenticated owner can perform this operation. The owner comes from
+  the access token, never from the request body. Missing and foreign stash IDs
+  both return HTTP 404 with code stash_not_found.
+
+  Manual ownership check: create a stash with account A. Set accessToken to the
+  token of a second verified account B and use A's stash ID in this request.
+  Expect 404; repeat with a missing ID and compare the same response. Switch back
+  to A and verify that the recipient, ciphertext and schedule remain unchanged.
+  Without an access token expect 401. With A's token the operation succeeds.

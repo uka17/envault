@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 import { container } from "tsyringe";
-import { CODES, MESSAGES } from "#common/constants.js";
+import { CODES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import StashService from "#service/StashService.js";
@@ -233,18 +233,18 @@ describe("Stash Routes", () => {
       expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
       expect(response.body.errors?.[0]?.field).to.equal("hours");
     });
-    it("should return 500 when stash not found for snooze", async() => {
+    it("should return 404 when stash not found for snooze", async() => {
       const response = await request(globalThis.app)
         .post("/api/v1/stashes/99999999/snooze/1")
         .set("Authorization", `Bearer ${token}`)
         .send();
 
-      expect(response.status).to.equal(CODES.SERVER_ERROR);
-      expect(response.body.message).to.equal(MESSAGES.SERVER_ERROR);
+      expect(response.status).to.equal(CODES.API_NOT_FOUND);
+      expect(response.body.code).to.equal("stash_not_found");
     });
 
     it("should snooze stash successfully", async() => {
-      const id = 1;
+      const id = stash.id;
       const hours = 100;
       const response = await request(globalThis.app)
         .post(`/api/v1/stashes/${id}/snooze/${hours}`)
@@ -252,6 +252,12 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.id).to.equal(stash.id);
+      expect(response.body.publicAccessToken).to.be.undefined;
+      expect(response.body.modifiedBy).to.be.undefined;
+      const expected = new Date(stash.scheduledAt);
+      expected.setHours(expected.getHours() + hours);
+      expect(new Date(response.body.scheduledAt).getTime()).to.equal(expected.getTime());
     });
   });
 
