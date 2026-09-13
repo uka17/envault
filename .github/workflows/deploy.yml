@@ -69,14 +69,24 @@ jobs:
       - name: Check coverage
         run: npm run check-coverage:api        
 
+      - name: Save api coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: api/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: secrets.CODECOV_TOKEN
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./api/coverage/lcov.info
-          fail_ci_if_error: false
+          disable_search: true
+          flags: api
+          name: api-coverage
+          fail_ci_if_error: true
           verbose: true
-        continue-on-error: true
 
   test_worker:
     name: 🧪 Run tests for worker, collect coverage and upload to Codecov  
@@ -126,11 +136,22 @@ jobs:
       - name: Check coverage
         run: npm run check-coverage:worker        
 
+      - name: Save worker coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-coverage
+          path: worker/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: b759b58e-3d1d-46f1-8979-36a61f1a706d
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./worker/coverage/lcov.info
+          disable_search: true
+          flags: worker
+          name: worker-coverage
           fail_ci_if_error: true
           verbose: true                
 
