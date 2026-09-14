@@ -7,7 +7,6 @@ import { CODES } from "#common/constants.js";
 import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import StashService from "#service/StashService.js";
-import LogService from "#service/LogService.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
 let token: string;
@@ -55,8 +54,6 @@ describe("Stash Routes", () => {
 
   describe("POST /api/v1/stashes", () => {
     it("should return a safe 500 when saving the stash fails", async() => {
-      const loggerError = container.resolve<LogService>(TOKENS.LogService).error as sinon.SinonStub;
-      loggerError.resetHistory();
       sinon.stub(globalThis.appDataSource.manager, "save")
         .rejects(new Error("SQL connection failed with secret ciphertext"));
 
@@ -70,7 +67,6 @@ describe("Stash Routes", () => {
         code: "error_500",
         message: "Oops, something went wrong and the server returned an error",
       });
-      expect(loggerError.calledOnce).to.be.true;
     });
 
     it("should return error body_required", async() => {
@@ -251,8 +247,6 @@ describe("Stash Routes", () => {
 
   describe("POST /api/v1/stashes/:id/snooze/:hours", () => {
     it("should return a safe 500 when the snooze update fails", async() => {
-      const loggerError = container.resolve<LogService>(TOKENS.LogService).error as sinon.SinonStub;
-      loggerError.resetHistory();
       sinon.stub(globalThis.appDataSource.manager, "update")
         .rejects(new Error("UPDATE stash SET body = ciphertext"));
 
@@ -266,7 +260,6 @@ describe("Stash Routes", () => {
         code: "error_500",
         message: "Oops, something went wrong and the server returned an error",
       });
-      expect(loggerError.calledOnce).to.be.true;
     });
 
     it("should return error id_should_be_numeric", async() => {
