@@ -117,12 +117,9 @@ describe("Stash service", () => {
       await globalThis.appDataSource.getRepository(User).delete([owner.id, other.id]);
     });
 
-    it("should not update a stash whose owner changed after the initial read", async() => {
+    it("should not update a stash whose owner changed before the mutation", async() => {
       const originalDate = stash.scheduledAt.getTime();
-      sinon.stub(stashService, "getStash").callsFake(async() => {
-        await stashRepositoryStub.update(stash.id, { user: other });
-        return stash;
-      });
+      await stashRepositoryStub.update(stash.id, { user: other });
 
       const result = await stashService.snoozeStash(stash.id, 24, owner);
 
@@ -134,11 +131,8 @@ describe("Stash service", () => {
       expect(persisted.scheduledAt.getTime()).to.equal(originalDate);
     });
 
-    it("should not recreate a stash deleted after the initial read", async() => {
-      sinon.stub(stashService, "getStash").callsFake(async() => {
-        await stashRepositoryStub.delete(stash.id);
-        return stash;
-      });
+    it("should not recreate a stash deleted before the mutation", async() => {
+      await stashRepositoryStub.delete(stash.id);
 
       const result = await stashService.snoozeStash(stash.id, 24, owner);
 
@@ -261,10 +255,11 @@ describe("Stash service", () => {
       const stash = await createTestStash({
         scheduledAt: new Date(Date.now() - 1000),
         lockedAt: new Date(),
+        claimToken: "00000000-0000-4000-8000-000000000001",
       });
 
       const beforeMark = Date.now();
-      const result = await stashService.markStashSent(stash.id);
+      const result = await stashService.markStashSent(stash.id, stash.claimToken);
       expect(result?.affected).to.equal(1);
 
       const updated = await stashRepositoryStub.findOne({ where: { id: stash.id } });
@@ -278,9 +273,10 @@ describe("Stash service", () => {
       const stash = await createTestStash({
         scheduledAt: new Date(Date.now() - 1000),
         lockedAt: new Date(),
+        claimToken: "00000000-0000-4000-8000-000000000001",
       });
 
-      const result = await stashService.releaseStashLock(stash.id);
+      const result = await stashService.releaseStashLock(stash.id, stash.claimToken);
       expect(result?.affected).to.equal(1);
 
       const updated = await stashRepositoryStub.findOne({ where: { id: stash.id } });
@@ -360,7 +356,7 @@ describe("Stash service", () => {
 
     it("should error on deleteStash", async() => {
       const error = new Error("Unexpected error");
-      sinon.stub(globalThis.appDataSource.manager, "delete").rejects(error);
+      sinon.stub(globalThis.appDataSource.manager, "transaction").rejects(error);
 
       await expectRejectedWith(stashService.deleteStash(Number.MAX_SAFE_INTEGER, 1), error);
       expect(loggerStub.error.notCalled).to.be.true;
@@ -368,8 +364,7 @@ describe("Stash service", () => {
 
     it("should error on snoozeStash", async() => {
       const error = new Error("Update failed");
-      sinon.stub(stashService, "getStash").resolves({ scheduledAt: new Date() } as Stash);
-      sinon.stub(stashRepositoryStub, "update").rejects(error);
+      sinon.stub(globalThis.appDataSource.manager, "transaction").rejects(error);
 
       try {
         await stashService.snoozeStash(1, 1, { id: 1 } as any);
@@ -381,7 +376,7 @@ describe("Stash service", () => {
     });
 
     it("should error on claimDueStashes", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "query").throws(new Error("Unexpected error"));
+      sinon.stub(globalThis.appDataSource.manager, "transaction").throws(new Error("Unexpected error"));
 
       let result = await stashService.claimDueStashes(10, 5 * 60 * 1000);
 
@@ -392,7 +387,7 @@ describe("Stash service", () => {
     it("should error on markStashSent", async() => {
       sinon.stub(globalThis.appDataSource.manager, "update").throws(new Error("Unexpected error"));
 
-      let result = await stashService.markStashSent(1);
+      let result = await stashService.markStashSent(1, "00000000-0000-4000-8000-000000000001");
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;
@@ -401,7 +396,7 @@ describe("Stash service", () => {
     it("should error on releaseStashLock", async() => {
       sinon.stub(globalThis.appDataSource.manager, "update").throws(new Error("Unexpected error"));
 
-      let result = await stashService.releaseStashLock(1);
+      let result = await stashService.releaseStashLock(1, "00000000-0000-4000-8000-000000000001");
 
       expect(result).to.be.null;
       expect(loggerStub.error.calledOnce).to.be.true;

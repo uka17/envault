@@ -51,28 +51,41 @@ export default class StashSenderService {
 
   /**
    * Sends a single previously-claimed stash and updates its state
-   * accordingly. Never throws; failures are logged and the stash's claim
-   * is released so it can be retried on a later tick.
+   * accordingly. Transport failures release the claim; ambiguous database
+   * failures retain it for stale recovery. Failures are logged and never thrown.
    * @param stash Claimed stash to send
    * @returns Nothing
    */
   private async sendClaimedStash(stash: Stash): Promise<void> {
     try {
-      const mailOptions = this.buildMailOptions(stash);
-      const messageId = await this.emailService.send(mailOptions);
-
-      if (!messageId) {
-        this.logger.error(`Failed to send stash ${stash.id}; releasing lock for retry.`);
-        await this.stashService.releaseStashLock(stash.id);
-        return;
-      }
-
-      await this.stashService.log(stash.id, mailOptions, messageId);
-      await this.stashService.markStashSent(stash.id);
-      this.logger.info(`Sent stash ${stash.id} to ${mailOptions.to} (messageId=${messageId}).`);
+      await this.stashService.withClaim(stash, /**
+       * Sends and records the result while this claim holds the database row lock.
+       * @param service Transaction-scoped stash service
+       * @returns Nothing
+       */ async(service) => {
+          const mailOptions = this.buildMailOptions(stash);
+          let messageId: string | null;
+          try {
+            messageId = await this.emailService.send(mailOptions);
+          } catch (error) {
+            this.logger.error(error);
+            await service.releaseStashLock(stash.id, stash.claimToken);
+            return;
+          }
+          if (!messageId) {
+            await service.releaseStashLock(stash.id, stash.claimToken);
+            return;
+          }
+          await service.log(stash.id, mailOptions, messageId);
+          const result = await service.markStashSent(stash.id, stash.claimToken);
+          if (result?.affected !== 1) {
+            throw new Error(`Failed to record delivery for stash ${stash.id}`);
+          }
+          this.logger.info(`Sent stash ${stash.id} to ${mailOptions.to} (messageId=${messageId}).`);
+        });
     } catch (error) {
+      // Keep the claim after an ambiguous delivery/database failure for stale recovery.
       this.logger.error(error);
-      await this.stashService.releaseStashLock(stash.id);
     }
   }
 

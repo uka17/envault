@@ -23,7 +23,7 @@ const userCredentials = {
 const testStash = {
   body: "v1.c2FsdA==.aXY=.public_stash_test_ciphertext",
   to: "public-test@testmail.com",
-  scheduledAt: "2023-04-27T20:04:30.446+0200",
+  scheduledAt: new Date(Date.now() + 86400000).toISOString(),
 };
 
 describe("Public Stash Routes", () => {
@@ -44,6 +44,7 @@ describe("Public Stash Routes", () => {
       .set("Authorization", `Bearer ${token}`)
       .send(testStash);
 
+    expect(createResponse.status).to.equal(CODES.API_CREATED);
     stashId = createResponse.body.id;
 
     //publicAccessToken is @Exclude()'d from the API response, so read it
@@ -87,7 +88,7 @@ describe("Public Stash Routes", () => {
       expect(response.body.message).to.equal("Invalid link or key");
     });
 
-    it("should return the stash content, with the body returned exactly as stored (still encrypted)", async() => {
+    it("should allow public reading before scheduledAt, returning the encrypted body unchanged", async() => {
       const response = await request(globalThis.app)
         .get(`/api/public/stashes/${publicAccessToken}`);
 

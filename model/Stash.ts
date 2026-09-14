@@ -26,6 +26,10 @@ export default class Stash extends Base {
     lockedAt: Date | null;
 
   @Exclude()
+  @Column({ name: "claim_token", type: "uuid", nullable: true })
+    claimToken: string | null;
+
+  @Exclude()
   @Column({
     name: "public_access_token",
     type: "varchar",

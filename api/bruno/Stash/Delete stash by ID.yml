@@ -12,7 +12,7 @@ http:
     - name: id
       value: "42"
       type: path
-      description: Stash ID
+      description: Positive integer Stash ID (1 through 2147483647)
   auth:
     type: bearer
     token: "{{accessToken}}"
@@ -33,7 +33,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 200
       statusText: OK
@@ -55,7 +55,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 200
       statusText: OK
@@ -78,7 +78,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 401
       statusText: Unauthorized
@@ -100,7 +100,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 401
       statusText: Unauthorized
@@ -123,7 +123,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 422
       statusText: Unprocessable Entity
@@ -150,7 +150,7 @@ examples:
         - name: id
           value: "42"
           type: path
-          description: Stash ID
+          description: Positive integer Stash ID (1 through 2147483647)
     response:
       status: 422
       statusText: Unprocessable Entity
@@ -199,3 +199,5 @@ docs: |-
   Expect 404; repeat with a missing ID and compare the same response. Switch back
   to A and verify that the recipient, ciphertext and schedule remain unchanged.
   Without an access token expect 401. With A's token the operation succeeds.
+
+  Unsent stashes can be cancelled only before a worker claims them. Fresh and stale claims or concurrent mutations return 409 stash_delivery_in_progress. Sent stashes can be deleted: content and SendLog entries are removed and the public link is revoked, but the delivered email cannot be recalled.

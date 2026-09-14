@@ -20,6 +20,7 @@ function buildStash(overrides: Partial<Stash> = {}): Stash {
     body: "encrypted-body",
     isSent: false,
     lockedAt: new Date(),
+    claimToken: "00000000-0000-4000-8000-000000000001",
     publicAccessToken: "token1234567890abcd",
     scheduledAt: new Date(Date.now() - 1000),
     user: { name: "Jordan Smith" },
@@ -38,6 +39,15 @@ describe("Stash sender service", () => {
    * @returns Nothing
    */ () => {
       stashServiceStub = sinon.createStubInstance(StashService);
+      stashServiceStub.withClaim.callsFake(/**
+       * Runs delivery against the isolated service stub.
+       * @param stash Claimed snapshot
+       * @param deliver Delivery callback
+       * @returns Whether delivery ran
+       */ async(stash, deliver) => {
+          await deliver(stashServiceStub); return true;
+        });
+      stashServiceStub.markStashSent.resolves({ affected: 1, raw: [], generatedMaps: [] });
       emailServiceStub = sinon.createStubInstance(EmailService);
       loggerStub = sinon.createStubInstance(LogService);
       stashSenderService = new StashSenderService(
@@ -51,7 +61,7 @@ describe("Stash sender service", () => {
     sinon.restore();
   });
 
-  describe("recipient routing", 
+  describe("recipient routing",
     function() {
       const cases = [
         { env: "PROD", recipient: "recipient@example.com" },
@@ -64,7 +74,7 @@ describe("Stash sender service", () => {
       ];
 
       for (const { env, recipient } of cases) {
-        it(`should send to ${recipient} when ENV is ${JSON.stringify(env)}`, 
+        it(`should send to ${recipient} when ENV is ${JSON.stringify(env)}`,
           async function() {
             sinon.stub(config, "environment").value(env);
             const stash = buildStash();
@@ -108,7 +118,7 @@ describe("Stash sender service", () => {
 
       expect(emailServiceStub.send.calledOnce).to.be.true;
       expect(stashServiceStub.log.calledOnceWith(stash.id, sinon.match.object, "message-id-1")).to.be.true;
-      expect(stashServiceStub.markStashSent.calledOnceWith(stash.id)).to.be.true;
+      expect(stashServiceStub.markStashSent.calledOnceWith(stash.id, stash.claimToken)).to.be.true;
       expect(stashServiceStub.releaseStashLock.called).to.be.false;
     });
 
@@ -119,7 +129,7 @@ describe("Stash sender service", () => {
 
       await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
 
-      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id)).to.be.true;
+      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id, stash.claimToken)).to.be.true;
       expect(stashServiceStub.log.called).to.be.false;
       expect(stashServiceStub.markStashSent.called).to.be.false;
     });
@@ -131,7 +141,7 @@ describe("Stash sender service", () => {
 
       await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
 
-      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id)).to.be.true;
+      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id, stash.claimToken)).to.be.true;
       expect(stashServiceStub.markStashSent.called).to.be.false;
     });
 

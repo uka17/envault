@@ -1,3 +1,4 @@
+import { StashClaimToken1789420000000 } from "./migrations/1789420000000-StashClaimToken.js";
 import { DataSource } from "typeorm";
 import { SnakeNamingStrategy } from "./SnakeNamingStrategy.js";
 //--Tables
@@ -24,6 +25,7 @@ function getAppDataSource(
     url: dbURL,
     database: dbName,
     entities: [User, Stash, SendLog, Session, EmailVerification],
+    migrations: [StashClaimToken1789420000000],
     synchronize: true,
     logging: showLogs,
     connectTimeoutMS: 10000,
