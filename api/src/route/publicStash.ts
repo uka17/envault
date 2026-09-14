@@ -9,6 +9,11 @@ import config from "api/src/config/config.js";
 import PublicStashController from "api/src/controller/PublicStashController.js";
 import PublicStashValidator from "api/src/route/validator/PublicStashValidator.js";
 
+/**
+ * Registers the public stash endpoint.
+ * @param app Router receiving the public stash route
+ * @returns Nothing
+ */
 export default function(app: express.Router) {
   const publicStashController =
     container.resolve<PublicStashController>(TOKENS.PublicStashController);
@@ -54,6 +59,10 @@ export default function(app: express.Router) {
     } */
     /* #swagger.responses[429] = {
           description: 'Too many requests',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[500] = {
+          description: 'Database lookup failed',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     publicStashController.getByToken.bind(publicStashController),

@@ -1,8 +1,10 @@
 import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
+import sinon from "sinon";
 
 import { CODES } from "#common/constants.js";
+import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 import Stash from "#model/Stash.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
@@ -52,7 +54,25 @@ describe("Public Stash Routes", () => {
     publicAccessToken = persistedStash!.publicAccessToken;
   });
 
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe("GET /api/public/stashes/:token", () => {
+    it("should return a safe 500 when the public stash lookup fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "findOne")
+        .rejects(new Error("SELECT ciphertext using postgres://user:password@database"));
+
+      const response = await request(globalThis.app)
+        .get(`/api/public/stashes/${publicAccessToken}`);
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: API_ERROR_MESSAGES.error_500,
+      });
+    });
+
     it("should return 422 for an invalid token format", async() => {
       const response = await request(globalThis.app).get("/api/public/stashes/short");
 

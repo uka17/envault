@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { instanceToPlain } from "class-transformer";
 
 import { TOKENS } from "#di/tokens.js";
-import { CODES, MESSAGES } from "#common/constants.js";
+import { CODES } from "#common/constants.js";
 
 import Stash from "#model/Stash.js";
 
@@ -108,9 +108,6 @@ export default class StashController {
 
       const userId = (req.user as User).id;
       const result = await this.stashService.deleteStash(id, userId);
-      if (result === null) {
-        throw new ApiError(CODES.SERVER_ERROR, "error_500", MESSAGES.SERVER_ERROR);
-      }
       if (!result.affected) {
         throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }

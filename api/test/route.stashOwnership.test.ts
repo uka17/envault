@@ -2,11 +2,8 @@ import request from "supertest";
 import { expect } from "chai";
 import sinon from "sinon";
 import { randomUUID } from "node:crypto";
-import { container } from "tsyringe";
 
-import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
-import StashService from "#service/StashService.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
 /**
@@ -105,8 +102,7 @@ describe("Private stash ownership", () => {
   });
 
   it("should return 500 when an owner-scoped delete fails", async() => {
-    const service = container.resolve<StashService>(TOKENS.StashService);
-    sinon.stub(service, "deleteStash").resolves(null);
+    sinon.stub(globalThis.appDataSource.manager, "delete").rejects(new Error("Delete failed"));
     const response = await request(globalThis.app).delete(`/api/v1/stashes/${stash.id}`)
       .set("Authorization", `Bearer ${owner.token}`);
     expect(response.status).to.equal(500);

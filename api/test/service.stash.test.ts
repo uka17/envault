@@ -12,6 +12,15 @@ let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);
 let sendLogRepository = globalThis.appDataSource.getRepository(SendLog);
 let loggerStub: { error: sinon.SinonStub };
 
+async function expectRejectedWith(promise: Promise<unknown>, expectedError: Error) {
+  try {
+    await promise;
+    expect.fail("Expected promise to reject");
+  } catch (error) {
+    expect(error).to.equal(expectedError);
+  }
+}
+
 describe("Stash service", () => {
   describe("Regular logic", () => {
     afterEach(() => {
@@ -306,62 +315,55 @@ describe("Stash service", () => {
     });
 
     it("should error on createStash", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "save").throws(new Error("Unexpected error"));
+      const error = new Error("Unexpected error");
+      sinon.stub(globalThis.appDataSource.manager, "save").rejects(error);
 
-      let result = await stashService.createStash({} as any);
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.createStash({} as any), error);
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
-    it("should give up and log after repeated token conflicts", async() => {
+    it("should give up after repeated token conflicts", async() => {
       const conflictError: any = new Error("duplicate key value violates unique constraint");
       conflictError.code = "23505";
       conflictError.detail = "Key (public_access_token)=(abc) already exists.";
 
       const saveStub = sinon.stub(globalThis.appDataSource.manager, "save").rejects(conflictError);
 
-      let result = await stashService.createStash({} as any);
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.createStash({} as any), conflictError);
+      expect(loggerStub.error.notCalled).to.be.true;
       expect(saveStub.callCount).to.equal(5);
     });
 
     it("should error on getStashByPublicAccessToken", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "findOne").throws(new Error("Unexpected error"));
+      const error = new Error("Unexpected error");
+      sinon.stub(globalThis.appDataSource.manager, "findOne").rejects(error);
 
-      let result = await stashService.getStashByPublicAccessToken("some-token");
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.getStashByPublicAccessToken("some-token"), error);
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on getUserStashes", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "find").throws(new Error("Unexpected error"));
+      const error = new Error("Unexpected error");
+      sinon.stub(globalThis.appDataSource.manager, "find").rejects(error);
 
-      let result = await stashService.getUserStashes(Number.MAX_SAFE_INTEGER);
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.getUserStashes(Number.MAX_SAFE_INTEGER), error);
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on getStash", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "findOne").throws(new Error("Unexpected error"));
+      const error = new Error("Unexpected error");
+      sinon.stub(globalThis.appDataSource.manager, "findOne").rejects(error);
 
-      let result = await stashService.getStash(Number.MAX_SAFE_INTEGER, 1);
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.getStash(Number.MAX_SAFE_INTEGER, 1), error);
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on deleteStash", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "delete").throws(new Error("Unexpected error"));
+      const error = new Error("Unexpected error");
+      sinon.stub(globalThis.appDataSource.manager, "delete").rejects(error);
 
-      let result = await stashService.deleteStash(Number.MAX_SAFE_INTEGER, 1);
-
-      expect(result).to.be.null;
-      expect(loggerStub.error.calledOnce).to.be.true;
+      await expectRejectedWith(stashService.deleteStash(Number.MAX_SAFE_INTEGER, 1), error);
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on snoozeStash", async() => {
@@ -375,7 +377,7 @@ describe("Stash service", () => {
       } catch (caught) {
         expect(caught).to.equal(error);
       }
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on claimDueStashes", async() => {
