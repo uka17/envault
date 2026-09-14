@@ -53,9 +53,9 @@ describe("Stash Routes", () => {
   });
 
   describe("POST /api/v1/stashes", () => {
-    it("should return 500 when createStash throws", async() => {
-      const stashService = container.resolve<StashService>(TOKENS.StashService);
-      sinon.stub(stashService, "createStash").rejects(new Error("Unexpected error"));
+    it("should return a safe 500 when saving the stash fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "save")
+        .rejects(new Error("SQL connection failed with secret ciphertext"));
 
       const response = await request(globalThis.app)
         .post("/api/v1/stashes")
@@ -63,6 +63,10 @@ describe("Stash Routes", () => {
         .send(testStash);
 
       expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
     });
 
     it("should return error body_required", async() => {
@@ -154,9 +158,9 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
     });
 
-    it("should return 500 when getUserStashes throws", async() => {
-      const stashService = container.resolve<StashService>(TOKENS.StashService);
-      sinon.stub(stashService, "getUserStashes").rejects(new Error("Unexpected error"));
+    it("should return a safe 500 when listing stashes fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "find")
+        .rejects(new Error("SELECT ciphertext FROM stash"));
 
       const response = await request(globalThis.app)
         .get("/api/v1/stashes")
@@ -164,6 +168,23 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
+    });
+
+    it("should return an empty array when the user has no stashes", async() => {
+      const stashService = container.resolve<StashService>(TOKENS.StashService);
+      sinon.stub(stashService, "getUserStashes").resolves([]);
+
+      const response = await request(globalThis.app)
+        .get("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body).to.deep.equal([]);
     });
 
     it("should return stashes", async() => {
@@ -178,6 +199,22 @@ describe("Stash Routes", () => {
     });
   });
   describe("GET /api/v1/stashes/:id", () => {
+    it("should return a safe 500 when loading the stash fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "findOne")
+        .rejects(new Error("postgres://user:password@database"));
+
+      const response = await request(globalThis.app)
+        .get(`/api/v1/stashes/${stash.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
+    });
+
     it("should return error id_format_incorrect", async() => {
       const response = await request(globalThis.app)
         .get("/api/v1/stashes/wrong_id")
@@ -209,6 +246,22 @@ describe("Stash Routes", () => {
   });
 
   describe("POST /api/v1/stashes/:id/snooze/:hours", () => {
+    it("should return a safe 500 when the snooze update fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "update")
+        .rejects(new Error("UPDATE stash SET body = ciphertext"));
+
+      const response = await request(globalThis.app)
+        .post(`/api/v1/stashes/${stash.id}/snooze/1`)
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
+    });
+
     it("should return error id_should_be_numeric", async() => {
       const id = "wrong_id";
       const hours = 100;
@@ -262,9 +315,9 @@ describe("Stash Routes", () => {
   });
 
   describe("DELETE /api/v1/stashes/:id", () => {
-    it("should return 500 when deleteStash throws", async() => {
-      const stashService = container.resolve<StashService>(TOKENS.StashService);
-      sinon.stub(stashService, "deleteStash").rejects(new Error("Unexpected error"));
+    it("should return a safe 500 when deleting the stash fails", async() => {
+      sinon.stub(globalThis.appDataSource.manager, "delete")
+        .rejects(new Error("DELETE failed for database password"));
 
       const response = await request(globalThis.app)
         .delete(`/api/v1/stashes/${stash.id}`)
@@ -272,6 +325,10 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
     });
 
     it("should return error id_should_be_numeric", async() => {
@@ -302,6 +359,16 @@ describe("Stash Routes", () => {
 
       expect(response.status).to.equal(CODES.API_OK);
       expect(response.body.affected).to.equal(1);
+    });
+
+    it("should return 404 when the stash to delete is not found", async() => {
+      const response = await request(globalThis.app)
+        .delete("/api/v1/stashes/99999999")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(response.status).to.equal(CODES.API_NOT_FOUND);
+      expect(response.body.code).to.equal("stash_not_found");
     });
   });
 });

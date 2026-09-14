@@ -73,6 +73,10 @@ export default function(app: express.Router) {
           description: 'Missing or invalid JWT token',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
+    /* #swagger.responses[500] = {
+          description: 'Database lookup failed',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     stashController.list.bind(stashController),
   );
 
@@ -103,6 +107,10 @@ export default function(app: express.Router) {
     } */
     /* #swagger.responses[404] = {
           description: 'Stash does not exist or belongs to another user (stash_not_found)',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[500] = {
+          description: 'Database lookup failed',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.get.bind(stashController),
