@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 
 import { CODES } from "#common/constants.js";
+import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 import Stash from "#model/Stash.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
@@ -68,7 +69,7 @@ describe("Public Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 

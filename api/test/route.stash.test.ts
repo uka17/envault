@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import sinon from "sinon";
 import { container } from "tsyringe";
 import { CODES } from "#common/constants.js";
+import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
 import StashService from "#service/StashService.js";
@@ -65,7 +66,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 
@@ -170,7 +171,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 
@@ -211,7 +212,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 
@@ -258,7 +259,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 
@@ -327,7 +328,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.SERVER_ERROR);
       expect(response.body).to.deep.equal({
         code: "error_500",
-        message: "Oops, something went wrong and the server returned an error",
+        message: API_ERROR_MESSAGES.error_500,
       });
     });
 
