@@ -40,9 +40,6 @@ export default class StashController {
       newStash.modifiedBy = user;
 
       const createdStash = await this.stashService.createStash(newStash);
-      if (!createdStash) {
-        throw ApiError.fromCode(CODES.SERVER_ERROR, "error_500");
-      }
       return res.status(CODES.API_CREATED).json(instanceToPlain(createdStash));
     } catch (e: unknown) {
       /* istanbul ignore next */
@@ -66,9 +63,6 @@ export default class StashController {
         throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       } else {
         stashes = await this.stashService.getUserStashes(userId);
-        if (!stashes) {
-          throw ApiError.fromCode(CODES.SERVER_ERROR, "error_500");
-        }
         return res.status(CODES.API_OK).json(instanceToPlain(stashes));
       }
     } catch (e: unknown) {
@@ -114,9 +108,6 @@ export default class StashController {
 
       const userId = (req.user as User).id;
       const result = await this.stashService.deleteStash(id, userId);
-      if (result === null) {
-        throw ApiError.fromCode(CODES.SERVER_ERROR, "error_500");
-      }
       if (!result.affected) {
         throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }

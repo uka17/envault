@@ -72,7 +72,6 @@ export default class StashService {
         if (this.isPublicAccessTokenConflict(error) && attempt < maxAttempts) {
           continue;
         }
-        this.logger.error(error);
         throw error;
       }
     }
@@ -98,18 +97,13 @@ export default class StashService {
    * @throws Error when the stashes cannot be loaded
    */
   public async getUserStashes(userId: number): Promise<Stash[]> {
-    try {
-      return await this.stashRepository.find({
-        where: {
-          user: {
-            id: userId,
-          },
+    return await this.stashRepository.find({
+      where: {
+        user: {
+          id: userId,
         },
-      });
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+      },
+    });
   }
 
   /**
@@ -120,17 +114,12 @@ export default class StashService {
    * @throws Error when the stash lookup fails
    */
   public async getStash(stashId: number, userId: number): Promise<Stash | null> {
-    try {
-      return await this.stashRepository.findOne({
-        where: {
-          id: stashId,
-          user: { id: userId },
-        },
-      });
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    return await this.stashRepository.findOne({
+      where: {
+        id: stashId,
+        user: { id: userId },
+      },
+    });
   }
 
   /**
@@ -140,16 +129,11 @@ export default class StashService {
    * @throws Error when the stash lookup fails
    */
   public async getStashByPublicAccessToken(publicAccessToken: string): Promise<Stash | null> {
-    try {
-      return await this.stashRepository.findOne({
-        where: {
-          publicAccessToken,
-        },
-      });
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    return await this.stashRepository.findOne({
+      where: {
+        publicAccessToken,
+      },
+    });
   }
 
   /**
@@ -160,12 +144,7 @@ export default class StashService {
    * @throws Error when the deletion fails
    */
   public async deleteStash(stashId: number, userId: number): Promise<DeleteResult> {
-    try {
-      return await this.stashRepository.delete({ id: stashId, user: { id: userId } });
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    return await this.stashRepository.delete({ id: stashId, user: { id: userId } });
   }
 
   /**
@@ -181,24 +160,19 @@ export default class StashService {
     hours: number,
     modifiedBy: User,
   ): Promise<Stash | null> {
-    try {
-      const stash = await this.getStash(stashId, modifiedBy.id);
-      if (!stash) {
-        return null;
-      }
-      stash.scheduledAt.setHours(stash.scheduledAt.getHours() + hours);
-      const result = await this.stashRepository.update(
-        { id: stashId, user: { id: modifiedBy.id } },
-        { scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: new Date() },
-      );
-      if (!result.affected) {
-        return null;
-      }
-      return await this.getStash(stashId, modifiedBy.id);
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    const stash = await this.getStash(stashId, modifiedBy.id);
+    if (!stash) {
+      return null;
     }
+    stash.scheduledAt.setHours(stash.scheduledAt.getHours() + hours);
+    const result = await this.stashRepository.update(
+      { id: stashId, user: { id: modifiedBy.id } },
+      { scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: new Date() },
+    );
+    if (!result.affected) {
+      return null;
+    }
+    return await this.getStash(stashId, modifiedBy.id);
   }
 
   /**

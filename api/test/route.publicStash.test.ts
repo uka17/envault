@@ -1,9 +1,13 @@
 import request from "supertest";
 import { expect } from "chai";
 import { customAlphabet } from "nanoid";
+import sinon from "sinon";
+import { container } from "tsyringe";
 
 import { CODES } from "#common/constants.js";
+import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
+import LogService from "#service/LogService.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
 let token: string;
@@ -52,7 +56,28 @@ describe("Public Stash Routes", () => {
     publicAccessToken = persistedStash!.publicAccessToken;
   });
 
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe("GET /api/public/stashes/:token", () => {
+    it("should return a safe 500 when the public stash lookup fails", async() => {
+      const loggerError = container.resolve<LogService>(TOKENS.LogService).error as sinon.SinonStub;
+      loggerError.resetHistory();
+      sinon.stub(globalThis.appDataSource.manager, "findOne")
+        .rejects(new Error("SELECT ciphertext using postgres://user:password@database"));
+
+      const response = await request(globalThis.app)
+        .get(`/api/public/stashes/${publicAccessToken}`);
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(response.body).to.deep.equal({
+        code: "error_500",
+        message: "Oops, something went wrong and the server returned an error",
+      });
+      expect(loggerError.calledOnce).to.be.true;
+    });
+
     it("should return 422 for an invalid token format", async() => {
       const response = await request(globalThis.app).get("/api/public/stashes/short");
 

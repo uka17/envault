@@ -319,10 +319,10 @@ describe("Stash service", () => {
       sinon.stub(globalThis.appDataSource.manager, "save").rejects(error);
 
       await expectRejectedWith(stashService.createStash({} as any), error);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
-    it("should give up and log after repeated token conflicts", async() => {
+    it("should give up after repeated token conflicts", async() => {
       const conflictError: any = new Error("duplicate key value violates unique constraint");
       conflictError.code = "23505";
       conflictError.detail = "Key (public_access_token)=(abc) already exists.";
@@ -330,7 +330,7 @@ describe("Stash service", () => {
       const saveStub = sinon.stub(globalThis.appDataSource.manager, "save").rejects(conflictError);
 
       await expectRejectedWith(stashService.createStash({} as any), conflictError);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
       expect(saveStub.callCount).to.equal(5);
     });
 
@@ -339,7 +339,7 @@ describe("Stash service", () => {
       sinon.stub(globalThis.appDataSource.manager, "findOne").rejects(error);
 
       await expectRejectedWith(stashService.getStashByPublicAccessToken("some-token"), error);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on getUserStashes", async() => {
@@ -347,7 +347,7 @@ describe("Stash service", () => {
       sinon.stub(globalThis.appDataSource.manager, "find").rejects(error);
 
       await expectRejectedWith(stashService.getUserStashes(Number.MAX_SAFE_INTEGER), error);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on getStash", async() => {
@@ -355,7 +355,7 @@ describe("Stash service", () => {
       sinon.stub(globalThis.appDataSource.manager, "findOne").rejects(error);
 
       await expectRejectedWith(stashService.getStash(Number.MAX_SAFE_INTEGER, 1), error);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on deleteStash", async() => {
@@ -363,7 +363,7 @@ describe("Stash service", () => {
       sinon.stub(globalThis.appDataSource.manager, "delete").rejects(error);
 
       await expectRejectedWith(stashService.deleteStash(Number.MAX_SAFE_INTEGER, 1), error);
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on snoozeStash", async() => {
@@ -377,7 +377,7 @@ describe("Stash service", () => {
       } catch (caught) {
         expect(caught).to.equal(error);
       }
-      expect(loggerStub.error.calledOnce).to.be.true;
+      expect(loggerStub.error.notCalled).to.be.true;
     });
 
     it("should error on claimDueStashes", async() => {
