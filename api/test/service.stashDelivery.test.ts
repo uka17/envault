@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import sinon from "sinon";
+import { EntityManager } from "typeorm";
 import { randomUUID } from "node:crypto";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
@@ -54,7 +55,7 @@ function deliverySuite() {
    * Deletes the fixture owner.
    * @returns Nothing
    */ async() => {
-      await globalThis.appDataSource.getRepository(User).delete(owner.id); 
+      await globalThis.appDataSource.getRepository(User).delete(owner.id);
     });
 
   for (const operation of ["delete", "snooze"] as const) {
@@ -111,6 +112,53 @@ function deliverySuite() {
       expect((await service.markStashSent(stash.id, current.claimToken))?.affected).to.equal(1);
     });
 
+  for (const claimToken of [null, undefined, ""]) {
+    it(`rejects delivery and state writes without a claim token (${String(claimToken)})`, /**
+     * Verifies missing tokens cannot bypass claim ownership or clear an active claim.
+     * @returns Nothing
+     */ async() => {
+        const [claimed] = (await service.claimDueStashes(1, 300000))!;
+        const deliver = sinon.stub().resolves();
+        expect(await service.withClaim(repo.create({ ...claimed, claimToken }), deliver)).to.equal(false);
+        expect(deliver.called).to.equal(false);
+        expect((await service.markStashSent(stash.id, claimToken))?.affected).to.equal(0);
+        expect((await service.releaseStashLock(stash.id, claimToken))?.affected).to.equal(0);
+        const persisted = await repo.findOneByOrFail({ id: stash.id });
+        expect(persisted.claimToken).to.equal(claimed.claimToken);
+        expect(persisted.lockedAt.getTime()).to.equal(claimed.lockedAt.getTime());
+        expect(persisted.isSent).to.equal(false);
+        expect(persisted.sentAt).to.equal(null);
+      });
+  }
+
+  it("retains the claim and rolls back the delivery log when recording sent state fails", /**
+   * Simulates database failure after transport acceptance to prevent premature cancellation or retry.
+   * @returns Nothing
+   */ async() => {
+      const failure = new Error("Test delivery state write failed");
+      const update = sinon.stub(EntityManager.prototype, "update").callThrough();
+      update.withArgs(Stash, sinon.match.any, sinon.match.has("isSent", true)).rejects(failure);
+
+      await sender.processDueStashes(1, 300000);
+
+      expect(email.send.calledOnce).to.equal(true);
+      expect(update.calledOnce).to.equal(true);
+      const persisted = await repo.findOneByOrFail({ id: stash.id });
+      expect(persisted.claimToken).to.be.a("string");
+      expect(persisted.lockedAt).to.be.instanceOf(Date);
+      expect(persisted.isSent).to.equal(false);
+      expect(persisted.sentAt).to.equal(null);
+      expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(0);
+      try {
+        await service.deleteStash(stash.id, owner.id);
+        expect.fail("Expected ambiguous delivery to retain its cancellation guard");
+      } catch (error) {
+        expect((error as ApiError).code).to.equal("stash_delivery_in_progress");
+      }
+      await sender.processDueStashes(1, 300000);
+      expect(email.send.calledOnce).to.equal(true);
+    });
+
   it("does not reclaim a live sender even when its timestamp is stale", /**
    * Pauses inside delivery with an explicit promise barrier, without timing sleeps.
    * @returns Nothing
@@ -121,17 +169,17 @@ function deliverySuite() {
       let finish!: () => void;
       const started = new Promise<void>(/** @param resolve Signals entry. @returns Nothing */
         (resolve) => {
-          entered = resolve; 
+          entered = resolve;
         });
       const pending = new Promise<void>(/** @param resolve Releases delivery. @returns Nothing */
         (resolve) => {
-          finish = resolve; 
+          finish = resolve;
         });
       const running = service.withClaim(claimed, /**
      * Holds the row lock while another worker and the API compete for it.
      * @returns Nothing
      */ async() => {
-          entered(); await pending; 
+          entered(); await pending;
         });
       try {
         await started;
@@ -142,10 +190,10 @@ function deliverySuite() {
           await service.deleteStash(stash.id, owner.id);
           expect.fail("Expected conflict during delivery");
         } catch (error) {
-          expect((error as ApiError).code).to.equal("stash_delivery_in_progress"); 
+          expect((error as ApiError).code).to.equal("stash_delivery_in_progress");
         }
       } finally {
-        finish(); await running; 
+        finish(); await running;
       }
     });
 
@@ -161,7 +209,7 @@ function deliverySuite() {
         await service.snoozeStash(stash.id, 1, owner);
         expect.fail("Expected sent-state conflict");
       } catch (error) {
-        expect((error as ApiError).code).to.equal("stash_already_sent"); 
+        expect((error as ApiError).code).to.equal("stash_already_sent");
       }
       expect((await service.deleteStash(stash.id, owner.id)).affected).to.equal(1);
       expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(0);
@@ -203,7 +251,7 @@ function deliverySuite() {
         const [row] = await runner.query("SELECT body, claim_token FROM stash WHERE id = $1", [stash.id]);
         expect(row).to.deep.equal({ body: "ciphertext", claim_token: null });
       } finally {
-        await runner.rollbackTransaction(); await runner.release(); 
+        await runner.rollbackTransaction(); await runner.release();
       }
     });
 }
