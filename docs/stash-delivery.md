@@ -29,31 +29,21 @@ an email but before commit can still cause a retry and duplicate email: PostgreS
 and SES do not share a transaction. This change does not promise exactly-once
 email delivery. Non-PROD recipient redirection remains unchanged.
 
-## Migration and rollout
+## Schema and rollout
 
-The additive TypeORM migration
-`common/migrations/1789420000000-StashClaimToken.ts` adds nullable UUID
-`stash.claim_token`; it is registered in the DataSource. Existing content and
-SendLog constraints are unchanged. Deletion removes SendLog rows explicitly in
-the same transaction, so no FK migration is needed.
+The application is still pre-production and uses TypeORM `synchronize: true`.
+The nullable UUID field `Stash.claimToken` maps to `stash.claim_token`; TypeORM
+synchronizes the column from the entity definition. No migration or new
+environment variable is required. Deletion removes SendLog rows explicitly in
+the same transaction.
 
-Production rollout remains dependent on #44, which must provide the versioned
-migration baseline/runner and disable production synchronize. The current
-DataSource still uses the pre-existing synchronize setting; do not treat local
-schema synchronization as a production migration check. Integrate this migration
-with #44 before deployment or closing #45. Do not run its up method after
-synchronize has already added the column.
-
-Stop and drain old workers before applying the migration and deploying the new
-API and workers. Old workers do not enforce claim tokens; mixed versions do not
-provide this contract. Old outstanding claims have a null token and are recovered
-only after their stale timeout by a new worker. Rollback requires stopping new
-workers before reverting code and dropping claim_token. No new environment
-variables are required.
+Stop and drain old workers before deploying the new API and workers. Old workers
+do not enforce claim tokens; mixed versions do not provide this contract. Old
+outstanding claims have a null token and are recovered only after their stale
+timeout by a new worker.
 
 Tests run on separate, disposable PostgreSQL databases with email transport
 stubbed. They cover both mutation/claim orders, two concurrent claims, stale
 fencing, active delivery exclusion using promise barriers, API conflicts and
-validation, DST duration, delivery-log deletion, and migration down/up in a
-rolled-back transaction. Production smoke tests and migration integration with
-#44 require a separate deployment validation.
+validation, DST duration, delivery-log deletion, missing claim tokens, ambiguous
+delivery failures, and the ORM-created column and token serialization.

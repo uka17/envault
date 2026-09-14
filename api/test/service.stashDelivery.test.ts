@@ -9,7 +9,7 @@ import StashService from "#service/StashService.js";
 import StashSenderService from "#service/StashSenderService.js";
 import EmailService from "#service/EmailService.js";
 import ApiError from "api/src/error/ApiError.js";
-import { StashClaimToken1789420000000 } from "#common/migrations/1789420000000-StashClaimToken.js";
+import { instanceToPlain } from "class-transformer";
 
 /**
  * Defines deterministic PostgreSQL delivery and mutation interleavings.
@@ -237,22 +237,19 @@ function deliverySuite() {
       }
     });
 
-  it("migrates existing rows without losing stash data", /**
-   * Runs downgrade and upgrade inside a rolled-back transaction on the test database.
+  it("synchronizes a nullable UUID claim column and excludes its value from API serialization", /**
+   * Verifies the ORM-created column and the privacy of persisted claim tokens.
    * @returns Nothing
    */ async() => {
-      const runner = globalThis.appDataSource.createQueryRunner();
-      await runner.connect();
-      await runner.startTransaction();
-      try {
-        const migration = new StashClaimToken1789420000000();
-        await migration.down(runner);
-        await migration.up(runner);
-        const [row] = await runner.query("SELECT body, claim_token FROM stash WHERE id = $1", [stash.id]);
-        expect(row).to.deep.equal({ body: "ciphertext", claim_token: null });
-      } finally {
-        await runner.rollbackTransaction(); await runner.release();
-      }
+      const [column] = await repo.manager.query(`
+        SELECT data_type, is_nullable FROM information_schema.columns
+        WHERE table_schema = current_schema() AND table_name = 'stash' AND column_name = 'claim_token'
+      `);
+      expect(column).to.deep.equal({ data_type: "uuid", is_nullable: "YES" });
+      expect((await repo.findOneByOrFail({ id: stash.id })).claimToken).to.equal(null);
+      const [claimed] = (await service.claimDueStashes(1, 300000))!;
+      expect(claimed.claimToken).to.be.a("string");
+      expect(instanceToPlain(claimed)).not.to.have.property("claimToken");
     });
 }
 describe("Stash delivery contract", deliverySuite);
