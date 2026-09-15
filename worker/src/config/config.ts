@@ -18,8 +18,6 @@ export default {
     apiKey: process.env.LOKI_API_KEY || "",
   },
   runInterval: 1000, //ms
-  stashBatchSize: Number(process.env.STASH_BATCH_SIZE) || 25,
-  staleLockThresholdMs: Number(process.env.STALE_LOCK_THRESHOLD_MS) || 5 * 60 * 1000, // 5 minutes
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
   readMessageUrl: [baseUrl, "/unlock"].join(""),
   // TODO: replace with the real FAQ page once it exists in envault_fe.

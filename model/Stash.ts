@@ -18,17 +18,6 @@ export default class Stash extends Base {
   })
     isSent: boolean;
 
-  @Column({
-    name: "locked_at",
-    type: "timestamptz",
-    nullable: true,
-  })
-    lockedAt: Date | null;
-
-  @Exclude()
-  @Column({ name: "claim_token", type: "uuid", nullable: true })
-    claimToken: string | null;
-
   @Exclude()
   @Column({
     name: "public_access_token",

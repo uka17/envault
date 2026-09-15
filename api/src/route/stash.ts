@@ -131,7 +131,7 @@ export default function(app: express.Router) {
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Permanently deletes a stash belonging to the authenticated user.
           Owner and state are checked under a PostgreSQL row lock. An unsent message can only be cancelled
-          before the sender claims it. Outstanding claims, including stale claims, or a concurrent mutation
+          before the sender locks its row for delivery. Active delivery or a concurrent mutation
           return 409 stash_delivery_in_progress. Deleting an already sent stash removes its content and
           SendLog entries and revokes the public link; it cannot recall the delivered email.
           Missing and foreign stashes return 404 stash_not_found.' */
@@ -164,7 +164,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[409] = {
-          description: 'stash_delivery_in_progress: claimed (including stale) or busy',
+          description: 'stash_delivery_in_progress: delivery or another mutation holds the row lock',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.delete.bind(stashController),
@@ -178,8 +178,9 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Snooze stash for N hours' */
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Postpones a stash belonging to the authenticated user by the given number of hours.
-          Owner and state are checked under a PostgreSQL row lock. Only unclaimed, unsent stashes can be postponed.
-          Outstanding claims (including stale claims) or a concurrent mutation return 409 stash_delivery_in_progress.
+          Owner and state are checked under a PostgreSQL row lock.
+          Only unsent stashes without an active delivery can be postponed.
+          Active delivery or a concurrent mutation returns 409 stash_delivery_in_progress.
           Already sent stashes return 409 stash_already_sent. Adds exactly N times 3600000 milliseconds to
           the existing schedule, independent of DST; a still-overdue result remains eligible for delivery.
           Missing and foreign stashes return 404 stash_not_found.' */
@@ -219,7 +220,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[409] = {
-          description: 'stash_delivery_in_progress (claimed or busy) or stash_already_sent (delivered)',
+          description: 'stash_delivery_in_progress (sending or busy) or stash_already_sent (delivered)',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.snooze.bind(stashController),

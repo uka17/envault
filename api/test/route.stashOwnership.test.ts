@@ -3,9 +3,6 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { randomUUID } from "node:crypto";
 
-import { container } from "tsyringe";
-import { TOKENS } from "#di/tokens.js";
-import StashService from "#service/StashService.js";
 import Stash from "#model/Stash.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
@@ -122,20 +119,26 @@ describe("Private stash ownership", () => {
   for (const { method, suffix } of [
     { method: "delete", suffix: "" }, { method: "post", suffix: "/snooze/24" },
   ] as const) {
-    it(`returns 409 for ${method} after the worker claims the message`, /**
-     * Claims through PostgreSQL and checks owner and foreign API responses.
+    it(`returns 409 for ${method} while delivery holds the row lock`, /**
+     * Holds the sender's PostgreSQL lock and checks owner and foreign API responses.
      * @returns Nothing
      */ async() => {
-        await globalThis.appDataSource.getRepository(Stash).update(stash.id, { scheduledAt: new Date(0) });
-        const service = container.resolve<StashService>(TOKENS.StashService);
-        expect((await service.claimDueStashes(1, 300000))?.[0].id).to.equal(stash.id);
-        const response = await request(globalThis.app)[method](`/api/v1/stashes/${stash.id}${suffix}`)
-          .set("Authorization", `Bearer ${owner.token}`);
-        expect(response.status).to.equal(409);
-        expect(response.body.code).to.equal("stash_delivery_in_progress");
-        const foreign = await request(globalThis.app)[method](`/api/v1/stashes/${stash.id}${suffix}`)
-          .set("Authorization", `Bearer ${other.token}`);
-        expect(foreign.status).to.equal(404);
+        const runner = globalThis.appDataSource.createQueryRunner();
+        await runner.connect();
+        await runner.startTransaction();
+        try {
+          await runner.query("SELECT id FROM stash WHERE id = $1 FOR UPDATE", [stash.id]);
+          const response = await request(globalThis.app)[method](`/api/v1/stashes/${stash.id}${suffix}`)
+            .set("Authorization", `Bearer ${owner.token}`);
+          expect(response.status).to.equal(409);
+          expect(response.body.code).to.equal("stash_delivery_in_progress");
+          const foreign = await request(globalThis.app)[method](`/api/v1/stashes/${stash.id}${suffix}`)
+            .set("Authorization", `Bearer ${other.token}`);
+          expect(foreign.status).to.equal(404);
+        } finally {
+          await runner.rollbackTransaction();
+          await runner.release();
+        }
       });
   }
 

@@ -33,13 +33,13 @@ async function init() {
   logger.info(`Initializing service (logLevel=${config.logLevel})...`);
 
   /**
-   * Runs one claim-and-send pass, logging (but never throwing) on
+   * Runs one sequential delivery pass, logging (but never throwing) on
    * unexpected errors so a single bad tick cannot crash the worker process.
    * @returns Nothing
    */
   const tick = async() => {
     try {
-      await stashSenderService.processDueStashes(config.stashBatchSize, config.staleLockThresholdMs);
+      await stashSenderService.processDueStashes();
     } catch (error) {
       logger.error(error);
     }

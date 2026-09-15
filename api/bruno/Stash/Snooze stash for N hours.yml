@@ -296,4 +296,4 @@ docs: |-
   to A and verify that the recipient, ciphertext and schedule remain unchanged.
   Without an access token expect 401. With A's token the operation succeeds.
 
-  Only unclaimed, unsent stashes can be postponed. Fresh and stale claims or concurrent mutations return 409 stash_delivery_in_progress; already sent stashes return 409 stash_already_sent. hours must be an integer from 1 through 8760 or the API returns 422 snooze_hours_invalid. Duration is added to the existing date (exact milliseconds, unaffected by DST). A still-overdue result remains eligible for delivery.
+  Only unsent stashes without an active delivery can be postponed. Active delivery or concurrent mutations return 409 stash_delivery_in_progress; already sent stashes return 409 stash_already_sent. hours must be an integer from 1 through 8760 or the API returns 422 snooze_hours_invalid. Duration is added to the existing date (exact milliseconds, unaffected by DST). A still-overdue result remains eligible for delivery.
