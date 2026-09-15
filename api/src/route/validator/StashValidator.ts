@@ -18,11 +18,13 @@ export default class StashValidator {
         body("to")
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect")),
-        body("scheduledAt").notEmpty().withMessage(apiErrorPayload("is_required")),
         body("scheduledAt")
-          .optional()
+          .notEmpty()
+          .withMessage(apiErrorPayload("is_required"))
+          .bail()
           .isISO8601({ strict: true })
-          .withMessage(apiErrorPayload("date_format_incorrect")).bail()
+          .withMessage(apiErrorPayload("date_format_incorrect"))
+          .bail()
           .custom(/**
            * Requires an instant strictly later than request validation time.
            * @param value ISO date string

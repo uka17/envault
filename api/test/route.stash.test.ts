@@ -107,7 +107,27 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("is_required");
       expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
+      expect(response.body.errors).to.have.lengthOf(1);
     });
+
+    for (const scheduledAt of ["", null]) {
+      it(`should return only is_required for scheduledAt=${JSON.stringify(scheduledAt)}`, /**
+       * Checks that an empty date stops validation before format and future-date checks.
+       * @returns Nothing
+       */ async() => {
+          const response = await request(globalThis.app)
+            .post("/api/v1/stashes")
+            .set("Authorization", `Bearer ${token}`)
+            .send({ ...testStash, scheduledAt });
+
+          expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+          expect(response.body.errors).to.deep.equal([{
+            field: "scheduledAt",
+            code: "is_required",
+            message: API_ERROR_MESSAGES.is_required,
+          }]);
+        });
+    }
 
     it("should return error date_format_incorrect", async() => {
       const testStashWrongScheduledAt = { ...testStash };
@@ -120,6 +140,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("date_format_incorrect");
       expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
+      expect(response.body.errors).to.have.lengthOf(1);
     });
 
     it("should return error email_format_incorrect", async() => {
