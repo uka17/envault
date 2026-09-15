@@ -55,10 +55,10 @@ export default class StashSenderService {
    * @returns Whether a message was sent
    */
   private async sendNextStash(): Promise<boolean> {
-    const sentId = await this.stashRepository.manager.transaction(/**
+    const sent = await this.stashRepository.manager.transaction(/**
      * Keeps the selected row locked through email submission and database writes.
      * @param manager Transaction manager
-     * @returns Sent stash ID or null when no unlocked message is due
+     * @returns Delivery details or null when no unlocked message is due
      */ async(manager) => {
         const stash = await manager.getRepository(Stash).createQueryBuilder("stash")
           .leftJoinAndSelect("stash.user", "user")
@@ -69,7 +69,8 @@ export default class StashSenderService {
         if (!stash) {
           return null;
         }
-        const messageId = await this.emailService.send(this.buildMailOptions(stash));
+        const mailOptions = this.buildMailOptions(stash);
+        const messageId = await this.emailService.send(mailOptions);
         if (!messageId) {
           throw new Error(`Failed to send stash ${stash.id}`);
         }
@@ -78,12 +79,12 @@ export default class StashSenderService {
         if (result.affected !== 1) {
           throw new Error(`Failed to record delivery for stash ${stash.id}`);
         }
-        return stash.id;
+        return { id: stash.id, to: mailOptions.to, messageId };
       });
-    if (sentId === null) {
+    if (sent === null) {
       return false;
     }
-    this.logger.info(`Sent stash ${sentId}.`);
+    this.logger.info(`Sent stash ${sent.id} to ${sent.to} (messageId=${sent.messageId}).`);
     return true;
   }
 

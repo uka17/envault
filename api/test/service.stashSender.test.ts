@@ -66,8 +66,11 @@ function senderSuite() {
       sinon.stub(config, "environment").value(environment);
       await sender.processDueStashes();
       expect(email.send.calledOnce).to.equal(true);
-      expect(email.send.firstCall.args[0].to)
-        .to.equal(environment === "PROD" ? stash.to : "ukaoneseven@gmail.com");
+      const recipient = environment === "PROD" ? stash.to : "ukaoneseven@gmail.com";
+      expect(email.send.firstCall.args[0].to).to.equal(recipient);
+      expect(logger.info.calledOnceWith(
+        `Sent stash ${stash.id} to ${recipient} (messageId=test-message-id).`,
+      )).to.equal(true);
     });
   }
 
@@ -78,7 +81,9 @@ function senderSuite() {
     expect(persisted.isSent).to.equal(true);
     expect(persisted.sentAt.getTime()).to.be.at.least(before);
     expect((await logs.findOneByOrFail({ stash: { id: stash.id } })).messageId).to.equal("test-message-id");
-    expect(logger.info.calledOnceWith(`Sent stash ${stash.id}.`)).to.equal(true);
+    expect(logger.info.calledOnceWith(
+      `Sent stash ${stash.id} to ${email.send.firstCall.args[0].to} (messageId=test-message-id).`,
+    )).to.equal(true);
     await sender.processDueStashes();
     expect(email.send.calledOnce).to.equal(true);
   });
