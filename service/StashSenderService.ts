@@ -1,10 +1,11 @@
 import nodemailer from "nodemailer";
 import { injectable, inject } from "tsyringe";
+import { Repository } from "typeorm";
 
 import Stash from "#model/Stash.js";
 import { TOKENS } from "#di/tokens.js";
 
-import StashService from "#service/StashService.js";
+import SendLog from "#model/SendLog.js";
 import EmailService from "#service/EmailService.js";
 import LogService from "#service/LogService.js";
 import config from "worker/src/config/config.js";
@@ -12,68 +13,79 @@ import { renderStashReadyEmail } from "worker/src/templates/stashReady.js";
 
 @injectable()
 export default class StashSenderService {
+  private processing = false;
+
   /**
    * Creates instance of `StashSenderService`
-   * @param stashService Stash service, used to claim due stashes and record their delivery state
+   * @param stashRepository Repository used for transactional selection and delivery state
    * @param emailService Email service, used to actually deliver the stash notification email
    * @param logger Logger service
+   * @returns Stash sender service
    */
   constructor(
-    @inject(TOKENS.StashService) private stashService: StashService,
+    @inject(TOKENS.StashRepository) private stashRepository: Repository<Stash>,
     @inject(TOKENS.EmailService) private emailService: EmailService,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**
-   * Claims and sends all currently due, unsent stashes in one batch. Each
-   * stash is processed in isolation so that a single failure cannot abort
-   * the rest of the batch.
-   * @param batchSize Maximum number of stashes to claim in one pass
-   * @param staleLockThresholdMs Age in milliseconds after which a stuck claim is considered abandoned and reclaimable
-   * @returns Nothing; failures are logged internally and never thrown
+   * Sends due messages sequentially, committing each one before selecting the next.
+   * Overlapping ticks are skipped. A failure ends the pass and is retried on a later tick.
+   * @returns Nothing; failures are logged
    */
-  public async processDueStashes(
-    batchSize: number,
-    staleLockThresholdMs: number,
-  ): Promise<void> {
-    const claimed = await this.stashService.claimDueStashes(batchSize, staleLockThresholdMs);
-
-    if (!claimed || claimed.length === 0) {
+  public async processDueStashes(): Promise<void> {
+    if (this.processing) {
       return;
     }
-
-    this.logger.info(`Claimed ${claimed.length} due stash(es) for sending.`);
-
-    await Promise.allSettled(
-      claimed.map((stash) => this.sendClaimedStash(stash)),
-    );
+    this.processing = true;
+    try {
+      while (await this.sendNextStash()) {
+        // Each completed transaction releases its lock before the next selection.
+      }
+    } catch (error) {
+      this.logger.error(error);
+    } finally {
+      this.processing = false;
+    }
   }
 
   /**
-   * Sends a single previously-claimed stash and updates its state
-   * accordingly. Never throws; failures are logged and the stash's claim
-   * is released so it can be retried on a later tick.
-   * @param stash Claimed stash to send
-   * @returns Nothing
+   * Selects, sends and records one due message under a single PostgreSQL row lock.
+   * Errors roll back state and release the lock automatically.
+   * @returns Whether a message was sent
    */
-  private async sendClaimedStash(stash: Stash): Promise<void> {
-    try {
-      const mailOptions = this.buildMailOptions(stash);
-      const messageId = await this.emailService.send(mailOptions);
-
-      if (!messageId) {
-        this.logger.error(`Failed to send stash ${stash.id}; releasing lock for retry.`);
-        await this.stashService.releaseStashLock(stash.id);
-        return;
-      }
-
-      await this.stashService.log(stash.id, mailOptions, messageId);
-      await this.stashService.markStashSent(stash.id);
-      this.logger.info(`Sent stash ${stash.id} to ${mailOptions.to} (messageId=${messageId}).`);
-    } catch (error) {
-      this.logger.error(error);
-      await this.stashService.releaseStashLock(stash.id);
+  private async sendNextStash(): Promise<boolean> {
+    const sent = await this.stashRepository.manager.transaction(/**
+     * Keeps the selected row locked through email submission and database writes.
+     * @param manager Transaction manager
+     * @returns Delivery details or null when no unlocked message is due
+     */ async(manager) => {
+        const stash = await manager.getRepository(Stash).createQueryBuilder("stash")
+          .leftJoinAndSelect("stash.user", "user")
+          .where("stash.scheduled_at <= :now AND stash.is_sent IS NOT TRUE", { now: new Date() })
+          .orderBy("stash.scheduled_at", "ASC").addOrderBy("stash.id", "ASC")
+          .limit(1).setLock("pessimistic_write", undefined, ["stash"])
+          .setOnLocked("skip_locked").getOne();
+        if (!stash) {
+          return null;
+        }
+        const mailOptions = this.buildMailOptions(stash);
+        const messageId = await this.emailService.send(mailOptions);
+        if (!messageId) {
+          throw new Error(`Failed to send stash ${stash.id}`);
+        }
+        await manager.insert(SendLog, { stash, messageId });
+        const result = await manager.update(Stash, stash.id, { isSent: true, sentAt: new Date() });
+        if (result.affected !== 1) {
+          throw new Error(`Failed to record delivery for stash ${stash.id}`);
+        }
+        return { id: stash.id, to: mailOptions.to, messageId };
+      });
+    if (sent === null) {
+      return false;
     }
+    this.logger.info(`Sent stash ${sent.id} to ${sent.to} (messageId=${sent.messageId}).`);
+    return true;
   }
 
   /**

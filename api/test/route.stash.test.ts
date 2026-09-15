@@ -24,7 +24,7 @@ let testStash = {
   body: "test_body",
   secret: "test_secret",
   to: "test@testmail.com",
-  scheduledAt: "2023-04-27T20:04:30.446+0200",
+  scheduledAt: new Date(Date.now() + 86400000).toISOString(),
 };
 
 describe("Stash Routes", () => {
@@ -107,7 +107,27 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("is_required");
       expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
+      expect(response.body.errors).to.have.lengthOf(1);
     });
+
+    for (const scheduledAt of ["", null]) {
+      it(`should return only is_required for scheduledAt=${JSON.stringify(scheduledAt)}`, /**
+       * Checks that an empty date stops validation before format and future-date checks.
+       * @returns Nothing
+       */ async() => {
+          const response = await request(globalThis.app)
+            .post("/api/v1/stashes")
+            .set("Authorization", `Bearer ${token}`)
+            .send({ ...testStash, scheduledAt });
+
+          expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+          expect(response.body.errors).to.deep.equal([{
+            field: "scheduledAt",
+            code: "is_required",
+            message: API_ERROR_MESSAGES.is_required,
+          }]);
+        });
+    }
 
     it("should return error date_format_incorrect", async() => {
       const testStashWrongScheduledAt = { ...testStash };
@@ -120,6 +140,7 @@ describe("Stash Routes", () => {
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("date_format_incorrect");
       expect(response.body.errors?.[0]?.field).to.equal("scheduledAt");
+      expect(response.body.errors).to.have.lengthOf(1);
     });
 
     it("should return error email_format_incorrect", async() => {
@@ -223,7 +244,7 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.code).to.equal("stash_id_invalid");
       expect(response.body.errors?.[0]?.field).to.equal("id");
     });
     it("should return stash", async() => {
@@ -248,7 +269,7 @@ describe("Stash Routes", () => {
 
   describe("POST /api/v1/stashes/:id/snooze/:hours", () => {
     it("should return a safe 500 when the snooze update fails", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "update")
+      sinon.stub(globalThis.appDataSource.manager, "transaction")
         .rejects(new Error("UPDATE stash SET body = ciphertext"));
 
       const response = await request(globalThis.app)
@@ -272,7 +293,7 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.code).to.equal("stash_id_invalid");
       expect(response.body.errors?.[0]?.field).to.equal("id");
     });
     it("should return error hours_should_be_numeric", async() => {
@@ -284,7 +305,7 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.code).to.equal("snooze_hours_invalid");
       expect(response.body.errors?.[0]?.field).to.equal("hours");
     });
     it("should return 404 when stash not found for snooze", async() => {
@@ -317,7 +338,7 @@ describe("Stash Routes", () => {
 
   describe("DELETE /api/v1/stashes/:id", () => {
     it("should return a safe 500 when deleting the stash fails", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "delete")
+      sinon.stub(globalThis.appDataSource.manager, "transaction")
         .rejects(new Error("DELETE failed for database password"));
 
       const response = await request(globalThis.app)
@@ -340,7 +361,7 @@ describe("Stash Routes", () => {
         .send();
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("should_be_numeric");
+      expect(response.body.errors?.[0]?.code).to.equal("stash_id_invalid");
       expect(response.body.errors?.[0]?.field).to.equal("id");
     });
 

@@ -6,6 +6,10 @@ import { apiErrorPayload } from "#common/errorCodes.js";
 
 @injectable()
 export default class StashValidator {
+  /**
+   * Builds validation rules for stash requests.
+   * @returns Validation chains by operation
+   */
   public getRules() {
     return {
       create: [
@@ -14,24 +18,32 @@ export default class StashValidator {
         body("to")
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect")),
-        body("scheduledAt").notEmpty().withMessage(apiErrorPayload("is_required")),
         body("scheduledAt")
-          .optional()
-          .isISO8601()
-          .withMessage(apiErrorPayload("date_format_incorrect")),
+          .notEmpty()
+          .withMessage(apiErrorPayload("is_required"))
+          .bail()
+          .isISO8601({ strict: true })
+          .withMessage(apiErrorPayload("date_format_incorrect"))
+          .bail()
+          .custom(/**
+           * Requires an instant strictly later than request validation time.
+           * @param value ISO date string
+           * @returns Whether the date is in the future
+           */ (value: string) => new Date(value).getTime() > Date.now())
+          .withMessage(apiErrorPayload("scheduled_at_must_be_future")),
       ],
       find: [
-        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
+        param("id").isInt({ min: 1, max: 2147483647 }).withMessage(apiErrorPayload("stash_id_invalid")),
       ],
       delete: [
         param("id").notEmpty().withMessage(apiErrorPayload("id_required")),
-        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
+        param("id").isInt({ min: 1, max: 2147483647 }).withMessage(apiErrorPayload("stash_id_invalid")),
       ],
       snooze: [
-        param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),
+        param("id").isInt({ min: 1, max: 2147483647 }).withMessage(apiErrorPayload("stash_id_invalid")),
         param("hours")
-          .isNumeric()
-          .withMessage(apiErrorPayload("should_be_numeric")),
+          .isInt({ min: 1, max: 8760 })
+          .withMessage(apiErrorPayload("snooze_hours_invalid")),
       ],
     };
   }

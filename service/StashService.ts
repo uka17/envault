@@ -1,5 +1,5 @@
-import { DeleteResult, In, Repository, UpdateResult } from "typeorm";
-import nodemailer from "nodemailer";
+import { DeleteResult, EntityManager, Repository } from "typeorm";
+import ApiError from "api/src/error/ApiError.js";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
 
@@ -8,7 +8,6 @@ import SendLog from "#model/SendLog.js";
 import User from "#model/User.js";
 import { TOKENS } from "#di/tokens.js";
 
-import LogService from "#service/LogService.js";
 import config from "api/src/config/config.js";
 
 @injectable()
@@ -16,43 +15,11 @@ export default class StashService {
   /**
    * Creates instance of `StashService`
    * @param stashRepository Stash repository
-   * @param sendLogRepository SendLog repository
-   * @param logger Logger service
+   * @returns Stash service
    */
   constructor(
     @inject(TOKENS.StashRepository) private stashRepository: Repository<Stash>,
-    @inject(TOKENS.SendLogRepository) private sendLogRepository: Repository<SendLog>,
-    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
-
-  /**
-   * Logs the email message ID to the database
-   * @param stashId ID of the stash
-   * @param mailOptions Mail options object which contains to, from, subject, html and text fields
-   * @param messageId Message ID of the email received from AWS SES
-   * @returns Created `SendLog` object or `null` if error
-   */
-  public async log(
-    stashId: number,
-    mailOptions: nodemailer.SendMailOptions,
-    messageId: string,
-  ) {
-    try {
-      const stash = await this.stashRepository.findOne({
-        where: {
-          id: stashId,
-        },
-      });
-      const sendLog = new SendLog();
-      sendLog.stash = stash;
-      sendLog.messageId = messageId;
-      //TODO: add mailOptions to sendLog
-      return await this.sendLogRepository.manager.save(sendLog);
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
-  }
 
   /**
    * Creates a new stash. Generates a unique public access token and retries
@@ -144,7 +111,39 @@ export default class StashService {
    * @throws Error when the deletion fails
    */
   public async deleteStash(stashId: number, userId: number): Promise<DeleteResult> {
-    return await this.stashRepository.delete({ id: stashId, user: { id: userId } });
+    return this.stashRepository.manager.transaction(/**
+     * Deletes the message and its delivery logs under the same row lock.
+     * @param manager Transaction manager
+     * @returns Owner-scoped deletion result
+     */ async(manager) => {
+        const stash = await this.lockOwnedStash(manager, stashId, userId);
+        if (!stash) {
+          return { affected: 0, raw: [] };
+        }
+        await manager.delete(SendLog, { stash: { id: stashId } });
+        return manager.delete(Stash, { id: stashId, user: { id: userId } });
+      });
+  }
+
+  /**
+   * Locks an owner's row, rejecting concurrent delivery or mutation.
+   * @param manager Transaction manager
+   * @param stashId Stash ID
+   * @param userId Authenticated owner ID
+   * @returns Locked stash or null for a missing or foreign stash
+   */
+  private async lockOwnedStash(manager: EntityManager, stashId: number, userId: number): Promise<Stash | null> {
+    try {
+      const stash = await manager.getRepository(Stash).createQueryBuilder("stash")
+        .where("stash.id = :stashId AND stash.user_id = :userId", { stashId, userId })
+        .setLock("pessimistic_write").setOnLocked("nowait").getOne();
+      return stash;
+    } catch (error) {
+      if ((error as { code?: string }).code === "55P03") {
+        throw ApiError.fromCode(409, "stash_delivery_in_progress");
+      }
+      throw error;
+    }
   }
 
   /**
@@ -160,116 +159,26 @@ export default class StashService {
     hours: number,
     modifiedBy: User,
   ): Promise<Stash | null> {
-    const stash = await this.getStash(stashId, modifiedBy.id);
-    if (!stash) {
-      return null;
-    }
-    stash.scheduledAt.setHours(stash.scheduledAt.getHours() + hours);
-    const result = await this.stashRepository.update(
-      { id: stashId, user: { id: modifiedBy.id } },
-      { scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: new Date() },
-    );
-    if (!result.affected) {
-      return null;
-    }
-    return await this.getStash(stashId, modifiedBy.id);
-  }
-
-  /**
-   * Atomically claims up to `batchSize` stashes that are due to be sent
-   * (`scheduledAt` in the past), not yet sent, and not currently claimed by
-   * another worker (or whose claim has gone stale). Claiming is done via a
-   * single `UPDATE ... WHERE id IN (SELECT ... FOR UPDATE SKIP LOCKED)`
-   * statement so that concurrent callers (overlapping ticks, or multiple
-   * worker processes) can never claim the same stash twice.
-   * @param batchSize Maximum number of stashes to claim in one call
-   * @param staleLockThresholdMs Age in milliseconds after which an existing
-   * claim is considered abandoned and can be reclaimed
-   * @returns Array of claimed stashes with their `user` relation loaded
-   * (empty if none are due), or `null` if error
-   */
-  public async claimDueStashes(
-    batchSize: number,
-    staleLockThresholdMs: number,
-  ): Promise<Stash[] | null> {
-    try {
-      const now = new Date();
-      const staleCutoff = new Date(now.getTime() - staleLockThresholdMs);
-
-      // For UPDATE/DELETE statements, TypeORM's Postgres driver returns a
-      // `[rows, rowCount]` tuple rather than the rows array directly.
-      const [claimedRows]: [{ id: number }[], number] = await this.stashRepository.manager.query(
-        `
-          UPDATE stash
-          SET locked_at = $1
-          WHERE id IN (
-            SELECT id FROM stash
-            WHERE scheduled_at <= $1
-              AND is_sent IS NOT TRUE
-              AND (locked_at IS NULL OR locked_at < $2)
-            ORDER BY scheduled_at ASC
-            LIMIT $3
-            FOR UPDATE SKIP LOCKED
-          )
-          AND is_sent IS NOT TRUE
-          AND (locked_at IS NULL OR locked_at < $2)
-          RETURNING id
-        `,
-        [now, staleCutoff, batchSize],
-      );
-
-      if (claimedRows.length === 0) {
-        return [];
-      }
-
-      const claimedIds = claimedRows.map((row) => row.id);
-      return await this.stashRepository.find({
-        where: { id: In(claimedIds) },
-        relations: { user: true },
-        order: { scheduledAt: "ASC" },
+    return this.stashRepository.manager.transaction(/**
+     * Applies a duration while holding the row lock used by the sender.
+     * @param manager Transaction manager
+     * @returns Updated stash or null
+     */ async(manager) => {
+        const stash = await this.lockOwnedStash(manager, stashId, modifiedBy.id);
+        if (!stash) {
+          return null;
+        }
+        if (stash.isSent) {
+          throw ApiError.fromCode(409, "stash_already_sent");
+        }
+        stash.scheduledAt = new Date(stash.scheduledAt.getTime() + hours * 3_600_000);
+        stash.modifiedBy = modifiedBy;
+        stash.modifiedOn = new Date();
+        await manager.update(Stash, { id: stashId, user: { id: modifiedBy.id } }, {
+          scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: stash.modifiedOn,
+        });
+        return stash;
       });
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
-  }
-
-  /**
-   * Marks a stash as successfully sent and releases its claim.
-   * @param stashId ID of the stash
-   * @returns `UpdateResult` or `null` if error
-   */
-  public async markStashSent(stashId: number): Promise<UpdateResult | null> {
-    try {
-      return await this.stashRepository.manager.update(
-        Stash,
-        { id: stashId },
-        { isSent: true, lockedAt: null, sentAt: new Date() },
-      );
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
-  }
-
-  /**
-   * Releases a stash's claim without marking it as sent, so it becomes
-   * eligible to be claimed and retried on a later tick. Used when a send
-   * attempt fails.
-   * @param stashId ID of the stash
-   * @returns `UpdateResult` or `null` if error
-   */
-  public async releaseStashLock(stashId: number): Promise<UpdateResult | null> {
-    try {
-      return await this.stashRepository.manager.update(
-        Stash,
-        { id: stashId },
-        { lockedAt: null },
-      );
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
   }
 
   /**

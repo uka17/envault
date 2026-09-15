@@ -55,7 +55,7 @@ const doc = {
     StashCreateRequest: {
       $body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
       $to: "journalist@fakemail.com",
-      $scheduledAt: "2025-12-31T23:59:59Z",
+      $scheduledAt: "2030-12-31T23:59:59Z",
     },
     StashResponse: {
       id: 42,

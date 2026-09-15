@@ -28,7 +28,9 @@ export default function(app: express.Router) {
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user.
           The request body must already be encrypted client-side. The server stores it as an
-          opaque string and never sees the decryption key. Sent to the recipient at scheduledAt via SES.' */
+          opaque string and never sees the decryption key. scheduledAt must be a valid future ISO 8601 date.
+          A notification is sent when due via SES.
+          Public token reading remains available before the scheduled date.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.requestBody = {
           description: 'Stash data',
@@ -48,7 +50,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error: missing or invalid fields',
+          description: 'Invalid fields; dates use date_format_incorrect or scheduled_at_must_be_future',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[500] = {
@@ -92,9 +94,9 @@ export default function(app: express.Router) {
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
-          description: 'Stash ID',
+          description: 'Positive integer Stash ID, maximum 2147483647',
           required: true,
-          type: 'integer',
+          '@schema': { type: 'integer', minimum: 1, maximum: 2147483647 },
           example: 42
     } */
     /* #swagger.responses[200] = {
@@ -113,6 +115,10 @@ export default function(app: express.Router) {
           description: 'Database lookup failed',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error: stash_id_invalid',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
     stashController.get.bind(stashController),
   );
 
@@ -124,13 +130,17 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Delete stash by ID' */
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Permanently deletes a stash belonging to the authenticated user.
-          Ownership is checked in the delete query. Missing and foreign stashes return 404 stash_not_found.' */
+          Owner and state are checked under a PostgreSQL row lock. An unsent message can only be cancelled
+          before the sender locks its row for delivery. Active delivery or a concurrent mutation
+          return 409 stash_delivery_in_progress. Deleting an already sent stash removes its content and
+          SendLog entries and revokes the public link; it cannot recall the delivered email.
+          Missing and foreign stashes return 404 stash_not_found.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
-          description: 'Stash ID',
+          description: 'Positive integer Stash ID, maximum 2147483647',
           required: true,
-          type: 'integer',
+          '@schema': { type: 'integer', minimum: 1, maximum: 2147483647 },
           example: 42
     } */
     /* #swagger.responses[200] = {
@@ -150,8 +160,12 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error: invalid ID format',
+          description: 'Validation error: stash_id_invalid',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    /* #swagger.responses[409] = {
+          description: 'stash_delivery_in_progress: delivery or another mutation holds the row lock',
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.delete.bind(stashController),
   );
@@ -164,21 +178,25 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Snooze stash for N hours' */
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Postpones a stash belonging to the authenticated user by the given number of hours.
-          Ownership is checked in both the lookup and update.
+          Owner and state are checked under a PostgreSQL row lock.
+          Only unsent stashes without an active delivery can be postponed.
+          Active delivery or a concurrent mutation returns 409 stash_delivery_in_progress.
+          Already sent stashes return 409 stash_already_sent. Adds exactly N times 3600000 milliseconds to
+          the existing schedule, independent of DST; a still-overdue result remains eligible for delivery.
           Missing and foreign stashes return 404 stash_not_found.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {
           in: 'path',
-          description: 'Stash ID',
+          description: 'Positive integer Stash ID, maximum 2147483647',
           required: true,
-          type: 'integer',
+          '@schema': { type: 'integer', minimum: 1, maximum: 2147483647 },
           example: 42
     } */
     /* #swagger.parameters['hours'] = {
           in: 'path',
-          description: 'Number of hours to postpone',
+          description: 'Integer from 1 through 8760 (365 days); each hour is exactly 3600000 milliseconds',
           required: true,
-          type: 'integer',
+          '@schema': { type: 'integer', minimum: 1, maximum: 8760 },
           example: 24
     } */
     /* #swagger.responses[200] = {
@@ -190,7 +208,7 @@ export default function(app: express.Router) {
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
-          description: 'Validation error: invalid ID or hours format',
+          description: 'Validation error: stash_id_invalid or snooze_hours_invalid (integer 1 through 8760)',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[404] = {
@@ -199,6 +217,10 @@ export default function(app: express.Router) {
     } */
     /* #swagger.responses[500] = {
           description: 'Snooze update failed',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[409] = {
+          description: 'stash_delivery_in_progress (sending or busy) or stash_already_sent (delivered)',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     stashController.snooze.bind(stashController),

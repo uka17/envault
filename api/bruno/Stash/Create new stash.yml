@@ -14,7 +14,7 @@ http:
       {
         "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
         "to": "journalist@fakemail.com",
-        "scheduledAt": "2025-12-31T23:59:59Z"
+        "scheduledAt": "2030-12-31T23:59:59Z"
       }
   auth:
     type: bearer
@@ -38,7 +38,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 201
@@ -54,7 +54,7 @@ examples:
             "to": "journalist@fakemail.com",
             "body": "<encrypted>",
             "isSent": false,
-            "scheduledAt": "2025-12-31T23:59:59Z",
+            "scheduledAt": "2030-12-31T23:59:59Z",
             "createdOn": "2025-01-01T00:00:00Z",
             "modifiedOn": "2025-01-01T00:00:00Z"
           }
@@ -69,7 +69,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 201
@@ -101,7 +101,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 401
@@ -126,7 +126,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 401
@@ -152,7 +152,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 422
@@ -182,7 +182,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 422
@@ -208,7 +208,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 500
@@ -233,7 +233,7 @@ examples:
           {
             "body": "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
             "to": "journalist@fakemail.com",
-            "scheduledAt": "2025-12-31T23:59:59Z"
+            "scheduledAt": "2030-12-31T23:59:59Z"
           }
     response:
       status: 500
@@ -250,3 +250,7 @@ examples:
           </root>
 
 docs: Creates a new stash (encrypted message) for the authenticated user. The request body must already be encrypted client-side by the sender. The server stores it as an opaque string and never sees the decryption key. The stash will be sent to the recipient email at the scheduled time via AWS SES.
+
+docs: |-
+
+  scheduledAt must be a valid future ISO 8601 date. Invalid dates return 422 date_format_incorrect; past dates return 422 scheduled_at_must_be_future. Set the request date to a future instant before running. Public reading before that date is still allowed.

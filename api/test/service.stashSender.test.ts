@@ -1,181 +1,197 @@
 import { expect } from "chai";
 import sinon from "sinon";
-
+import { randomUUID } from "node:crypto";
+import { EntityManager } from "typeorm";
 import StashSenderService from "#service/StashSenderService.js";
-import StashService from "#service/StashService.js";
 import EmailService from "#service/EmailService.js";
 import LogService from "#service/LogService.js";
 import Stash from "#model/Stash.js";
+import User from "#model/User.js";
+import SendLog from "#model/SendLog.js";
 import config from "worker/src/config/config.js";
 
 /**
- * Builds a minimal, valid `Stash` object for use in these tests.
- * @param overrides Fields to override on the built stash
- * @returns A `Stash`-shaped object
+ * Tests the sequential sender with real PostgreSQL transactions and a stubbed mail transport.
+ * @returns Nothing
  */
-function buildStash(overrides: Partial<Stash> = {}): Stash {
-  return {
-    id: 1,
-    to: "recipient@example.com",
-    body: "encrypted-body",
-    isSent: false,
-    lockedAt: new Date(),
-    publicAccessToken: "token1234567890abcd",
-    scheduledAt: new Date(Date.now() - 1000),
-    user: { name: "Jordan Smith" },
-    ...overrides,
-  } as Stash;
-}
+function senderSuite() {
+  const repo = globalThis.appDataSource.getRepository(Stash);
+  const logs = globalThis.appDataSource.getRepository(SendLog);
+  let owner: User;
+  let stash: Stash;
+  let sender: StashSenderService;
+  let email: sinon.SinonStubbedInstance<EmailService>;
+  let logger: sinon.SinonStubbedInstance<LogService>;
+  const createdIds: number[] = [];
 
-describe("Stash sender service", () => {
-  let stashServiceStub: sinon.SinonStubbedInstance<StashService>;
-  let emailServiceStub: sinon.SinonStubbedInstance<EmailService>;
-  let loggerStub: sinon.SinonStubbedInstance<LogService>;
-  let stashSenderService: StashSenderService;
-
-  beforeEach(/**
-   * Creates isolated service dependencies for each test.
-   * @returns Nothing
-   */ () => {
-      stashServiceStub = sinon.createStubInstance(StashService);
-      emailServiceStub = sinon.createStubInstance(EmailService);
-      loggerStub = sinon.createStubInstance(LogService);
-      stashSenderService = new StashSenderService(
-      stashServiceStub as unknown as StashService,
-      emailServiceStub as unknown as EmailService,
-      loggerStub,
-      );
+  /**
+   * Creates a due message and records it for cleanup.
+   * @param overrides Optional field overrides
+   * @returns Persisted message
+   */
+  async function createStash(overrides: Partial<Stash> = {}): Promise<Stash> {
+    const created = await repo.save({
+      user: owner, to: "recipient@example.com", body: "ciphertext", scheduledAt: new Date(0),
+      publicAccessToken: randomUUID().replaceAll("-", "").slice(0, 20), ...overrides,
     });
+    createdIds.push(created.id);
+    return created;
+  }
 
-  afterEach(() => {
+  before(/** @returns Nothing */ async() => {
+    owner = await globalThis.appDataSource.getRepository(User).save({
+      name: "Jordan Smith", email: `${randomUUID()}@example.com`, password: "test-only",
+    });
+  });
+  beforeEach(/** @returns Nothing */ async() => {
+    email = sinon.createStubInstance(EmailService);
+    email.send.resolves("test-message-id");
+    logger = sinon.createStubInstance(LogService);
+    sender = new StashSenderService(repo, email, logger);
+    stash = await createStash();
+  });
+  afterEach(/** @returns Nothing */ async() => {
     sinon.restore();
+    for (const id of createdIds.splice(0)) {
+      await logs.delete({ stash: { id } });
+      await repo.delete(id);
+    }
+  });
+  after(/** @returns Nothing */ async() => {
+    await globalThis.appDataSource.getRepository(User).delete(owner.id);
   });
 
-  describe("recipient routing", 
-    function() {
-      const cases = [
-        { env: "PROD", recipient: "recipient@example.com" },
-        { env: "DEV", recipient: "ukaoneseven@gmail.com" },
-        { env: "prod", recipient: "ukaoneseven@gmail.com" },
-        { env: "production", recipient: "ukaoneseven@gmail.com" },
-        { env: " PROD ", recipient: "ukaoneseven@gmail.com" },
-        { env: "", recipient: "ukaoneseven@gmail.com" },
-        { env: undefined, recipient: "ukaoneseven@gmail.com" },
-      ];
+  for (const environment of ["PROD", "DEV", "prod", "production", " PROD ", "", undefined]) {
+    it(`routes recipient correctly for ENV=${JSON.stringify(environment)}`, /** @returns Nothing */ async() => {
+      sinon.stub(config, "environment").value(environment);
+      await sender.processDueStashes();
+      expect(email.send.calledOnce).to.equal(true);
+      const recipient = environment === "PROD" ? stash.to : "ukaoneseven@gmail.com";
+      expect(email.send.firstCall.args[0].to).to.equal(recipient);
+      expect(logger.info.calledOnceWith(
+        `Sent stash ${stash.id} to ${recipient} (messageId=test-message-id).`,
+      )).to.equal(true);
+    });
+  }
 
-      for (const { env, recipient } of cases) {
-        it(`should send to ${recipient} when ENV is ${JSON.stringify(env)}`, 
-          async function() {
-            sinon.stub(config, "environment").value(env);
-            const stash = buildStash();
-            stashServiceStub.claimDueStashes.resolves([stash]);
-            emailServiceStub.send.resolves("message-id-1");
+  it("records the log and sent state, and does not send the message again", /** @returns Nothing */ async() => {
+    const before = Date.now();
+    await sender.processDueStashes();
+    const persisted = await repo.findOneByOrFail({ id: stash.id });
+    expect(persisted.isSent).to.equal(true);
+    expect(persisted.sentAt.getTime()).to.be.at.least(before);
+    expect((await logs.findOneByOrFail({ stash: { id: stash.id } })).messageId).to.equal("test-message-id");
+    expect(logger.info.calledOnceWith(
+      `Sent stash ${stash.id} to ${email.send.firstCall.args[0].to} (messageId=test-message-id).`,
+    )).to.equal(true);
+    await sender.processDueStashes();
+    expect(email.send.calledOnce).to.equal(true);
+  });
 
-            await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
+  it("does not select a future message", /** @returns Nothing */ async() => {
+    await repo.update(stash.id, { scheduledAt: new Date(Date.now() + 86400000) });
+    await sender.processDueStashes();
+    expect(email.send.called).to.equal(false);
+  });
 
-            expect(emailServiceStub.send.calledOnce).to.be.true;
-            expect(emailServiceStub.send.firstCall.args[0].to).to.equal(recipient);
-            expect(stashServiceStub.log.firstCall.args[1].to).to.equal(recipient);
-            expect(loggerStub.info.lastCall.args[0])
-              .to.equal(`Sent stash ${stash.id} to ${recipient} (messageId=message-id-1).`);
-          });
+  it("processes legacy null isSent values", /** @returns Nothing */ async() => {
+    await repo.update(stash.id, { isSent: null });
+    await sender.processDueStashes();
+    expect(email.send.calledOnce).to.equal(true);
+    expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(true);
+  });
+
+  it("commits each message before sending the next", /** @returns Nothing */ async() => {
+    const second = await createStash({ scheduledAt: new Date(1) });
+    email.send.onSecondCall().callsFake(/** @returns Transport message ID */ async() => {
+      expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(true);
+      expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(1);
+      return "second-message-id";
+    });
+    await sender.processDueStashes();
+    expect(email.send.calledTwice).to.equal(true);
+    expect((await repo.findOneByOrFail({ id: second.id })).isSent).to.equal(true);
+  });
+
+  for (const throws of [false, true]) {
+    it(`rolls back a transport failure and retries on the next pass (throws=${throws})`,
+      /** @returns Nothing */ async() => {
+        const second = await createStash({ scheduledAt: new Date(1) });
+        if (throws) {
+          email.send.onFirstCall().rejects(new Error("Transport failure"));
+        } else {
+          email.send.onFirstCall().resolves(null);
+        }
+        await sender.processDueStashes();
+        expect(email.send.calledOnce).to.equal(true);
+        expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(false);
+        expect((await repo.findOneByOrFail({ id: second.id })).isSent).to.equal(false);
+        expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(0);
+        expect(logger.error.calledOnce).to.equal(true);
+        await sender.processDueStashes();
+        expect(email.send.callCount).to.equal(3);
+        expect((await repo.findOneByOrFail({ id: second.id })).isSent).to.equal(true);
+      });
+  }
+
+  for (const failure of ["log", "update", "missing update"] as const) {
+    it(`rolls back delivery state when ${failure} fails`, /** @returns Nothing */ async() => {
+      let write: sinon.SinonStub;
+      if (failure === "log") {
+        write = sinon.stub(EntityManager.prototype, "insert").rejects(new Error("Log insert failed"));
+      } else {
+        const update = sinon.stub(EntityManager.prototype, "update");
+        write = update;
+        if (failure === "update") {
+          update.rejects(new Error("Sent update failed"));
+        } else {
+          update.resolves({ affected: 0, raw: [], generatedMaps: [] });
+        }
       }
+      await sender.processDueStashes();
+      expect(email.send.calledOnce).to.equal(true);
+      expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(false);
+      expect((await repo.findOneByOrFail({ id: stash.id })).sentAt).to.equal(null);
+      expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(0);
+      expect(logger.error.calledOnce).to.equal(true);
+      expect(logger.info.called).to.equal(false);
+      write.restore();
+      await sender.processDueStashes();
+      expect(email.send.calledTwice).to.equal(true);
+      expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(true);
     });
+  }
 
-  describe("processDueStashes", () => {
-    it("should do nothing when there are no due stashes", async() => {
-      stashServiceStub.claimDueStashes.resolves([]);
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(emailServiceStub.send.called).to.be.false;
-    });
-
-    it("should do nothing when claiming fails", async() => {
-      stashServiceStub.claimDueStashes.resolves(null);
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(emailServiceStub.send.called).to.be.false;
-    });
-
-    it("should send, log and mark sent on a successful claim", async() => {
-      const stash = buildStash();
-      stashServiceStub.claimDueStashes.resolves([stash]);
-      emailServiceStub.send.resolves("message-id-1");
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(emailServiceStub.send.calledOnce).to.be.true;
-      expect(stashServiceStub.log.calledOnceWith(stash.id, sinon.match.object, "message-id-1")).to.be.true;
-      expect(stashServiceStub.markStashSent.calledOnceWith(stash.id)).to.be.true;
-      expect(stashServiceStub.releaseStashLock.called).to.be.false;
-    });
-
-    it("should release the lock without marking sent when the send fails", async() => {
-      const stash = buildStash();
-      stashServiceStub.claimDueStashes.resolves([stash]);
-      emailServiceStub.send.resolves(null);
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id)).to.be.true;
-      expect(stashServiceStub.log.called).to.be.false;
-      expect(stashServiceStub.markStashSent.called).to.be.false;
-    });
-
-    it("should release the lock when sending throws unexpectedly", async() => {
-      const stash = buildStash();
-      stashServiceStub.claimDueStashes.resolves([stash]);
-      emailServiceStub.send.rejects(new Error("SES error"));
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(stashServiceStub.releaseStashLock.calledOnceWith(stash.id)).to.be.true;
-      expect(stashServiceStub.markStashSent.called).to.be.false;
-    });
-
-    it("should isolate failures so one bad stash does not stop the rest of the batch", async() => {
-      const failingStash = buildStash({ id: 1 });
-      const succeedingStash = buildStash({ id: 2 });
-      stashServiceStub.claimDueStashes.resolves([failingStash, succeedingStash]);
-      emailServiceStub.send.onFirstCall().rejects(new Error("SES error"));
-      emailServiceStub.send.onSecondCall().resolves("message-id-2");
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      expect(stashServiceStub.releaseStashLock.calledOnceWith(failingStash.id)).to.be.true;
-      expect(stashServiceStub.markStashSent.calledOnceWith(succeedingStash.id)).to.be.true;
-    });
-
-    it("should render the notification email from the stash's sender name and unlock link", async() => {
-      const stash = buildStash({ user: { name: "Jordan Smith" } as Stash["user"] });
-      stashServiceStub.claimDueStashes.resolves([stash]);
-      emailServiceStub.send.resolves("message-id-1");
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      const mailOptions = emailServiceStub.send.firstCall.args[0];
-      const expectedUnlockUrl = `${config.readMessageUrl}/${stash.publicAccessToken}`;
-
-      expect(mailOptions.subject).to.equal("A message from Jordan Smith is ready for you");
-      expect(mailOptions.html).to.include("Jordan Smith");
-      expect(mailOptions.html).to.include(expectedUnlockUrl);
-      expect(mailOptions.html).to.include(config.faqUrl);
-      expect(mailOptions.text).to.include(expectedUnlockUrl);
-    });
-
-    it("should HTML-escape the sender's name so it cannot inject markup into the email", async() => {
-      const stash = buildStash({ user: { name: "<img src=x onerror=alert(1)>" } as Stash["user"] });
-      stashServiceStub.claimDueStashes.resolves([stash]);
-      emailServiceStub.send.resolves("message-id-1");
-
-      await stashSenderService.processDueStashes(25, 5 * 60 * 1000);
-
-      const mailOptions = emailServiceStub.send.firstCall.args[0];
-
-      expect(mailOptions.html).to.not.include("<img src=x onerror=alert(1)>");
-      expect(mailOptions.html).to.include("&lt;img src=x onerror=alert(1)&gt;");
-    });
+  it("logs a selection failure and allows a later pass", /** @returns Nothing */ async() => {
+    const transaction = sinon.stub(repo.manager, "transaction").rejects(new Error("Database unavailable"));
+    await sender.processDueStashes();
+    expect(email.send.called).to.equal(false);
+    expect(logger.error.calledOnce).to.equal(true);
+    transaction.restore();
+    await sender.processDueStashes();
+    expect(email.send.calledOnce).to.equal(true);
   });
-});
+
+  it("renders the sender name and unlock link", /** @returns Nothing */ async() => {
+    await sender.processDueStashes();
+    const options = email.send.firstCall.args[0];
+    expect(options.subject).to.equal("A message from Jordan Smith is ready for you");
+    expect(options.html).to.include("Jordan Smith");
+    expect(options.html).to.include(`${config.readMessageUrl}/${stash.publicAccessToken}`);
+    expect(options.html).to.include(config.faqUrl);
+    expect(options.text).to.include(`${config.readMessageUrl}/${stash.publicAccessToken}`);
+  });
+
+  it("escapes HTML in the sender name", /** @returns Nothing */ async() => {
+    await globalThis.appDataSource.getRepository(User).update(owner.id, { name: "<img src=x onerror=alert(1)>" });
+    try {
+      await sender.processDueStashes();
+      const html = email.send.firstCall.args[0].html;
+      expect(html).not.to.include("<img src=x onerror=alert(1)>");
+      expect(html).to.include("&lt;img src=x onerror=alert(1)&gt;");
+    } finally {
+      await globalThis.appDataSource.getRepository(User).update(owner.id, { name: owner.name });
+    }
+  });
+}
+describe("Sequential stash sender", senderSuite);
