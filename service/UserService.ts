@@ -119,7 +119,19 @@ export default class UserService {
     session.previousRefreshTokenHash = session.refreshTokenHash;
     session.previousTokenExpiresAt = graceExpiresAt;
     session.refreshTokenHash = crypto.createHash("sha256").update(newRaw).digest("hex");
-    await this.sessionRepository.save(session);
+    // A password change or logout may have revoked the session after it was read.
+    // Update only rotation fields so a stale snapshot cannot restore revokedAt.
+    const result = await this.sessionRepository.update(
+      { id: session.id, revokedAt: IsNull() },
+      {
+        previousRefreshTokenHash: session.previousRefreshTokenHash,
+        previousTokenExpiresAt: session.previousTokenExpiresAt,
+        refreshTokenHash: session.refreshTokenHash,
+      },
+    );
+    if (result.affected !== 1) {
+      return null;
+    }
 
     return { user: session.user, session, raw: newRaw };
   }
