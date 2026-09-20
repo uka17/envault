@@ -3,7 +3,6 @@ import "reflect-metadata";
 import { container } from "tsyringe";
 import express, { Express } from "express";
 import session from "express-session";
-import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import chalk from "chalk";

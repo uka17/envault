@@ -11,6 +11,7 @@
   },
   "main": "index.js",
   "scripts": {
+    "lint": "eslint .",
     "test:api": "npm run build && c8 --exclude=worker --reporter=html --reporter=text --report-dir=api/coverage mocha --file dist/api/test/setup.js dist/api/test/**/*.test.js",
     "test:worker": "npm run build && c8 --exclude=api --reporter=html --reporter=text --report-dir=worker/coverage mocha --file dist/worker/test/setup.js dist/worker/test/**/*.test.js",
     "mtest:api": "npm run build && mocha --file dist/api/test/setup.js dist/api/test/**/*.test.js",
