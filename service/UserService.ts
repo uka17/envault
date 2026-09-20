@@ -230,7 +230,8 @@ export default class UserService {
   }
 
   /**
-   * Changes a user's password after verifying the current password.
+   * Changes a user's password after verifying the current password and revokes all of the
+   * user's sessions (including the current one), so every access and refresh token stops working.
    * @param userId User ID
    * @param currentPassword Plain-text current password to verify
    * @param newPassword Plain-text new password to set
@@ -252,6 +253,7 @@ export default class UserService {
       password: this.getPasswordHash(newPassword),
       modifiedOn: new Date(),
     });
+    await this.revokeAllSessions(userId);
     return true;
   }
 

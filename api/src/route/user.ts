@@ -226,8 +226,13 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Change user password' */
     /* #swagger.tags = ['User'] */
     /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.description = 'Changes the password and revokes all sessions of the user, including the current one. Access and refresh tokens stop working immediately, so the next protected request returns 401 and the user has to log in again.' */
     /* #swagger.responses[200] = {
           description: 'Password changed successfully'
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid JWT token, or its session is revoked or expired',
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[422] = {
           description: 'Validation error or incorrect current password',
@@ -246,6 +251,10 @@ export default function(app: express.Router) {
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.responses[200] = {
           description: 'Logout successful'
+    } */
+    /* #swagger.responses[401] = {
+          description: 'Missing or invalid JWT token, or its session is revoked or expired',
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     userController.logout.bind(userController),
   );

@@ -30,5 +30,22 @@ examples:
       body:
         type: text
         data: ""
+  - name: 401 Response
+    description: Missing or invalid JWT token, or its session is revoked or expired
+    request:
+      url: "{{baseUrl}}/api/v1/users/logout"
+      method: POST
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "incorrect_token"
+          }
 
-docs: Revokes the refresh token and clears the cookie. Requires a valid access token.
+docs: Revokes the session, so its access and refresh tokens stop working immediately, and clears the cookie. Requires a valid access token.

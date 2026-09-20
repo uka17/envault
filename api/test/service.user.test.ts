@@ -275,5 +275,26 @@ describe("User service", () => {
       const updated = await userRepositoryStub.findOne({ where: { id: passwordUser.id } });
       expect(bcrypt.compareSync(newPassword, updated!.password)).to.be.true;
     });
+
+    it("should revoke every active session of the user when the password is changed", async() => {
+      const { sessionId: first } = await userService.createRefreshToken(passwordUser);
+      const { sessionId: second } = await userService.createRefreshToken(passwordUser);
+      const currentPassword = "NewPass1";
+
+      await userService.updatePassword(passwordUser.id, currentPassword, "NewPass2");
+
+      const sessions = await sessionRepositoryStub.find({ where: [{ id: first }, { id: second }] });
+      expect(sessions).to.have.length(2);
+      sessions.forEach((session) => expect(session.revokedAt).to.not.be.null);
+    });
+
+    it("should keep sessions active when the current password is wrong", async() => {
+      const { sessionId } = await userService.createRefreshToken(passwordUser);
+
+      await userService.updatePassword(passwordUser.id, "WrongPassword1", "NewPass3");
+
+      const session = await sessionRepositoryStub.findOne({ where: { id: sessionId } });
+      expect(session!.revokedAt).to.be.null;
+    });
   });
 });

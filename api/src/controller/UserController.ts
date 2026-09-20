@@ -25,13 +25,20 @@ function normalizeIp(ip: string | undefined): string | undefined {
   return ip?.replace(/^::ffff:/, "");
 }
 
-const REFRESH_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
-  maxAge: config.JWTRefreshMaxAgeDays * 24 * 60 * 60 * 1000,
-  path: "/",
-};
+/**
+ * Build options of the refresh token cookie. `secure` is evaluated on each call and follows the
+ * runtime `ENV` from `.env` (`PROD` only), so the same image works in every environment
+ * @returns Cookie options
+ */
+export function getRefreshCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: config.environment === "PROD",
+    sameSite: "strict" as const,
+    maxAge: config.JWTRefreshMaxAgeDays * 24 * 60 * 60 * 1000,
+    path: "/",
+  };
+}
 
 @injectable()
 export default class UserController {
@@ -104,7 +111,7 @@ export default class UserController {
               ip: normalizeIp(req.ip),
             });
             const accessToken = this.userService.createToken(passportUser, sessionId);
-            res.cookie(REFRESH_COOKIE, raw, REFRESH_COOKIE_OPTIONS);
+            res.cookie(REFRESH_COOKIE, raw, getRefreshCookieOptions());
             return res.json({ token: accessToken });
           }
 
@@ -136,7 +143,7 @@ export default class UserController {
       }
 
       const accessToken = this.userService.createToken(result.user, result.session.id);
-      res.cookie(REFRESH_COOKIE, result.raw, REFRESH_COOKIE_OPTIONS);
+      res.cookie(REFRESH_COOKIE, result.raw, getRefreshCookieOptions());
       return res.json({ token: accessToken });
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
@@ -196,6 +203,7 @@ export default class UserController {
       if (!success) {
         throw ApiError.fromCode(CODES.API_REQUEST_VALIDATION_ERROR, "incorrect_current_password");
       }
+      res.clearCookie(REFRESH_COOKIE, { path: "/" });
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
