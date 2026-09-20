@@ -296,5 +296,26 @@ describe("User service", () => {
       const session = await sessionRepositoryStub.findOne({ where: { id: sessionId } });
       expect(session!.revokedAt).to.be.null;
     });
+
+    it("should roll back the password change when the revocation fails", async() => {
+      const { sessionId } = await userService.createRefreshToken(passwordUser);
+      const revokeStub = sinon.stub(userService, "revokeAllSessions").rejects(new Error("connection lost"));
+
+      let error: Error | undefined;
+      try {
+        await userService.updatePassword(passwordUser.id, "NewPass2", "NewPass4");
+      } catch (e) {
+        error = e as Error;
+      } finally {
+        revokeStub.restore();
+      }
+
+      expect(error?.message).to.equal("connection lost");
+      const stored = await userRepositoryStub.findOne({ where: { id: passwordUser.id } });
+      expect(bcrypt.compareSync("NewPass2", stored!.password)).to.be.true;
+      expect(bcrypt.compareSync("NewPass4", stored!.password)).to.be.false;
+      const session = await sessionRepositoryStub.findOne({ where: { id: sessionId } });
+      expect(session!.revokedAt).to.be.null;
+    });
   });
 });
