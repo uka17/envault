@@ -1111,10 +1111,25 @@
           "User"
         ],
         "summary": "Change user password",
-        "description": "",
+        "description": "Changes the password and revokes all sessions, including the current one. The next request returns 401.",
         "responses": {
           "200": {
             "description": "Password changed successfully"
+          },
+          "401": {
+            "description": "Missing or invalid JWT token, or its session is revoked or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation error or incorrect current password",
@@ -1149,6 +1164,21 @@
         "responses": {
           "200": {
             "description": "Logout successful"
+          },
+          "401": {
+            "description": "Missing or invalid JWT token, or its session is revoked or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [

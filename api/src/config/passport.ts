@@ -2,7 +2,8 @@ import passport from "passport";
 import local from "passport-local";
 
 import User from "../../../model/User.js";
-import { DataSource } from "typeorm";
+import Session from "../../../model/Session.js";
+import { DataSource, IsNull, MoreThan } from "typeorm";
 import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 
 import bcrypt from "bcryptjs";
@@ -18,6 +19,7 @@ export default function(
   jwtSecret: string,
 ) {
   const userRepository = appDataSource.getRepository(User);
+  const sessionRepository = appDataSource.getRepository(Session);
   // Set up Local strategy
   passport.use(
     new local.Strategy(
@@ -53,16 +55,37 @@ export default function(
         secretOrKey: jwtSecret,
       },
       async(payload, done) => {
-        const user = await userRepository.findOneBy({
-          id: payload.sub,
-        });
-        /* istanbul ignore next */
-        if (!user) {
-          return done(null, false);
+        try {
+          const user = await userRepository.findOneBy({
+            id: payload.sub,
+          });
+          /* istanbul ignore next */
+          if (!user) {
+            return done(null, false);
+          }
+          // Tokens without `sid` (issued before session binding) and tokens of revoked, expired
+          // or foreign sessions are rejected, so revocation takes effect immediately
+          if (!payload.sid) {
+            return done(null, false);
+          }
+          const session = await sessionRepository.findOne({
+            where: {
+              id: payload.sid,
+              user: { id: payload.sub },
+              revokedAt: IsNull(),
+              expiresAt: MoreThan(new Date()),
+            },
+          });
+          if (!session) {
+            return done(null, false);
+          }
+          //This is jsut to avoid creation of seprate object where `sessionID` property added to `User`
+          (user as User & { sessionId?: number }).sessionId = session.id;
+          return done(null, user);
+        } catch (error) {
+          // Pass database errors to Express instead of leaving the request hanging
+          return done(error);
         }
-        //This is jsut to avoid creation of seprate object where `sessionID` property added to `User`
-        (user as User & { sessionId?: number }).sessionId = payload.sid;
-        return done(null, user);
       },
     ),
   );

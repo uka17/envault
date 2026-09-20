@@ -59,6 +59,7 @@ ENV=
 LOG_LEVEL=
 SHOW_LOGS=
 SUBNET=
+BASE_URL=
 
 # Logging (Grafana Cloud Loki, optional - logs are only shipped when LOKI_HOST is set)
 LOKI_HOST=

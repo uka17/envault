@@ -94,6 +94,54 @@ describe("User service", () => {
       expect(found).to.be.null;
     });
 
+    for (const usePreviousToken of [false, true]) {
+      const tokenKind = usePreviousToken ? "previous" : "current";
+      it(`should not rotate a ${tokenKind} token when a password change revokes the session after it is read`,
+        /**
+         * Reproduce a password change committing between the refresh read and write.
+         * @returns Resolves when the stale refresh cannot undo the revocation.
+         */
+        async() => {
+          const password = "OriginalPass1";
+          const user = await userRepositoryStub.save(Object.assign(new User(), {
+            email: `refresh_race_${tokenKind}_${Date.now()}@test.com`,
+            password: userService.getPasswordHash(password),
+            name: "RefreshRaceUser",
+          }));
+          const { raw, sessionId } = await userService.createRefreshToken(user);
+          if (usePreviousToken) {
+            expect(await userService.verifyRefreshToken(raw)).to.not.be.null;
+          }
+          const before = await sessionRepositoryStub.findOneByOrFail({ id: sessionId });
+          const findOne = sessionRepositoryStub.findOne.bind(sessionRepositoryStub);
+          const readStub = sinon.stub(sessionRepositoryStub, "findOne").callsFake(
+            /**
+             * Return a stale snapshot after committing the password change and revocation.
+             * @param options Session lookup options.
+             * @returns The session as it was before the password change.
+             */
+            async(options) => {
+              const stale = await findOne(options);
+              expect(stale).to.not.be.null;
+              expect(await userService.updatePassword(user.id, password, "NewPass1")).to.be.true;
+              return stale;
+            },
+          );
+          try {
+            expect(await userService.verifyRefreshToken(raw)).to.be.null;
+          } finally {
+            readStub.restore();
+          }
+
+          const stored = await sessionRepositoryStub.findOneByOrFail({ id: sessionId });
+          expect(stored.revokedAt).to.not.be.null;
+          expect(stored.refreshTokenHash).to.equal(before.refreshTokenHash);
+          expect(stored.previousRefreshTokenHash).to.equal(before.previousRefreshTokenHash);
+          expect(stored.previousTokenExpiresAt).to.deep.equal(before.previousTokenExpiresAt);
+          expect(await userService.verifyRefreshToken(raw)).to.be.null;
+        });
+    }
+
     it("revokeRefreshToken should invalidate the session immediately", async() => {
       const { raw, sessionId } = await userService.createRefreshToken(testUser);
       await userService.revokeRefreshToken(sessionId);
@@ -274,6 +322,48 @@ describe("User service", () => {
       // Verify new password is stored
       const updated = await userRepositoryStub.findOne({ where: { id: passwordUser.id } });
       expect(bcrypt.compareSync(newPassword, updated!.password)).to.be.true;
+    });
+
+    it("should revoke every active session of the user when the password is changed", async() => {
+      const { sessionId: first } = await userService.createRefreshToken(passwordUser);
+      const { sessionId: second } = await userService.createRefreshToken(passwordUser);
+      const currentPassword = "NewPass1";
+
+      await userService.updatePassword(passwordUser.id, currentPassword, "NewPass2");
+
+      const sessions = await sessionRepositoryStub.find({ where: [{ id: first }, { id: second }] });
+      expect(sessions).to.have.length(2);
+      sessions.forEach((session) => expect(session.revokedAt).to.not.be.null);
+    });
+
+    it("should keep sessions active when the current password is wrong", async() => {
+      const { sessionId } = await userService.createRefreshToken(passwordUser);
+
+      await userService.updatePassword(passwordUser.id, "WrongPassword1", "NewPass3");
+
+      const session = await sessionRepositoryStub.findOne({ where: { id: sessionId } });
+      expect(session!.revokedAt).to.be.null;
+    });
+
+    it("should roll back the password change when the revocation fails", async() => {
+      const { sessionId } = await userService.createRefreshToken(passwordUser);
+      const revokeStub = sinon.stub(userService, "revokeAllSessions").rejects(new Error("connection lost"));
+
+      let error: Error | undefined;
+      try {
+        await userService.updatePassword(passwordUser.id, "NewPass2", "NewPass4");
+      } catch (e) {
+        error = e as Error;
+      } finally {
+        revokeStub.restore();
+      }
+
+      expect(error?.message).to.equal("connection lost");
+      const stored = await userRepositoryStub.findOne({ where: { id: passwordUser.id } });
+      expect(bcrypt.compareSync("NewPass2", stored!.password)).to.be.true;
+      expect(bcrypt.compareSync("NewPass4", stored!.password)).to.be.false;
+      const session = await sessionRepositoryStub.findOne({ where: { id: sessionId } });
+      expect(session!.revokedAt).to.be.null;
     });
   });
 });

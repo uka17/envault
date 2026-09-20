@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { injectable, inject } from "tsyringe";
-import { IsNull, MoreThan, Not, Repository } from "typeorm";
+import { EntityManager, IsNull, MoreThan, Not, Repository } from "typeorm";
 
 import User from "#model/User.js";
 import Session from "#model/Session.js";
@@ -119,7 +119,19 @@ export default class UserService {
     session.previousRefreshTokenHash = session.refreshTokenHash;
     session.previousTokenExpiresAt = graceExpiresAt;
     session.refreshTokenHash = crypto.createHash("sha256").update(newRaw).digest("hex");
-    await this.sessionRepository.save(session);
+    // A password change or logout may have revoked the session after it was read.
+    // Update only rotation fields so a stale snapshot cannot restore revokedAt.
+    const result = await this.sessionRepository.update(
+      { id: session.id, revokedAt: IsNull() },
+      {
+        previousRefreshTokenHash: session.previousRefreshTokenHash,
+        previousTokenExpiresAt: session.previousTokenExpiresAt,
+        refreshTokenHash: session.refreshTokenHash,
+      },
+    );
+    if (result.affected !== 1) {
+      return null;
+    }
 
     return { user: session.user, session, raw: newRaw };
   }
@@ -135,9 +147,14 @@ export default class UserService {
   /**
    * Immediately revoke every active session for a user (logout from all devices)
    * @param userId User ID
+   * @param manager Optional entity manager, to run the revocation inside an existing transaction
    */
-  public async revokeAllSessions(userId: number): Promise<void> {
-    await this.sessionRepository.update(
+  public async revokeAllSessions(
+    userId: number,
+    manager: EntityManager = this.sessionRepository.manager,
+  ): Promise<void> {
+    await manager.update(
+      Session,
       { user: { id: userId }, revokedAt: IsNull() },
       { revokedAt: new Date() },
     );
@@ -230,7 +247,10 @@ export default class UserService {
   }
 
   /**
-   * Changes a user's password after verifying the current password.
+   * Changes a user's password after verifying the current password and revokes all of the
+   * user's sessions (including the current one), so every access and refresh token stops working.
+   * The password update and the revocation run in one transaction, so a failed revocation
+   * rolls back the password change.
    * @param userId User ID
    * @param currentPassword Plain-text current password to verify
    * @param newPassword Plain-text new password to set
@@ -248,9 +268,10 @@ export default class UserService {
     if (!bcrypt.compareSync(currentPassword, user.password)) {
       return false;
     }
-    await this.userRepository.update(userId, {
-      password: this.getPasswordHash(newPassword),
-      modifiedOn: new Date(),
+    const passwordHash = this.getPasswordHash(newPassword);
+    await this.userRepository.manager.transaction(async(manager) => {
+      await manager.update(User, userId, { password: passwordHash, modifiedOn: new Date() });
+      await this.revokeAllSessions(userId, manager);
     });
     return true;
   }

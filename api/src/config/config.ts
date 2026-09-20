@@ -49,7 +49,7 @@ export default {
     windowMs: 15 * 60 * 1000,
     max: 100,
   },
-  JWTAccessMaxAgeMinutes: 15000,
+  JWTAccessMaxAgeMinutes: 15,
   JWTRefreshMaxAgeDays: 30,
   JWTRefreshGraceMinutes: 1,
   refreshCookieName: "envault_refresh_token",
