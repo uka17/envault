@@ -2,6 +2,7 @@ import * as os from "os";
 
 /* istanbul ignore next */
 export default {
+  environment: process.env.ENV,
   dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@` +
     `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   dbName: process.env.DB_NAME || "",
