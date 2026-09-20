@@ -7,8 +7,11 @@ import getAppDataSource from "#common/dataSource.js";
 import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 import initDI from "#di/container.js";
+import { validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
 
 import StashSenderService from "#service/StashSenderService.js";
+
+validateRuntimeConfigOrExit("worker");
 
 /**
  * Initializes the worker process: sets up the database connection and DI

@@ -7,6 +7,7 @@ export default {
   dbURL: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}` +
     `@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   dbName: process.env.DB_NAME || "",
+  awsRegion: process.env.AWS_REGION || "",
   testDbURL: `postgres://${process.env.TEST_DB_USER}:${process.env.TEST_DB_PASSWORD}` + 
     `@${process.env.TEST_DB_HOST}:${process.env.TEST_DB_PORT}/${process.env.TEST_DB_NAME}`,
   testDbName: process.env.TEST_DB_NAME || "",

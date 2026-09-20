@@ -61,6 +61,11 @@ SHOW_LOGS=
 SUBNET=
 BASE_URL=
 
+# Mail (AWS SES). AWS_REGION is always required, keys are required when ENV=PROD
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
 # Logging (Grafana Cloud Loki, optional - logs are only shipped when LOKI_HOST is set)
 LOKI_HOST=
 LOKI_USER=
