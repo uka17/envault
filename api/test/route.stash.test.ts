@@ -7,6 +7,7 @@ import { CODES } from "#common/constants.js";
 import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 import { TOKENS } from "#di/tokens.js";
 import Stash from "#model/Stash.js";
+import Session from "#model/Session.js";
 import StashService from "#service/StashService.js";
 import { registerAndVerifyUser } from "./helpers.js";
 
@@ -222,8 +223,16 @@ describe("Stash Routes", () => {
   });
   describe("GET /api/v1/stashes/:id", () => {
     it("should return a safe 500 when loading the stash fails", async() => {
-      sinon.stub(globalThis.appDataSource.manager, "findOne")
-        .rejects(new Error("postgres://user:password@database"));
+      // Let the session lookup of the JWT strategy through, so the failure happens in stash loading
+      const findOne = globalThis.appDataSource.manager.findOne.bind(globalThis.appDataSource.manager);
+      sinon.stub(globalThis.appDataSource.manager, "findOne").callsFake(
+        (async(entity: unknown, ...args: unknown[]) => {
+          if (entity === Session) {
+            return (findOne as (...a: unknown[]) => Promise<unknown>)(entity, ...args);
+          }
+          throw new Error("postgres://user:password@database");
+        }) as never,
+      );
 
       const response = await request(globalThis.app)
         .get(`/api/v1/stashes/${stash.id}`)

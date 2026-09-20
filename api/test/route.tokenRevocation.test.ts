@@ -156,6 +156,19 @@ describe("Access token revocation", () => {
     });
   });
 
+  describe("database failure during authentication", () => {
+    it("should respond with a safe 500 instead of hanging when the session lookup fails", async() => {
+      const { token } = await login(await createUser());
+      sinon.stub(globalThis.appDataSource.manager, "findOne")
+        .rejects(new Error("postgres://user:password@database"));
+
+      const response = await whoami(token);
+
+      expect(response.status).to.equal(CODES.SERVER_ERROR);
+      expect(JSON.stringify(response.body)).to.not.include("postgres://");
+    });
+  });
+
   describe("revocation takes effect immediately", () => {
     it("should reject access and refresh tokens after logout", async() => {
       const { token, refreshCookie } = await login(await createUser());

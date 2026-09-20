@@ -226,7 +226,7 @@ export default function(app: express.Router) {
     /* #swagger.summary = 'Change user password' */
     /* #swagger.tags = ['User'] */
     /* #swagger.security = [{ "bearerAuth": [] }] */
-    /* #swagger.description = 'Changes the password and revokes all sessions of the user, including the current one. Access and refresh tokens stop working immediately, so the next protected request returns 401 and the user has to log in again.' */
+    /* #swagger.description = 'Changes the password and revokes all sessions, including the current one. The next request returns 401.' */
     /* #swagger.responses[200] = {
           description: 'Password changed successfully'
     } */
