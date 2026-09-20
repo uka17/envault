@@ -21,6 +21,29 @@ env:
   API_JWT_SECRET: test_secret      
 
 jobs:
+  lint_build:
+    name: 🔎 Lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
   test_api:
     name: 🧪 Run tests for API, collect coverage and upload to Codecov  
     runs-on: ubuntu-latest
@@ -159,7 +182,8 @@ jobs:
     name: 📦 Build Docker Images  
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.base_ref == 'master'
-    needs: 
+    needs:
+      - lint_build
       - test_api
       - test_worker
 
@@ -172,14 +196,15 @@ jobs:
 
       - name: Build Docker Images
         run: |
-          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-api:${{ github.sha }} -f Dockerfiles/api .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-worker:${{ github.sha }} -f Dockerfiles/worker .
 
   build_and_push:
     name: 🚢 Build and Push Docker Images  
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: 
+    needs:
+      - lint_build
       - test_api
       - test_worker
 
@@ -198,8 +223,11 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build --build-arg GIT_COMMIT_SHA=$(git rev-parse HEAD) -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-api:${{ github.sha }} -t uka17/envault-api:latest -f Dockerfiles/api .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-worker:${{ github.sha }} -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker push uka17/envault-api:${{ github.sha }}
+          docker push uka17/envault-worker:${{ github.sha }}
+          # TODO(#51 SP6): remove latest, deploy will use SHA tags
           docker push uka17/envault-api:latest
           docker push uka17/envault-worker:latest
 
