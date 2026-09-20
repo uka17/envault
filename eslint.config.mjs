@@ -4,6 +4,9 @@ import chaiFriendlyPlugin from "eslint-plugin-chai-friendly";
 
 export default [
   {
+    ignores: ["**/coverage/**", "**/dist/**", "**/node_modules/**"],
+  },
+  {
     files: ["**/*.ts", "**/*.js"],
     languageOptions: {
       parser: tsParser,
@@ -29,7 +32,7 @@ export default [
       'space-before-function-paren': ['error', 'never'],
       'space-infix-ops': ['error'],
       'brace-style': ['error', '1tbs'],
-      "max-len": ["error", { "code": 120 }],
+      "max-len": ["error", { "code": 120, "ignoreComments": true }],
       "linebreak-style": ["error", "unix"],
       "@typescript-eslint/no-var-requires": "off",
       '@typescript-eslint/no-explicit-any': 'off',
@@ -37,6 +40,5 @@ export default [
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
-    ignores: ["/coverage/**", "**/dist/**", "**/dist/**", "**/node_modules/**"],
   },
 ];

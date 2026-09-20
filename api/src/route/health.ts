@@ -50,5 +50,13 @@ export default function(app: express.Router) {
   });
   //Swagger
   const theme = new SwaggerTheme();
-  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true, swaggerOptions: { url: "/swagger/openapi.json" }, customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK) }));
+  app.use(
+    "/swagger",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument, {
+      explorer: true,
+      swaggerOptions: { url: "/swagger/openapi.json" },
+      customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
+    }),
+  );
 }
