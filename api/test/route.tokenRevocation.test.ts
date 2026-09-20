@@ -86,7 +86,7 @@ describe("Access token revocation", () => {
       const minutesLeft = (exp * 1000 - Date.now()) / 60000;
 
       expect(config.JWTAccessMaxAgeMinutes).to.equal(15);
-      expect(minutesLeft).to.be.within(14, 15);
+      expect(minutesLeft).to.be.closeTo(15, 0.5);
     });
 
     it("should reject a JWT whose exp is in the past", async() => {
