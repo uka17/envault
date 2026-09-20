@@ -8,3 +8,7 @@ coverage:
       default:
         target: 90%
         threshold: 0%
+
+codecov:
+  notify:
+    after_n_builds: 2
