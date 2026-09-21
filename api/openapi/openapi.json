@@ -137,6 +137,295 @@
           }
         }
       }
+    },
+    "/api/v1/users/me": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update user profile",
+        "description": "Name changes immediately. Email starts a pending change; current login and verification remain valid until confirmation. Repeating the pending email sends nothing; submitting the current email cancels the pending change.",
+        "responses": {
+          "200": {
+            "description": "Updated user profile",
+            "schema": {
+              "$ref": "#/definitions/UserResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "user_already_exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          },
+          "429": {
+            "description": "email_change_rate_limited; Retry-After header",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "503": {
+            "description": "email_change_delivery_failed: old login preserved, pending change retained for resend",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserUpdateRequest"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/users/email-change/confirm": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Confirm email change",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Email replaced; all sessions revoked. Log in with the new address.",
+            "schema": {
+              "$ref": "#/definitions/EmptyResponse"
+            }
+          },
+          "401": {
+            "description": "email_change_token_invalid: expired, cancelled, used or unknown token",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "user_already_exists: address was taken; account unchanged",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Invalid token format",
+            "schema": {
+              "$ref": "#/definitions/ValidationErrorResponse"
+            }
+          },
+          "429": {
+            "description": "IP confirmation limit; Retry-After header"
+          }
+        },
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EmailChangeConfirmRequest"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/users/email-change/resend": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Resend pending email change confirmation",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Confirmation sent; previous token invalidated",
+            "schema": {
+              "$ref": "#/definitions/EmptyResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "email_change_not_pending or user_already_exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "429": {
+            "description": "email_change_rate_limited: 60-second cooldown and 3 sends per 15 minutes per user, including address replacements; Retry-After header",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "503": {
+            "description": "email_change_delivery_failed: pending address retained; retry resend after cooldown",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "UserUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "email": {
+          "type": "string",
+          "example": "new@mail.com"
+        }
+      },
+      "xml": {
+        "name": "UserUpdateRequest"
+      }
+    },
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "example": 1
+        },
+        "email": {
+          "type": "string",
+          "example": "john@mail.com"
+        },
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "pendingEmail": {
+          "type": "string",
+          "example": "new@mail.com",
+          "x-nullable": true
+        },
+        "emailVerifiedAt": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "createdOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "modifiedOn": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        }
+      },
+      "xml": {
+        "name": "UserResponse"
+      }
+    },
+    "EmailChangeConfirmRequest": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "example": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      },
+      "required": [
+        "token"
+      ],
+      "xml": {
+        "name": "EmailChangeConfirmRequest"
+      }
+    },
+    "EmptyResponse": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "example": "unauthorized"
+        },
+        "message": {
+          "type": "string",
+          "example": "Unauthorized"
+        }
+      },
+      "xml": {
+        "name": "ErrorResponse"
+      }
+    },
+    "ValidationErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "example": "validation_error"
+        },
+        "message": {
+          "type": "string",
+          "example": "API request validation error"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "example": "email"
+              },
+              "code": {
+                "type": "string",
+                "example": "email_format_incorrect"
+              },
+              "message": {
+                "type": "string",
+                "example": "Has incorrect email format"
+              }
+            }
+          }
+        }
+      },
+      "xml": {
+        "name": "ValidationErrorResponse"
+      }
+    }
+  },
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization"
     }
   }
 }

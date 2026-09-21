@@ -1,0 +1,59 @@
+info:
+  name: Confirm email change
+  type: http
+  seq: 12
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users/email-change/confirm"
+  auth:
+    type: none
+  body:
+    type: json
+    data: |-
+      {
+        "token": "{{emailChangeToken}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Success
+    description: Email replaced and all sessions revoked; log in with the new address.
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/confirm"
+      method: POST
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: '{}'
+  - name: 401 email_change_token_invalid
+    description: Invalid, expired, cancelled or used token
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/confirm"
+      method: POST
+    response:
+      status: 401
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_token_invalid", "message": "Invalid, expired, cancelled or used token", "errors": []}
+  - name: 409 user_already_exists
+    description: New address has been taken
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/confirm"
+      method: POST
+    response:
+      status: 409
+      body:
+        type: json
+        data: |-
+          {"code": "user_already_exists", "message": "New address has been taken", "errors": []}

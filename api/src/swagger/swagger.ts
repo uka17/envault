@@ -24,6 +24,21 @@ const doc = {
       },
     },
   },
+  "@definitions": {
+    EmptyResponse: { type: "object", additionalProperties: false },
+    UserResponse: {
+      type: "object",
+      properties: {
+        id: { type: "integer", example: 1 },
+        email: { type: "string", example: "john@mail.com" },
+        name: { type: "string", example: "John Doe" },
+        pendingEmail: { type: "string", nullable: true, example: "new@mail.com" },
+        emailVerifiedAt: { type: "string", format: "date-time", nullable: true },
+        createdOn: { type: "string", format: "date-time" },
+        modifiedOn: { type: "string", format: "date-time" },
+      },
+    },
+  },
   definitions: {
     // swagger-autogen shorthand: $ prefix = required field, value = example
     UserCreateRequest: {
@@ -41,14 +56,8 @@ const doc = {
     ResendVerificationRequest: {
       $email: "john@mail.com",
     },
-    UserResponse: {
-      id: 1,
-      email: "john@mail.com",
-      name: "John Doe",
-      emailVerifiedAt: "2025-01-01T00:00:00Z",
-      createdOn: "2025-01-01T00:00:00Z",
-      modifiedOn: "2025-01-01T00:00:00Z",
-    },
+    UserUpdateRequest: { name: "John Doe", email: "new@mail.com" },
+    EmailChangeConfirmRequest: { $token: "0123456789abcdef".repeat(4) },
     TokenResponse: {
       token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     },

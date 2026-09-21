@@ -56,6 +56,9 @@ export default class UserValidator {
           .withMessage(apiErrorPayload("name_alphanumeric")),
         body("email")
           .optional()
+          .isString().bail()
+          .isLength({ max: 254 }).bail()
+          .isEmail().withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect"))
           .custom(async(email, { req }) => {
@@ -64,6 +67,10 @@ export default class UserValidator {
               return Promise.reject(apiErrorPayload("user_already_exists"));
             }
           }),
+      ],
+      confirmEmailChange: [
+        body("token").isString().bail().matches(/^[0-9a-f]{64}$/)
+          .withMessage(apiErrorPayload("email_change_token_invalid")),
       ],
       sessionId: [
         param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),

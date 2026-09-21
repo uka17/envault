@@ -621,16 +621,20 @@ describe("User Routes", () => {
       expect(response.body.password).to.be.undefined;
     });
 
-    it("should update email successfully", async() => {
+    it("should request email confirmation without replacing the login address", async() => {
       const newEmail = `${userId()}@test.com`;
 
+      const mail = container.resolve<EmailService>(TOKENS.EmailService);
+      const sendStub = sinon.stub(mail, "send").resolves("test-message-id");
       const response = await request(globalThis.app)
         .patch("/api/v1/users/me")
         .set("Authorization", `Bearer ${token}`)
         .send({ email: newEmail });
 
       expect(response.status).to.equal(CODES.API_OK);
-      expect(response.body.email).to.equal(newEmail);
+      expect(response.body.email).to.equal(userCredentials.email);
+      expect(response.body.pendingEmail).to.equal(newEmail);
+      sendStub.restore();
     });
 
     it("should return 422 for invalid email format", async() => {

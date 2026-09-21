@@ -269,11 +269,11 @@ describe("User service", () => {
       expect(result!.name).to.equal("UpdatedName");
     });
 
-    it("should update email", async() => {
+    it("should ignore email passed at runtime to the name-only method", async() => {
       const newEmail = `updated_${Date.now()}@test.com`;
-      const result = await userService.updateProfile(profileUser.id, { email: newEmail });
+      const result = await userService.updateProfile(profileUser.id, { email: newEmail } as any);
       expect(result).to.not.be.null;
-      expect(result!.email).to.equal(newEmail);
+      expect(result!.email).to.equal(profileUser.email);
     });
 
     it("should return null for a non-existent user id", async() => {

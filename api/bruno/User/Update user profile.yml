@@ -11,6 +11,13 @@ http:
   auth:
     type: bearer
     token: "{{accessToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "John Doe",
+        "email": "new@mail.com"
+      }
 
 settings:
   encodeUrl: true
@@ -19,86 +26,21 @@ settings:
   maxRedirects: 5
 
 examples:
-  - name: 200 Response
-    description: Updated user profile
+  - name: Pending email change
+    description: Old login remains valid. Repeating the pending address sends nothing; use resend. Current email cancels the request.
     request:
       url: "{{baseUrl}}/api/v1/users/me"
       method: PATCH
     response:
       status: 200
       statusText: OK
-      headers:
-        - name: Content-Type
-          value: application/json
       body:
         type: json
         data: |-
           {
             "id": 1,
             "email": "john@mail.com",
+            "pendingEmail": "new@mail.com",
             "name": "John Doe",
-            "createdOn": "2025-01-01T00:00:00Z",
-            "modifiedOn": "2025-01-01T00:00:00Z"
+            "emailVerifiedAt": "2025-01-01T00:00:00Z"
           }
-  - name: 200 Response
-    description: Updated user profile
-    request:
-      url: "{{baseUrl}}/api/v1/users/me"
-      method: PATCH
-    response:
-      status: 200
-      statusText: OK
-      headers:
-        - name: Content-Type
-          value: application/xml
-      body:
-        type: xml
-        data: |-
-          <?xml version="1.0" encoding="UTF-8"?>
-          <root>
-            <id>1</id>
-            <email>john@mail.com</email>
-            <name>John Doe</name>
-            <createdOn>2025-01-01T00:00:00Z</createdOn>
-            <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
-          </root>
-  - name: 422 Response
-    description: Validation error
-    request:
-      url: "{{baseUrl}}/api/v1/users/me"
-      method: PATCH
-    response:
-      status: 422
-      statusText: Unprocessable Entity
-      headers:
-        - name: Content-Type
-          value: application/json
-      body:
-        type: json
-        data: |-
-          {
-            "errors": [
-              {
-                "field": "email",
-                "message": "must be a valid email"
-              }
-            ]
-          }
-  - name: 422 Response
-    description: Validation error
-    request:
-      url: "{{baseUrl}}/api/v1/users/me"
-      method: PATCH
-    response:
-      status: 422
-      statusText: Unprocessable Entity
-      headers:
-        - name: Content-Type
-          value: application/xml
-      body:
-        type: xml
-        data: |-
-          <?xml version="1.0" encoding="UTF-8"?>
-          <root>
-            <errors>[object Object]</errors>
-          </root>

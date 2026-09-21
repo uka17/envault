@@ -1,0 +1,65 @@
+info:
+  name: Resend email change
+  type: http
+  seq: 13
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users/email-change/resend"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Success
+    description: New confirmation sent; previous token invalidated.
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/resend"
+      method: POST
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: '{}'
+  - name: 409 email_change_not_pending
+    description: No pending address
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/resend"
+      method: POST
+    response:
+      status: 409
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_not_pending", "message": "No pending address", "errors": []}
+  - name: 429 email_change_rate_limited
+    description: Retry after the Retry-After header interval
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/resend"
+      method: POST
+    response:
+      status: 429
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_rate_limited", "message": "Retry after the Retry-After header interval", "errors": []}
+  - name: 503 email_change_delivery_failed
+    description: Pending address retained; retry resend after cooldown
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/resend"
+      method: POST
+    response:
+      status: 503
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_delivery_failed", "message": "Pending address retained; retry resend after cooldown", "errors": []}

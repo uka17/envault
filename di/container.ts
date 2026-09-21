@@ -15,6 +15,7 @@ import StashSenderService from "#service/StashSenderService.js";
 import SendLog from "#model/SendLog.js";
 import UserService from "#service/UserService.js";
 import EmailService from "#service/EmailService.js";
+import EmailChangeService from "#service/EmailChangeService.js";
 import EmailVerificationService from "#service/EmailVerificationService.js";
 
 import UserController from "api/src/controller/UserController.js";
@@ -77,6 +78,7 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   container.registerSingleton(TOKENS.StashSenderService, StashSenderService);
   container.registerSingleton(TOKENS.UserService, UserService);
   container.registerSingleton(TOKENS.EmailService, EmailService);
+  container.registerSingleton(TOKENS.EmailChangeService, EmailChangeService);
   container.registerSingleton(TOKENS.EmailVerificationService, EmailVerificationService);
 
   // Register controllers

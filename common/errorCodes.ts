@@ -39,6 +39,10 @@ const API_ERROR_MESSAGES = {
   id_required: "ID is required",
   email_not_verified: "Please verify your email before logging in",
   verification_code_invalid: "This verification code is invalid or has expired",
+  email_change_token_invalid: "Email change token is invalid or expired",
+  email_change_rate_limited: "Too many email change requests",
+  email_change_not_pending: "No email change is pending",
+  email_change_delivery_failed: "Confirmation email could not be sent; please retry later",
   verification_code_required: "Verification code is required",
 } as const;
 
