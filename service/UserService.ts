@@ -73,7 +73,7 @@ export default class UserService {
       const current = await manager.findOne(User, {
         where: { id: user.id }, lock: { mode: "pessimistic_write" },
       });
-      if (!current || current.email !== user.email || current.password !== user.password) {
+      if (!current || current.email !== user.email) {
         throw ApiError.fromCode(401, "incorrect_password_or_email");
       }
       return manager.save(Session, manager.create(Session, {

@@ -82,6 +82,7 @@ export default class EmailChangeService {
       if (data.name !== undefined) {
         user.name = data.name;
       }
+      user.modifiedOn = new Date();
       await manager.save(user);
       return { user, token };
     });
@@ -125,6 +126,7 @@ export default class EmailChangeService {
         }
         user.email = user.pendingEmail;
         user.emailVerifiedAt = new Date();
+        user.modifiedOn = new Date();
         user.pendingEmail = null;
         user.emailChangeTokenHash = null;
         user.emailChangeExpiresAt = null;

@@ -191,6 +191,20 @@ describe("Email change API", () => {
     expect(await userService.verifyRefreshToken(raw)).not.to.be.null;
   });
 
+  it("allows only one account to confirm the same new address concurrently", async() => {
+    const email = address();
+    const other = await users.save(users.create({ email: address(), name: "Other", password: "hash" }));
+    await changes.request(user.id, { email });
+    const first = mailToken();
+    await changes.request(other.id, { email });
+    const second = mailToken();
+    const results = await Promise.all([confirm(first), confirm(second)]);
+    expect(results.map((r) => r.status).sort()).to.deep.equal([200, 409]);
+    expect(await users.countBy({ email })).to.equal(1);
+    const loser = results[0].status === 409 ? user : other;
+    expect((await users.findOneByOrFail({ id: loser.id })).email).to.equal(loser.email);
+  });
+
   it("rolls back the address and token if session revocation fails", async() => {
     await patch(access, { email: address() });
     const token = mailToken();
