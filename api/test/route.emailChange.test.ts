@@ -168,6 +168,28 @@ describe("Email change API", () => {
     expect(send.callCount).to.equal(2);
   });
 
+  it("rejects an address already used by another account without creating a pending request", async() => {
+    const other = await users.save(users.create({ email: address(), name: "Other", password: "hash" }));
+    const result = await patch(access, other.email);
+    expect(result.status).to.equal(409);
+    expect(result.body.code).to.equal("user_already_exists");
+    expect(send.called).to.be.false;
+    const stored = await users.findOneByOrFail({ id: user.id });
+    expect(stored.pendingEmail).to.be.null;
+    expect(stored.emailChangeSendCount).to.equal(0);
+  });
+
+  it("rejects a request for a missing account without sending mail", async() => {
+    let error: any;
+    try {
+      await changes.request(-1, address());
+    } catch (e) {
+      error = e;
+    }
+    expect(error.statusCode).to.equal(401);
+    expect(send.called).to.be.false;
+  });
+
   it("rejects unknown, expired, cancelled and replaced tokens", async() => {
     expect((await confirm("0".repeat(64))).status).to.equal(401);
     await patch(access, address());
