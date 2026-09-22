@@ -68,6 +68,19 @@ describe("User Routes", () => {
       ).to.equal("error_500");
     });
 
+    it("should return pendingEmail as null on the immediate registration response", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users")
+        .send({
+          email: `${userId()}@test.com`,
+          password: `Password${userId()}`,
+          name: `user${userName()}`,
+        });
+
+      expect(response.status).to.equal(201);
+      expect(response.body).to.have.property("pendingEmail", null);
+    });
+
     it("should return error user_already_exists", async() => {
       const newUser = {
         password: `Password${userId()}`,

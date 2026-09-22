@@ -11,7 +11,7 @@ export default class User extends Base {
     email: string;
 
   @Column({ type: "text", nullable: true })
-    pendingEmail: string | null;
+    pendingEmail: string | null = null;
 
   @Exclude()
   @Index("user_email_change_token_unique", { unique: true })
