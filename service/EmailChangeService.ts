@@ -5,6 +5,7 @@ import User from "#model/User.js";
 import EmailVerification from "#model/EmailVerification.js";
 import UserService from "#service/UserService.js";
 import EmailService from "#service/EmailService.js";
+import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 import config from "api/src/config/config.js";
 import ApiError from "api/src/error/ApiError.js";
@@ -16,17 +17,20 @@ export default class EmailChangeService {
    * @param users User repository
    * @param userService Session revocation service
    * @param emailService Email transport
+   * @param logger Logger service
    * @returns Service instance
    */
   constructor(
     @inject(TOKENS.UserRepository) private users: Repository<User>,
     @inject(TOKENS.UserService) private userService: UserService,
     @inject(TOKENS.EmailService) private emailService: EmailService,
+    @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
   /**
    * Updates a profile or resends its pending email confirmation. Only the hash is persisted.
-   * Repeating the same address is a no-op; submitting the current address cancels the request.
+   * Repeating the same address is a no-op while its token is still valid, and issues a fresh
+   * token once the old one expires; submitting the current address cancels the request.
    * The per-user send budget survives replacement, cancellation, process restarts and failures.
    * @param userId Authenticated user ID
    * @param data Optional profile changes
@@ -54,7 +58,8 @@ export default class EmailChangeService {
         user.pendingEmail = null;
         user.emailChangeTokenHash = null;
         user.emailChangeExpiresAt = null;
-      } else if (email !== undefined && email !== null && (resend || email !== user.pendingEmail)) {
+      } else if (email !== undefined && email !== null && (resend || email !== user.pendingEmail ||
+        (user.emailChangeExpiresAt?.getTime() ?? 0) <= Date.now())) {
         const now = new Date();
         const limits = config.emailChange;
         const windowActive = user.emailChangeWindowStartedAt !== null &&
@@ -99,10 +104,12 @@ export default class EmailChangeService {
           text: `Confirm your new email address: ${url}\nThis link expires in 30 minutes. ` +
             "If you did not request this change, ignore this email.",
         });
-      } catch {
+      } catch (error) {
+        this.logger.error(error as object);
         throw ApiError.fromCode(503, "email_change_delivery_failed");
       }
       if (!messageId) {
+        this.logger.error(`Failed to send email change confirmation to user ${result.user.id}`);
         throw ApiError.fromCode(503, "email_change_delivery_failed");
       }
     }

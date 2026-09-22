@@ -2,7 +2,7 @@
 
 One API PR: storage, request/confirm/resend, tests/contracts. No frontend or worker behavior changes.
 
-- `PATCH /api/v1/users/me` accepts optional `name` and `email`. A different email creates/replaces `pendingEmail`; the current `email` and `emailVerifiedAt` remain unchanged. Same pending email is idempotent and sends nothing, including after delivery failure. Use resend to retry. Submitting the current email cancels pending confirmation. Name-only updates do not consume the send budget.
+- `PATCH /api/v1/users/me` accepts optional `name` and `email`. A different email creates/replaces `pendingEmail`; the current `email` and `emailVerifiedAt` remain unchanged. Same pending email is idempotent and sends nothing while its token is still valid, including after delivery failure; use resend to retry. Once the token has expired, resubmitting the same address issues a new one. Submitting the current email cancels pending confirmation. Name-only updates do not consume the send budget.
 - User responses include `pendingEmail: string | null`; token hashes, expiry and counters are excluded.
 - `POST /api/v1/users/email-change/resend` requires authentication and no body. Sends to the current pending address; replaces the previous token.
 - `POST /api/v1/users/email-change/confirm` takes `{ "token": "<64 lowercase hex characters>" }`, without authentication. The bearer token identifies its owning user and exact address; a logged-in browser cannot redirect it to another account. The email link is `BASE_URL/confirm-email-change?token=...`. The frontend must call this endpoint explicitly; GET/link scanners do not confirm anything.

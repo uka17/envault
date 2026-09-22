@@ -56,8 +56,10 @@ export default class UserValidator {
           .withMessage(apiErrorPayload("name_alphanumeric")),
         body("email")
           .optional()
-          .isString().bail()
-          .isLength({ max: 254 }).bail()
+          .isString()
+          .withMessage(apiErrorPayload("should_be_string")).bail()
+          .isLength({ max: 254 })
+          .withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .isEmail().withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect"))
@@ -69,7 +71,10 @@ export default class UserValidator {
           }),
       ],
       confirmEmailChange: [
-        body("token").isString().bail().matches(/^[0-9a-f]{64}$/)
+        body("token")
+          .isString()
+          .withMessage(apiErrorPayload("email_change_token_invalid")).bail()
+          .matches(/^[0-9a-f]{64}$/)
           .withMessage(apiErrorPayload("email_change_token_invalid")),
       ],
       sessionId: [

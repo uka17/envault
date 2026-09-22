@@ -105,6 +105,23 @@ describe("Email change API", () => {
     expect((await confirm(first)).status).to.equal(200);
   });
 
+  it("issues a fresh token when the same address is resubmitted after the old one expired", async() => {
+    // Without this the user is stuck: PATCH answers 200, no email is sent and the dead token stays.
+    const email = address();
+    expect((await patch(access, { email })).status).to.equal(200);
+    const expired = mailToken();
+    clock.tick(config.emailChange.ttlMs + 1000);
+    // The access token outlives neither the tick nor the TTL, so re-authenticate before resubmitting.
+    const renewed = await userService.createRefreshToken(user);
+    expect((await patch(userService.createToken(user, renewed.sessionId), { email })).status).to.equal(200);
+    expect(send.callCount).to.equal(2);
+    const fresh = mailToken();
+    expect(fresh).not.to.equal(expired);
+    expect((await confirm(expired)).status).to.equal(401);
+    expect((await confirm(fresh)).status).to.equal(200);
+    expect((await users.findOneByOrFail({ id: user.id })).email).to.equal(email);
+  });
+
   it("enforces cooldown and a persistent per-user budget across address replacements and cancellations", async() => {
     expect((await patch(access, { email: address() })).status).to.equal(200);
     const limited = await resend(access);
@@ -123,7 +140,8 @@ describe("Email change API", () => {
     expect(budget.status).to.equal(429);
     expect(Number(budget.headers["retry-after"])).to.equal(720);
     // A fresh service instance uses the same persisted budget.
-    const fresh = new EmailChangeService(users, userService, container.resolve(TOKENS.EmailService));
+    const fresh = new EmailChangeService(users, userService,
+      container.resolve(TOKENS.EmailService), container.resolve(TOKENS.LogService));
     let error: any;
     try {
       await fresh.request(user.id, { email: address() }); 
@@ -289,14 +307,24 @@ describe("Email change API", () => {
   });
 
   it("validates input and requires authentication for resend", async() => {
-    for (const token of [undefined, 123, {}, "bad"]) {
-      expect((await request(globalThis.app).post(`${prefix}/email-change/confirm`).send({ token })).status)
-        .to.equal(422);
+    // Every rejected value must carry a machine-readable code; the frontend drops code-less errors.
+    // The array case matters: `matches` coerces `["<hex>"]` to a valid-looking string, and the
+    // service would then hash an array and answer 500 instead of 422.
+    for (const token of [undefined, 123, {}, "bad", [`${"a".repeat(64)}`]]) {
+      const result = await request(globalThis.app).post(`${prefix}/email-change/confirm`).send({ token });
+      expect(result.status).to.equal(422);
+      expect(result.body.errors).to.have.lengthOf(1);
+      expect(result.body.errors[0]).to.include({ field: "token", code: "email_change_token_invalid" });
+      expect(result.body.errors[0].message).to.be.a("string").and.not.empty;
     }
     expect((await request(globalThis.app).post(`${prefix}/email-change/resend`)).status).to.equal(401);
     expect((await resend(access)).status).to.equal(409);
-    for (const email of [123, {}, "not-an-email"]) {
-      expect((await patch(access, { email })).status).to.equal(422);
+    for (const [email, code] of [[123, "should_be_string"], [{}, "should_be_string"],
+      [`${"a".repeat(250)}@test.com`, "email_format_incorrect"], ["not-an-email", "email_format_incorrect"]]) {
+      const result = await patch(access, { email });
+      expect(result.status).to.equal(422);
+      expect(result.body.errors[0]).to.include({ field: "email", code });
+      expect(result.body.errors[0].message).to.be.a("string").and.not.empty;
     }
   });
 });
