@@ -61,18 +61,16 @@ function senderSuite() {
     await globalThis.appDataSource.getRepository(User).delete(owner.id);
   });
 
-  for (const environment of ["PROD", "DEV", "prod", "production", " PROD ", "", undefined]) {
-    it(`routes recipient correctly for ENV=${JSON.stringify(environment)}`, /** @returns Nothing */ async() => {
-      sinon.stub(config, "environment").value(environment);
-      await sender.processDueStashes();
-      expect(email.send.calledOnce).to.equal(true);
-      const recipient = environment === "PROD" ? stash.to : "ukaoneseven@gmail.com";
-      expect(email.send.firstCall.args[0].to).to.equal(recipient);
-      expect(logger.info.calledOnceWith(
-        `Sent stash ${stash.id} to ${recipient} (messageId=test-message-id).`,
-      )).to.equal(true);
-    });
-  }
+  it("passes the stash's real recipient to EmailService.send", /** @returns Nothing */ async() => {
+    // The non-PROD test-recipient redirect is EmailService's own responsibility (see
+    // service.email.test.ts); this stub bypasses it entirely, so the real address must come through.
+    await sender.processDueStashes();
+    expect(email.send.calledOnce).to.equal(true);
+    expect(email.send.firstCall.args[0].to).to.equal(stash.to);
+    expect(logger.info.calledOnceWith(
+      `Sent stash ${stash.id} to ${stash.to} (messageId=test-message-id).`,
+    )).to.equal(true);
+  });
 
   it("records the log and sent state, and does not send the message again", /** @returns Nothing */ async() => {
     const before = Date.now();
