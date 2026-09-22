@@ -9,6 +9,7 @@ import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 import config from "api/src/config/config.js";
 import ApiError from "api/src/error/ApiError.js";
+import { renderConfirmEmailChange } from "#common/templates/confirmEmailChange.js";
 
 @injectable()
 export default class EmailChangeService {
@@ -91,15 +92,16 @@ export default class EmailChangeService {
 
     // Commit before contacting SES. A failure leaves the old login working and allows resend.
     if (result.token) {
-      const url = `${config.baseUrl}/confirm-email-change?token=${result.token}`;
+      const confirmUrl = `${config.baseUrl}/confirm-email-change?token=${result.token}`;
+      const { subject, html, text } = renderConfirmEmailChange({ confirmUrl });
       let messageId: string | null;
       try {
         messageId = await this.emailService.send({
           to: result.user.pendingEmail!,
           from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
-          subject: "Confirm your new Envault email address",
-          text: `Confirm your new email address: ${url}\nThis link expires in 30 minutes. ` +
-            "If you did not request this change, ignore this email.",
+          subject,
+          html,
+          text,
         });
       } catch (error) {
         this.logger.error(error as object);
