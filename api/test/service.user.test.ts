@@ -248,7 +248,7 @@ describe("User service", () => {
     });
   });
 
-  describe("updateProfile", () => {
+  describe("updateName", () => {
     let profileUser: User;
 
     before(async() => {
@@ -264,20 +264,13 @@ describe("User service", () => {
     // Password/refreshToken stripping is done at the response-serialization boundary
     // (class-transformer's @Exclude()), not by the service; see UserController.
     it("should update name", async() => {
-      const result = await userService.updateProfile(profileUser.id, { name: "UpdatedName" });
+      const result = await userService.updateName(profileUser.id, "UpdatedName");
       expect(result).to.not.be.null;
       expect(result!.name).to.equal("UpdatedName");
     });
 
-    it("should ignore email passed at runtime to the name-only method", async() => {
-      const newEmail = `updated_${Date.now()}@test.com`;
-      const result = await userService.updateProfile(profileUser.id, { email: newEmail } as any);
-      expect(result).to.not.be.null;
-      expect(result!.email).to.equal(profileUser.email);
-    });
-
     it("should return null for a non-existent user id", async() => {
-      const result = await userService.updateProfile(NON_EXISTENT_ID, { name: "Ghost" });
+      const result = await userService.updateName(NON_EXISTENT_ID, "Ghost");
       expect(result).to.be.null;
     });
   });

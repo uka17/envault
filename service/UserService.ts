@@ -240,18 +240,14 @@ export default class UserService {
   }
 
   /**
-   * Updates a user name. Email changes must go through EmailChangeService.
+   * Updates a user's display name. Email changes go through EmailChangeService instead,
+   * since they require a confirmation token and are not a plain field update.
    * @param userId User ID
-   * @param data Object containing the optional name to update
+   * @param name New display name
    * @returns Updated user without password, or null if user not found
    */
-  public async updateProfile(
-    userId: number,
-    data: { name?: string },
-  ): Promise<User | null> {
-    if (data.name !== undefined) {
-      await this.userRepository.update(userId, { name: data.name, modifiedOn: new Date() });
-    }
+  public async updateName(userId: number, name: string): Promise<User | null> {
+    await this.userRepository.update(userId, { name, modifiedOn: new Date() });
     return this.getUserById(userId);
   }
 

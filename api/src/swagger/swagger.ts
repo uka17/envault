@@ -56,7 +56,8 @@ const doc = {
     ResendVerificationRequest: {
       $email: "john@mail.com",
     },
-    UserUpdateRequest: { name: "John Doe", email: "new@mail.com" },
+    UserUpdateRequest: { $name: "John Doe" },
+    EmailChangeRequest: { $email: "new@mail.com" },
     EmailChangeConfirmRequest: { $token: "0123456789abcdef".repeat(4) },
     TokenResponse: {
       token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",

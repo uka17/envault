@@ -16,8 +16,10 @@ import config from "api/src/config/config.js";
 const prefix = "/api/v1/users";
 const users = globalThis.appDataSource.getRepository(User);
 const sessions = globalThis.appDataSource.getRepository(Session);
-const patch = (token: string, body: object) => request(globalThis.app)
-  .patch(`${prefix}/me`).set("Authorization", `Bearer ${token}`).send(body);
+const patchName = (token: string, name: string) => request(globalThis.app)
+  .patch(`${prefix}/me`).set("Authorization", `Bearer ${token}`).send({ name });
+const patch = (token: string, email: unknown) => request(globalThis.app)
+  .post(`${prefix}/email-change/request`).set("Authorization", `Bearer ${token}`).send({ email });
 const confirm = (token: string) => request(globalThis.app).post(`${prefix}/email-change/confirm`).send({ token });
 const resend = (token: string) => request(globalThis.app)
   .post(`${prefix}/email-change/resend`).set("Authorization", `Bearer ${token}`);
@@ -54,7 +56,8 @@ describe("Email change API", () => {
     const nextEmail = address();
     const extraSession = await userService.createRefreshToken(user);
     const extraAccess = userService.createToken(user, extraSession.sessionId);
-    const result = await patch(access, { email: nextEmail, name: "New Name" });
+    await patchName(access, "New Name");
+    const result = await patch(access, nextEmail);
     expect(result.status).to.equal(200);
     expect(result.body).to.include({ email: user.email, pendingEmail: nextEmail, name: "New Name" });
     expect(result.body.emailVerifiedAt).to.equal(user.emailVerifiedAt!.toISOString());
@@ -92,28 +95,29 @@ describe("Email change API", () => {
     expect((await confirm(token)).status).to.equal(401);
   });
 
-  it("does not send again for repeated PATCH and keeps name editing independent", async() => {
+  it("does not send again for repeated requests and keeps name editing independent", async() => {
     const email = address();
-    expect((await patch(access, { email })).status).to.equal(200);
+    expect((await patch(access, email)).status).to.equal(200);
     const first = mailToken();
-    const results = await Promise.all(Array.from({ length: 5 }, () => patch(access, { email })));
+    const results = await Promise.all(Array.from({ length: 5 }, () => patch(access, email)));
     expect(results.every((r) => r.status === 200)).to.be.true;
     expect(send.callCount).to.equal(1);
-    const named = await patch(access, { name: "Renamed" });
-    expect(named.body).to.include({ name: "Renamed", pendingEmail: email });
-    expect(named.body.emailVerifiedAt).to.equal(user.emailVerifiedAt!.toISOString());
+    const named = await patchName(access, "Renamed");
+    expect(named.body).to.include({ name: "Renamed" });
+    const pending = await users.findOneByOrFail({ id: user.id });
+    expect(pending.pendingEmail).to.equal(email);
     expect((await confirm(first)).status).to.equal(200);
   });
 
   it("issues a fresh token when the same address is resubmitted after the old one expired", async() => {
-    // Without this the user is stuck: PATCH answers 200, no email is sent and the dead token stays.
+    // Without this the user is stuck: request answers 200, no email is sent and the dead token stays.
     const email = address();
-    expect((await patch(access, { email })).status).to.equal(200);
+    expect((await patch(access, email)).status).to.equal(200);
     const expired = mailToken();
     clock.tick(config.emailChange.ttlMs + 1000);
     // The access token outlives neither the tick nor the TTL, so re-authenticate before resubmitting.
     const renewed = await userService.createRefreshToken(user);
-    expect((await patch(userService.createToken(user, renewed.sessionId), { email })).status).to.equal(200);
+    expect((await patch(userService.createToken(user, renewed.sessionId), email)).status).to.equal(200);
     expect(send.callCount).to.equal(2);
     const fresh = mailToken();
     expect(fresh).not.to.equal(expired);
@@ -123,7 +127,7 @@ describe("Email change API", () => {
   });
 
   it("enforces cooldown and a persistent per-user budget across address replacements and cancellations", async() => {
-    expect((await patch(access, { email: address() })).status).to.equal(200);
+    expect((await patch(access, address())).status).to.equal(200);
     const limited = await resend(access);
     expect(limited.status).to.equal(429);
     expect(limited.body.code).to.equal("email_change_rate_limited");
@@ -133,10 +137,10 @@ describe("Email change API", () => {
     expect((await resend(access)).status).to.equal(200);
     expect((await confirm(oldToken)).status).to.equal(401);
     clock.tick(60_000);
-    expect((await patch(access, { email: address() })).status).to.equal(200);
-    expect((await patch(access, { email: user.email })).body.pendingEmail).to.be.null;
+    expect((await patch(access, address())).status).to.equal(200);
+    expect((await patch(access, user.email)).body.pendingEmail).to.be.null;
     clock.tick(60_000);
-    const budget = await patch(access, { email: address() });
+    const budget = await patch(access, address());
     expect(budget.status).to.equal(429);
     expect(Number(budget.headers["retry-after"])).to.equal(720);
     // A fresh service instance uses the same persisted budget.
@@ -144,18 +148,18 @@ describe("Email change API", () => {
       container.resolve(TOKENS.EmailService), container.resolve(TOKENS.LogService));
     let error: any;
     try {
-      await fresh.request(user.id, { email: address() }); 
+      await fresh.request(user.id, address()); 
     } catch (e) {
       error = e; 
     }
     expect(error.statusCode).to.equal(429);
     clock.tick(720_000);
-    await fresh.request(user.id, { email: address() });
+    await fresh.request(user.id, address());
     expect(send.callCount).to.equal(4);
   });
 
   it("serializes concurrent replacement and resend requests without exceeding the send budget", async() => {
-    const results = await Promise.all([patch(access, { email: address() }), patch(access, { email: address() })]);
+    const results = await Promise.all([patch(access, address()), patch(access, address())]);
     expect(results.map((r) => r.status).sort()).to.deep.equal([200, 429]);
     expect(send.callCount).to.equal(1);
     clock.tick(60_000);
@@ -166,16 +170,16 @@ describe("Email change API", () => {
 
   it("rejects unknown, expired, cancelled and replaced tokens", async() => {
     expect((await confirm("0".repeat(64))).status).to.equal(401);
-    await patch(access, { email: address() });
+    await patch(access, address());
     const replaced = mailToken();
     clock.tick(60_000);
-    await patch(access, { email: address() });
+    await patch(access, address());
     expect((await confirm(replaced)).status).to.equal(401);
     const cancelled = mailToken();
-    await patch(access, { email: user.email });
+    await patch(access, user.email);
     expect((await confirm(cancelled)).status).to.equal(401);
     clock.tick(60_000);
-    await patch(access, { email: address() });
+    await patch(access, address());
     const expired = mailToken();
     clock.tick(30 * 60_000);
     expect((await confirm(expired)).status).to.equal(401);
@@ -188,7 +192,7 @@ describe("Email change API", () => {
   });
 
   it("consumes a token only once under parallel confirmation", async() => {
-    await patch(access, { email: address() });
+    await patch(access, address());
     const token = mailToken();
     const results = await Promise.all([confirm(token), confirm(token)]);
     expect(results.map((r) => r.status).sort()).to.deep.equal([200, 401]);
@@ -196,7 +200,7 @@ describe("Email change API", () => {
 
   it("rolls back token consumption and revocation if the target email was claimed", async() => {
     const email = address();
-    await patch(access, { email });
+    await patch(access, email);
     const token = mailToken();
     await users.save(users.create({ email, name: "Other User", password: "hash" }));
     const result = await confirm(token);
@@ -212,9 +216,9 @@ describe("Email change API", () => {
   it("allows only one account to confirm the same new address concurrently", async() => {
     const email = address();
     const other = await users.save(users.create({ email: address(), name: "Other", password: "hash" }));
-    await changes.request(user.id, { email });
+    await changes.request(user.id, email);
     const first = mailToken();
-    await changes.request(other.id, { email });
+    await changes.request(other.id, email);
     const second = mailToken();
     const results = await Promise.all([confirm(first), confirm(second)]);
     expect(results.map((r) => r.status).sort()).to.deep.equal([200, 409]);
@@ -224,7 +228,7 @@ describe("Email change API", () => {
   });
 
   it("rolls back the address and token if session revocation fails", async() => {
-    await patch(access, { email: address() });
+    await patch(access, address());
     const token = mailToken();
     const revoke = sinon.stub(userService, "revokeAllSessions").rejects(new Error("database unavailable"));
     expect((await confirm(token)).status).to.equal(500);
@@ -242,11 +246,11 @@ describe("Email change API", () => {
         send.resolves(null); 
       }
       const email = address();
-      const result = await patch(access, { email });
+      const result = await patch(access, email);
       expect(result.status).to.equal(503);
       expect(result.body.code).to.equal("email_change_delivery_failed");
       expect((await users.findOneByOrFail({ id: user.id }))).to.include({ email: user.email, pendingEmail: email });
-      expect((await patch(access, { email })).status).to.equal(200);
+      expect((await patch(access, email)).status).to.equal(200);
       expect(send.callCount).to.equal(1);
       expect((await resend(access)).status).to.equal(429);
       clock.tick(60_000);
@@ -259,7 +263,7 @@ describe("Email change API", () => {
   it("uses the token owner, not the authenticated browser, and never accepts registration codes", async() => {
     const other = await users.save(users.create({ email: address(), name: "Other", password: "hash" }));
     const otherSession = await userService.createRefreshToken(other);
-    await patch(access, { email: address() });
+    await patch(access, address());
     const token = mailToken();
     const verification = container.resolve<EmailVerificationService>(TOKENS.EmailVerificationService);
     await verification.createAndSend(user);
@@ -280,7 +284,7 @@ describe("Email change API", () => {
     await verification.createAndSend(user);
     const code = send.lastCall.args[0].text.match(/verification page: (\S+)/)[1];
     const email = address();
-    await patch(access, { email });
+    await patch(access, email);
     const token = mailToken();
     const repo = globalThis.appDataSource.getRepository(EmailVerification);
     const original = repo.findOne.bind(repo);
@@ -294,7 +298,7 @@ describe("Email change API", () => {
   });
 
   it("rejects a login snapshot captured before email confirmation", async() => {
-    await patch(access, { email: address() });
+    await patch(access, address());
     await confirm(mailToken());
     let error: any;
     try {
@@ -321,7 +325,7 @@ describe("Email change API", () => {
     expect((await resend(access)).status).to.equal(409);
     for (const [email, code] of [[123, "should_be_string"], [{}, "should_be_string"],
       [`${"a".repeat(250)}@test.com`, "email_format_incorrect"], ["not-an-email", "email_format_incorrect"]]) {
-      const result = await patch(access, { email });
+      const result = await patch(access, email);
       expect(result.status).to.equal(422);
       expect(result.body.errors[0]).to.include({ field: "email", code });
       expect(result.body.errors[0].message).to.be.a("string").and.not.empty;

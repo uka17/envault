@@ -49,13 +49,17 @@ export default class UserValidator {
           .notEmpty()
           .withMessage(apiErrorPayload("password_required")),
       ],
-      updateProfile: [
+      updateName: [
         body("name")
-          .optional()
+          .notEmpty()
+          .withMessage(apiErrorPayload("name_required"))
           .matches(config.nameRegExp)
           .withMessage(apiErrorPayload("name_alphanumeric")),
+      ],
+      requestEmailChange: [
         body("email")
-          .optional()
+          .notEmpty()
+          .withMessage(apiErrorPayload("email_required")).bail()
           .isString()
           .withMessage(apiErrorPayload("should_be_string")).bail()
           .isLength({ max: 254 })

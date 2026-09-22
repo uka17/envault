@@ -176,16 +176,34 @@ export default class UserController {
   }
 
   /**
-   * Update the current user's profile (name and/or email)
+   * Updates the current user's display name. Applies immediately, no confirmation required.
    * @param req Request object
    * @param res Response object
    * @param next Next function
    */
-  public async updateProfile(req: Request, res: Response, next: NextFunction) {
+  public async updateName(req: Request, res: Response, next: NextFunction) {
     try {
       const id = (req.user as User).id;
-      const { name, email } = req.body as { name?: string; email?: string };
-      const updated = await this.emailChangeService.request(id, { name, email });
+      const { name } = req.body as { name: string };
+      const updated = await this.userService.updateName(id, name);
+      return res.status(CODES.API_OK).json(instanceToPlain(updated));
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Requests an email change for the current user. The current address stays active
+   * and logged in until the confirmation link is used.
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async requestEmailChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = (req.user as User).id;
+      const { email } = req.body as { email: string };
+      const updated = await this.emailChangeService.request(id, email);
       return res.status(CODES.API_OK).json(instanceToPlain(updated));
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
@@ -218,7 +236,7 @@ export default class UserController {
    */
   public async resendEmailChange(req: Request, res: Response, next: NextFunction) {
     try {
-      await this.emailChangeService.request((req.user as User).id, {}, true);
+      await this.emailChangeService.request((req.user as User).id, undefined, true);
       return res.status(200).json({});
     } catch (error) {
       next(error);

@@ -28,18 +28,18 @@ export default class EmailChangeService {
   ) {}
 
   /**
-   * Updates a profile or resends its pending email confirmation. Only the hash is persisted.
+   * Requests an email change or resends its pending confirmation. Only the hash is persisted.
    * Repeating the same address is a no-op while its token is still valid, and issues a fresh
    * token once the old one expires; submitting the current address cancels the request.
    * The per-user send budget survives replacement, cancellation, process restarts and failures.
    * @param userId Authenticated user ID
-   * @param data Optional profile changes
+   * @param newEmail Email address to request, ignored when resending
    * @param resend Whether to replace the pending token and send another email
    * @returns Profile with the current email unchanged until confirmation
    */
   public async request(
     userId: number,
-    data: { name?: string; email?: string } = {},
+    newEmail?: string,
     resend = false,
   ): Promise<User> {
     const result = await this.users.manager.transaction(async(manager) => {
@@ -49,7 +49,7 @@ export default class EmailChangeService {
       if (!user) {
         throw ApiError.fromCode(401, "unauthorized");
       }
-      const email = resend ? user.pendingEmail : data.email;
+      const email = resend ? user.pendingEmail : newEmail;
       if (resend && !email) {
         throw ApiError.fromCode(409, "email_change_not_pending");
       }
@@ -83,9 +83,6 @@ export default class EmailChangeService {
         user.emailChangeLastSentAt = now;
         user.emailChangeWindowStartedAt = windowActive ? user.emailChangeWindowStartedAt : now;
         user.emailChangeSendCount = (windowActive ? user.emailChangeSendCount : 0) + 1;
-      }
-      if (data.name !== undefined) {
-        user.name = data.name;
       }
       user.modifiedOn = new Date();
       await manager.save(user);

@@ -1,5 +1,5 @@
 info:
-  name: Update user profile
+  name: Update user name
   type: http
   seq: 5
   tags:
@@ -15,8 +15,7 @@ http:
     type: json
     data: |-
       {
-        "name": "John Doe",
-        "email": "new@mail.com"
+        "name": "John Doe"
       }
 
 settings:
@@ -26,8 +25,8 @@ settings:
   maxRedirects: 5
 
 examples:
-  - name: Pending email change
-    description: Old login remains valid. Repeating the pending address sends nothing; use resend. Current email cancels the request.
+  - name: Success
+    description: Applies immediately, no confirmation required. Email changes go through "Request email change" instead.
     request:
       url: "{{baseUrl}}/api/v1/users/me"
       method: PATCH
@@ -40,7 +39,7 @@ examples:
           {
             "id": 1,
             "email": "john@mail.com",
-            "pendingEmail": "new@mail.com",
+            "pendingEmail": null,
             "name": "John Doe",
             "emailVerifiedAt": "2025-01-01T00:00:00Z"
           }

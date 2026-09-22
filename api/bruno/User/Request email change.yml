@@ -1,0 +1,78 @@
+info:
+  name: Request email change
+  type: http
+  seq: 11
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users/email-change/request"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "new@mail.com"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Pending email change
+    description: Old login remains valid. Repeating the pending address sends nothing; use resend. Current email cancels the request.
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/request"
+      method: POST
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "id": 1,
+            "email": "john@mail.com",
+            "pendingEmail": "new@mail.com",
+            "name": "John Doe",
+            "emailVerifiedAt": "2025-01-01T00:00:00Z"
+          }
+  - name: 409 user_already_exists
+    description: Address already taken by another account
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/request"
+      method: POST
+    response:
+      status: 409
+      body:
+        type: json
+        data: |-
+          {"code": "user_already_exists", "message": "Address already taken by another account", "errors": []}
+  - name: 429 email_change_rate_limited
+    description: Retry after the Retry-After header interval
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/request"
+      method: POST
+    response:
+      status: 429
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_rate_limited", "message": "Retry after the Retry-After header interval", "errors": []}
+  - name: 503 email_change_delivery_failed
+    description: Old login preserved, pending change retained for resend
+    request:
+      url: "{{baseUrl}}/api/v1/users/email-change/request"
+      method: POST
+    response:
+      status: 503
+      body:
+        type: json
+        data: |-
+          {"code": "email_change_delivery_failed", "message": "Old login preserved, pending change retained for resend", "errors": []}
