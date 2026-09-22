@@ -6,6 +6,7 @@ import { AwsCredentialIdentityProvider } from "@smithy/types";
 
 import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
+import config from "api/src/config/config.js";
 
 @injectable()
 export default class EmailService {
@@ -23,7 +24,7 @@ export default class EmailService {
   ) {
     this.logger = logger;
     this.sesClient = new SESClient({
-      region: "eu-north-1",
+      region: config.awsRegion,
       credentials: this.credentials,
     });
     this.transporter = nodemailer.createTransport({

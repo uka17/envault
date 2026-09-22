@@ -21,6 +21,9 @@ import LogService from "#service/LogService.js";
 
 import initDI from "#di/container.js";
 import { TOKENS } from "#di/tokens.js";
+import { validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
+
+validateRuntimeConfigOrExit("api");
 
 
 //Init data source
@@ -50,11 +53,6 @@ const app: Express = express();
 app.use(session(config.session));
 app.use(cookieParser());
 app.use(bodyParser.json());
-
-//Basic checks
-if (!config.jwtSecret) {
-  throw "JWT_SECRET is empty or nor found";
-}
 
 appDataSource
   .initialize()

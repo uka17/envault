@@ -3,6 +3,7 @@ import sinon from "sinon";
 
 import EmailService from "#service/EmailService.js";
 import LogService from "#service/LogService.js";
+import config from "api/src/config/config.js";
 
 const mockLogger = new LogService();
 const emailService = new EmailService(mockLogger, null);
@@ -10,6 +11,12 @@ const emailService = new EmailService(mockLogger, null);
 describe("Email service", () => {
   afterEach(() => {
     sinon.restore();
+  });
+
+  describe("Configuration", () => {
+    it("should create SES client with the region from config", async() => {
+      expect(await (emailService as any).sesClient.config.region()).to.equal(config.awsRegion);
+    });
   });
 
   describe("Errors", () => {
