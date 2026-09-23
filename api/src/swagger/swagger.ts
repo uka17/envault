@@ -59,6 +59,13 @@ const doc = {
     UserUpdateRequest: { $name: "John Doe" },
     EmailChangeRequest: { $email: "new@mail.com" },
     EmailChangeConfirmRequest: { $token: "0123456789abcdef".repeat(4) },
+    PasswordResetRequest: {
+      $email: "john@mail.com",
+    },
+    PasswordResetConfirmRequest: {
+      $token: "0123456789abcdef".repeat(4),
+      $newPassword: "{{newPassword}}",
+    },
     TokenResponse: {
       token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     },

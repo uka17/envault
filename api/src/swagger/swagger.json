@@ -728,6 +728,217 @@
         ]
       }
     },
+    "/api/v1/users/password-reset/request": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Request password reset",
+        "description": "Sends a reset link only to verified accounts. Unknown and unverified addresses receive the same 200 response. Replaces any previous token. The link expires in 30 minutes. Limits: 3 requests/15 minutes/address and 20/15 minutes/IP.",
+        "responses": {
+          "200": {
+            "description": "Request accepted, whether or not an email was sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "password_reset_rate_limited; Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/password-reset/confirm": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Confirm password reset",
+        "description": "Consumes a one-time token, changes the password and revokes all sessions atomically. No automatic login. Does not change stashes or recover encryption keys. Limited to 30 attempts/15 minutes/IP.",
+        "responses": {
+          "200": {
+            "description": "Password changed; refresh cookie cleared; log in again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "password_reset_invalid: missing, malformed, unknown, expired or used token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "password_reset_rate_limited; Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users": {
       "post": {
         "tags": [
@@ -1811,6 +2022,41 @@
         ],
         "xml": {
           "name": "EmailChangeConfirmRequest"
+        }
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@mail.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "xml": {
+          "name": "PasswordResetRequest"
+        }
+      },
+      "PasswordResetConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "{{newPassword}}"
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ],
+        "xml": {
+          "name": "PasswordResetConfirmRequest"
         }
       },
       "TokenResponse": {
