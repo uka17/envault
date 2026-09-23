@@ -136,6 +136,10 @@ export default class EmailChangeService {
         user.pendingEmail = null;
         user.emailChangeTokenHash = null;
         user.emailChangeExpiresAt = null;
+        // A reset link issued for the old address must not survive the address change.
+        user.passwordResetTokenHash = null;
+        user.passwordResetExpiresAt = null;
+        user.passwordResetEmail = null;
         await manager.save(user);
         await manager.update(EmailVerification,
           { user: { id: user.id }, consumedAt: IsNull() }, { consumedAt: new Date() });

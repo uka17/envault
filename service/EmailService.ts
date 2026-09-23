@@ -50,8 +50,9 @@ export default class EmailService {
       this.logger.info(`Sending email to ${finalOptions.to}...`);
       const info = await this.transporter.sendMail(finalOptions);
       return info.messageId || null;
-    } catch (error) {
-      this.logger.error(error);
+    } catch {
+      // Transport errors can contain the message body, including authentication links.
+      this.logger.error("Email delivery failed");
       return null;
     }
   }

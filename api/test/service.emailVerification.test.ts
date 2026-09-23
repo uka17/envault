@@ -36,8 +36,8 @@ async function createUnverifiedUser(): Promise<User> {
 
 describe("EmailVerification service", () => {
   beforeEach(() => {
-    userService = new UserService(userRepository, sessionRepository, globalThis.mockLogService);
     emailService = new EmailService(globalThis.mockLogService, null);
+    userService = new UserService(userRepository, sessionRepository, globalThis.mockLogService, emailService);
     emailVerificationService = new EmailVerificationService(
       emailVerificationRepository,
       emailService,

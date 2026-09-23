@@ -103,12 +103,12 @@ export default class UserController {
             return next(ApiError.fromCode(CODES.SERVER_ERROR, "error_500"));
           }
 
-          if (passportUser) {
-            if (!passportUser.emailVerifiedAt) {
-              return next(ApiError.fromCode(CODES.API_FORBIDDEN, "email_not_verified"));
-            }
+          try {
+            if (passportUser) {
+              if (!passportUser.emailVerifiedAt) {
+                return next(ApiError.fromCode(CODES.API_FORBIDDEN, "email_not_verified"));
+              }
 
-            try {
               const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
                 userAgent: req.headers["user-agent"],
                 ip: normalizeIp(req.ip),
@@ -116,12 +116,12 @@ export default class UserController {
               const accessToken = this.userService.createToken(passportUser, sessionId);
               res.cookie(REFRESH_COOKIE, raw, getRefreshCookieOptions());
               return res.json({ token: accessToken });
-            } catch (error) {
-              return next(error);
             }
-          }
 
-          return next(ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_password_or_email"));
+            return next(ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_password_or_email"));
+          } catch (error) {
+            return next(error);
+          }
         },
       )(req, res, next);
     } catch (e: unknown) /* istanbul ignore next */ {
@@ -359,6 +359,48 @@ export default class UserController {
       return res.status(CODES.API_OK).json({});
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
+    }
+  }
+
+  /**
+   * Requests a reset email without revealing whether the account exists.
+   * @param req Request containing the email address
+   * @param res Response object
+   * @param next Error handler
+   * @returns HTTP response or forwarded error
+   */
+  public async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      const retryAfter = await this.userService.requestPasswordReset(req.body.email);
+      if (retryAfter) {
+        res.setHeader("Retry-After", retryAfter);
+        return next(ApiError.fromCode(429, "password_reset_rate_limited"));
+      }
+      return res.status(CODES.API_OK).json({});
+    } catch {
+      this.logger.error("Password reset request failed");
+      return next(ApiError.fromCode(CODES.SERVER_ERROR, "error_500"));
+    }
+  }
+
+  /**
+   * Changes a password using a one-time token and clears the refresh cookie.
+   * @param req Request containing token and newPassword
+   * @param res Response object
+   * @param next Error handler
+   * @returns HTTP response or forwarded error
+   */
+  public async confirmPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      const changed = await this.userService.confirmPasswordReset(req.body.token, req.body.newPassword);
+      if (!changed) {
+        return next(ApiError.fromCode(400, "password_reset_invalid"));
+      }
+      res.clearCookie(REFRESH_COOKIE, { path: "/" });
+      return res.status(CODES.API_OK).json({});
+    } catch {
+      this.logger.error("Password reset confirmation failed");
+      return next(ApiError.fromCode(CODES.SERVER_ERROR, "error_500"));
     }
   }
 
