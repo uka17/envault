@@ -6,7 +6,6 @@ import { TOKENS } from "#di/tokens.js";
 import { apiErrorPayload } from "#common/errorCodes.js";
 
 import UserService from "#service/UserService.js";
-import User from "#model/User.js";
 
 @injectable()
 export default class UserValidator {
@@ -66,13 +65,7 @@ export default class UserValidator {
           .withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .isEmail().withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .matches(config.emailRegExp)
-          .withMessage(apiErrorPayload("email_format_incorrect"))
-          .custom(async(email, { req }) => {
-            const existing = await this.userService.getUserByEmail(email);
-            if (existing && existing.id !== (req.user as User).id) {
-              return Promise.reject(apiErrorPayload("user_already_exists"));
-            }
-          }),
+          .withMessage(apiErrorPayload("email_format_incorrect")),
       ],
       confirmEmailChange: [
         body("token")

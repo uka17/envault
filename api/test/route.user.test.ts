@@ -719,7 +719,7 @@ describe("User Routes", () => {
       expect(response.body.errors?.[0]?.code).to.equal("email_required");
     });
 
-    it("should return 422 when updating to an already taken email", async() => {
+    it("should return 409 when updating to an already taken email", async() => {
       const otherUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
@@ -732,8 +732,8 @@ describe("User Routes", () => {
         .set("Authorization", `Bearer ${token}`)
         .send({ email: otherUser.email });
 
-      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("user_already_exists");
+      expect(response.status).to.equal(409);
+      expect(response.body.code).to.equal("user_already_exists");
     });
   });
 
