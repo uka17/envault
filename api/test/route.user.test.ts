@@ -167,6 +167,27 @@ describe("User Routes", () => {
       expect(response.status).to.equal(422);
     });
 
+    // The name is stored as sent, so a leading or trailing space must be rejected rather than silently kept.
+    for (const name of ["Nick ", " Nick"]) {
+      it(`should return error name_alphanumeric for name with leading or trailing space: "${name}"`, async() => {
+        const newUser = {
+          password: `Password${userId()}`,
+          email: `${userId()}@test.com`,
+          name,
+        };
+
+        const response = await request(
+          globalThis.app,
+        )
+          .post("/api/v1/users")
+          .send(newUser);
+        expect(
+          response.body.errors?.[0]?.code,
+        ).to.equal("name_alphanumeric");
+        expect(response.status).to.equal(422);
+      });
+    }
+
     it("should return error email_format_incorrect", async() => {
       const newUser = {
         password: `Password${userId()}`,
@@ -642,6 +663,20 @@ describe("User Routes", () => {
 
       expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
       expect(response.body.errors?.[0]?.code).to.equal("name_alphanumeric");
+    });
+
+    // The name is stored as sent, so a leading or trailing space must be rejected rather than silently kept.
+    // Both cases share one test: each test registers and verifies a user, which counts against the verification rate limit.
+    it("should return 422 for name with leading or trailing space", async() => {
+      for (const name of ["Nick ", " Nick"]) {
+        const response = await request(globalThis.app)
+          .patch("/api/v1/users/me")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ name });
+
+        expect(response.status, name).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+        expect(response.body.errors?.[0]?.code, name).to.equal("name_alphanumeric");
+      }
     });
 
     it("should return 422 for a missing name", async() => {
