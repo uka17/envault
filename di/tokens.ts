@@ -10,6 +10,7 @@ export const TOKENS = {
   StashSenderService: Symbol("StashSenderService"),
   UserService: Symbol("UserService"),
   EmailService: Symbol("EmailService"),
+  EmailChangeService: Symbol("EmailChangeService"),
   EmailVerificationService: Symbol("EmailVerificationService"),
 
   UserController: Symbol("UserController"),

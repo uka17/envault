@@ -6,7 +6,6 @@ import { TOKENS } from "#di/tokens.js";
 import { apiErrorPayload } from "#common/errorCodes.js";
 
 import UserService from "#service/UserService.js";
-import User from "#model/User.js";
 
 @injectable()
 export default class UserValidator {
@@ -49,21 +48,31 @@ export default class UserValidator {
           .notEmpty()
           .withMessage(apiErrorPayload("password_required")),
       ],
-      updateProfile: [
+      updateName: [
         body("name")
-          .optional()
+          .notEmpty()
+          .withMessage(apiErrorPayload("name_required"))
           .matches(config.nameRegExp)
           .withMessage(apiErrorPayload("name_alphanumeric")),
+      ],
+      requestEmailChange: [
         body("email")
-          .optional()
+          .notEmpty()
+          .withMessage(apiErrorPayload("email_required")).bail()
+          .isString()
+          .withMessage(apiErrorPayload("should_be_string")).bail()
+          .isLength({ max: 254 })
+          .withMessage(apiErrorPayload("email_format_incorrect")).bail()
+          .isEmail().withMessage(apiErrorPayload("email_format_incorrect")).bail()
           .matches(config.emailRegExp)
-          .withMessage(apiErrorPayload("email_format_incorrect"))
-          .custom(async(email, { req }) => {
-            const existing = await this.userService.getUserByEmail(email);
-            if (existing && existing.id !== (req.user as User).id) {
-              return Promise.reject(apiErrorPayload("user_already_exists"));
-            }
-          }),
+          .withMessage(apiErrorPayload("email_format_incorrect")),
+      ],
+      confirmEmailChange: [
+        body("token")
+          .isString()
+          .withMessage(apiErrorPayload("email_change_token_invalid")).bail()
+          .matches(/^[0-9a-f]{64}$/)
+          .withMessage(apiErrorPayload("email_change_token_invalid")),
       ],
       sessionId: [
         param("id").isNumeric().withMessage(apiErrorPayload("should_be_numeric")),

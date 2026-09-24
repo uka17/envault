@@ -112,13 +112,24 @@ export default class EmailVerificationService {
       return null;
     }
 
-    verification.consumedAt = new Date();
-    await this.emailVerificationRepository.save(verification);
-
-    verification.user.emailVerifiedAt = new Date();
-    await this.emailVerificationRepository.manager.save(verification.user);
-
-    return verification.user;
+    return this.emailVerificationRepository.manager.transaction(async(manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: verification.user.id }, lock: { mode: "pessimistic_write" },
+      });
+      if (!user) {
+        return null;
+      }
+      const claim = await manager.update(EmailVerification, {
+        id: verification.id, consumedAt: IsNull(), expiresAt: MoreThan(new Date()),
+      }, { consumedAt: new Date() });
+      if (claim.affected !== 1) {
+        return null;
+      }
+      // Never save the stale user snapshot read before the lock (it may contain an old email).
+      user.emailVerifiedAt = new Date();
+      await manager.update(User, user.id, { emailVerifiedAt: user.emailVerifiedAt });
+      return user;
+    });
   }
 
   /**

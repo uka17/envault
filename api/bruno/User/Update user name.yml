@@ -1,0 +1,45 @@
+info:
+  name: Update user name
+  type: http
+  seq: 5
+  tags:
+    - User
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/users/me"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "John Doe"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Success
+    description: Applies immediately, no confirmation required. Email changes go through "Request email change" instead.
+    request:
+      url: "{{baseUrl}}/api/v1/users/me"
+      method: PATCH
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "id": 1,
+            "email": "john@mail.com",
+            "pendingEmail": null,
+            "name": "John Doe",
+            "emailVerifiedAt": "2025-01-01T00:00:00Z"
+          }

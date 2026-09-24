@@ -12,6 +12,9 @@ export default function(){
     const logService = container.resolve<LogService>(TOKENS.LogService);
 
     if (error instanceof ApiError) {
+      if (error.retryAfter !== undefined) {
+        res.set("Retry-After", String(error.retryAfter));
+      }
       return res
         .status(error.statusCode)
         .json({ code: error.code, message: error.message, errors: error.errors });

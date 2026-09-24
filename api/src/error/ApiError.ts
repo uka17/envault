@@ -7,6 +7,7 @@ export interface ApiFieldError {
 }
 
 export default class ApiError extends Error {
+  public retryAfter?: number;
   public statusCode: number;
   public code: string;
   public errors: ApiFieldError[];

@@ -972,6 +972,297 @@
         }
       }
     },
+    "/api/v1/users/email-change/confirm": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Confirm email change",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Email replaced; all sessions revoked. Log in with the new address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "email_change_token_invalid: expired, cancelled, used or unknown token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "user_already_exists: address was taken; account unchanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid token format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "IP confirmation limit; Retry-After header"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeConfirmRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/email-change/resend": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Resend pending email change confirmation",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Confirmation sent; previous token invalidated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "email_change_not_pending or user_already_exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "email_change_rate_limited: 60-second cooldown and 3 sends per 15 minutes per user, including address replacements; Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "email_change_delivery_failed: pending address retained; retry resend after cooldown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/email-change/request": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Request an email change",
+        "description": "Starts a pending email change; current login and verification remain valid until confirmation. Repeating the pending email sends nothing; submitting the current email cancels the pending change.",
+        "responses": {
+          "200": {
+            "description": "Updated user profile (email unchanged until confirmed)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "user_already_exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "email_change_rate_limited; Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "email_change_delivery_failed: old login preserved, pending change retained for resend",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users/whoami": {
       "get": {
         "tags": [
@@ -1064,8 +1355,8 @@
         "tags": [
           "User"
         ],
-        "summary": "Update user profile",
-        "description": "",
+        "summary": "Update user name",
+        "description": "Updates the display name. Applies immediately, no confirmation required. Email changes go through /api/v1/users/email-change/request instead.",
         "responses": {
           "200": {
             "description": "Updated user profile",
@@ -1078,6 +1369,21 @@
               "application/xml": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1102,7 +1408,17 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/users/me/password": {
@@ -1452,36 +1768,49 @@
           "name": "ResendVerificationRequest"
         }
       },
-      "UserResponse": {
+      "UserUpdateRequest": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "number",
-            "example": 1
-          },
-          "email": {
-            "type": "string",
-            "example": "john@mail.com"
-          },
           "name": {
             "type": "string",
             "example": "John Doe"
-          },
-          "emailVerifiedAt": {
-            "type": "string",
-            "example": "2025-01-01T00:00:00Z"
-          },
-          "createdOn": {
-            "type": "string",
-            "example": "2025-01-01T00:00:00Z"
-          },
-          "modifiedOn": {
-            "type": "string",
-            "example": "2025-01-01T00:00:00Z"
           }
         },
+        "required": [
+          "name"
+        ],
         "xml": {
-          "name": "UserResponse"
+          "name": "UserUpdateRequest"
+        }
+      },
+      "EmailChangeRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "new@mail.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "xml": {
+          "name": "EmailChangeRequest"
+        }
+      },
+      "EmailChangeConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "xml": {
+          "name": "EmailChangeConfirmRequest"
         }
       },
       "TokenResponse": {
@@ -1661,6 +1990,45 @@
         },
         "xml": {
           "name": "ValidationErrorResponse"
+        }
+      },
+      "EmptyResponse": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "example": "john@mail.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "pendingEmail": {
+            "type": "string",
+            "nullable": true,
+            "example": "new@mail.com"
+          },
+          "emailVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifiedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       }
     }

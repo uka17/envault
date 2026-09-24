@@ -68,6 +68,19 @@ describe("User Routes", () => {
       ).to.equal("error_500");
     });
 
+    it("should return pendingEmail as null on the immediate registration response", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users")
+        .send({
+          email: `${userId()}@test.com`,
+          password: `Password${userId()}`,
+          name: `user${userName()}`,
+        });
+
+      expect(response.status).to.equal(201);
+      expect(response.body).to.have.property("pendingEmail", null);
+    });
+
     it("should return error user_already_exists", async() => {
       const newUser = {
         password: `Password${userId()}`,
@@ -621,28 +634,6 @@ describe("User Routes", () => {
       expect(response.body.password).to.be.undefined;
     });
 
-    it("should update email successfully", async() => {
-      const newEmail = `${userId()}@test.com`;
-
-      const response = await request(globalThis.app)
-        .patch("/api/v1/users/me")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ email: newEmail });
-
-      expect(response.status).to.equal(CODES.API_OK);
-      expect(response.body.email).to.equal(newEmail);
-    });
-
-    it("should return 422 for invalid email format", async() => {
-      const response = await request(globalThis.app)
-        .patch("/api/v1/users/me")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ email: "notanemail" });
-
-      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("email_format_incorrect");
-    });
-
     it("should return 422 for invalid name format", async() => {
       const response = await request(globalThis.app)
         .patch("/api/v1/users/me")
@@ -653,7 +644,82 @@ describe("User Routes", () => {
       expect(response.body.errors?.[0]?.code).to.equal("name_alphanumeric");
     });
 
-    it("should return 422 when updating to an already taken email", async() => {
+    it("should return 422 for a missing name", async() => {
+      const response = await request(globalThis.app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.code).to.equal("name_required");
+    });
+  });
+
+  describe("POST /api/v1/users/email-change/request", () => {
+    let token: string;
+    let userCredentials: { email: string; password: string; name: string };
+
+    beforeEach(async() => {
+      userCredentials = {
+        email: `${userId()}@test.com`,
+        password: `Password${userId()}`,
+        name: `user${userName()}`,
+      };
+
+      await registerAndVerifyUser(userCredentials);
+
+      const loginResponse = await request(globalThis.app)
+        .post("/api/v1/users/login")
+        .send({ email: userCredentials.email, password: userCredentials.password });
+
+      token = loginResponse.body.token;
+    });
+
+    it("should return 401 without a valid access token", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/email-change/request")
+        .send({ email: `${userId()}@test.com` });
+
+      expect(response.status).to.equal(CODES.API_UNAUTHORIZED);
+    });
+
+    it("should request email confirmation without replacing the login address", async() => {
+      const newEmail = `${userId()}@test.com`;
+
+      const mail = container.resolve<EmailService>(TOKENS.EmailService);
+      const sendStub = sinon.stub(mail, "send").resolves("test-message-id");
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/email-change/request")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: newEmail });
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body.email).to.equal(userCredentials.email);
+      expect(response.body.pendingEmail).to.equal(newEmail);
+      sendStub.restore();
+    });
+
+    it("should return 422 for invalid email format", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/email-change/request")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "notanemail" });
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.code).to.equal("email_format_incorrect");
+    });
+
+    it("should return 422 for a missing email", async() => {
+      const response = await request(globalThis.app)
+        .post("/api/v1/users/email-change/request")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+
+      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
+      expect(response.body.errors?.[0]?.code).to.equal("email_required");
+    });
+
+    it("should return 409 when updating to an already taken email", async() => {
       const otherUser = {
         email: `${userId()}@test.com`,
         password: `Password${userId()}`,
@@ -662,12 +728,12 @@ describe("User Routes", () => {
       await request(globalThis.app).post("/api/v1/users").send(otherUser);
 
       const response = await request(globalThis.app)
-        .patch("/api/v1/users/me")
+        .post("/api/v1/users/email-change/request")
         .set("Authorization", `Bearer ${token}`)
         .send({ email: otherUser.email });
 
-      expect(response.status).to.equal(CODES.API_REQUEST_VALIDATION_ERROR);
-      expect(response.body.errors?.[0]?.code).to.equal("user_already_exists");
+      expect(response.status).to.equal(409);
+      expect(response.body.code).to.equal("user_already_exists");
     });
   });
 

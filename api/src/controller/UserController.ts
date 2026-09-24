@@ -10,6 +10,7 @@ import config from "api/src/config/config.js";
 import User from "#model/User.js";
 
 import UserService from "#service/UserService.js";
+import EmailChangeService from "#service/EmailChangeService.js";
 import EmailVerificationService from "#service/EmailVerificationService.js";
 import LogService from "#service/LogService.js";
 import ApiError from "api/src/error/ApiError.js";
@@ -45,6 +46,7 @@ export default class UserController {
   constructor(
     @inject(TOKENS.UserService) private userService: UserService,
     @inject(TOKENS.EmailVerificationService) private emailVerificationService: EmailVerificationService,
+    @inject(TOKENS.EmailChangeService) private emailChangeService: EmailChangeService,
     @inject(TOKENS.LogService) private logger: LogService,
   ) {}
 
@@ -106,13 +108,17 @@ export default class UserController {
               return next(ApiError.fromCode(CODES.API_FORBIDDEN, "email_not_verified"));
             }
 
-            const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
-              userAgent: req.headers["user-agent"],
-              ip: normalizeIp(req.ip),
-            });
-            const accessToken = this.userService.createToken(passportUser, sessionId);
-            res.cookie(REFRESH_COOKIE, raw, getRefreshCookieOptions());
-            return res.json({ token: accessToken });
+            try {
+              const { raw, sessionId } = await this.userService.createRefreshToken(passportUser, {
+                userAgent: req.headers["user-agent"],
+                ip: normalizeIp(req.ip),
+              });
+              const accessToken = this.userService.createToken(passportUser, sessionId);
+              res.cookie(REFRESH_COOKIE, raw, getRefreshCookieOptions());
+              return res.json({ token: accessToken });
+            } catch (error) {
+              return next(error);
+            }
           }
 
           return next(ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_password_or_email"));
@@ -170,19 +176,70 @@ export default class UserController {
   }
 
   /**
-   * Update the current user's profile (name and/or email)
+   * Updates the current user's display name. Applies immediately, no confirmation required.
    * @param req Request object
    * @param res Response object
    * @param next Next function
    */
-  public async updateProfile(req: Request, res: Response, next: NextFunction) {
+  public async updateName(req: Request, res: Response, next: NextFunction) {
     try {
       const id = (req.user as User).id;
-      const { name, email } = req.body as { name?: string; email?: string };
-      const updated = await this.userService.updateProfile(id, { name, email });
+      const { name } = req.body as { name: string };
+      const updated = await this.userService.updateName(id, name);
       return res.status(CODES.API_OK).json(instanceToPlain(updated));
     } catch (e: unknown) /* istanbul ignore next */ {
       next(e);
+    }
+  }
+
+  /**
+   * Requests an email change for the current user. The current address stays active
+   * and logged in until the confirmation link is used.
+   * @param req Request object
+   * @param res Response object
+   * @param next Next function
+   */
+  public async requestEmailChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = (req.user as User).id;
+      const { email } = req.body as { email: string };
+      const updated = await this.emailChangeService.request(id, email);
+      return res.status(CODES.API_OK).json(instanceToPlain(updated));
+    } catch (e: unknown) /* istanbul ignore next */ {
+      next(e);
+    }
+  }
+
+  /**
+   * Confirms a new address and clears the now-revoked refresh cookie.
+   * @param req Request containing the token
+   * @param res Response
+   * @param next Error handler
+   * @returns HTTP response
+   */
+  public async confirmEmailChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      await this.emailChangeService.confirm(req.body.token);
+      res.clearCookie(REFRESH_COOKIE, { path: "/" });
+      return res.status(200).json({});
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Resends the authenticated user's pending email confirmation.
+   * @param req Authenticated request
+   * @param res Response
+   * @param next Error handler
+   * @returns HTTP response
+   */
+  public async resendEmailChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      await this.emailChangeService.request((req.user as User).id, undefined, true);
+      return res.status(200).json({});
+    } catch (error) {
+      next(error);
     }
   }
 

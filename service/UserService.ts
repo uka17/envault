@@ -7,6 +7,7 @@ import { EntityManager, IsNull, MoreThan, Not, Repository } from "typeorm";
 import User from "#model/User.js";
 import Session from "#model/Session.js";
 import LogService from "#service/LogService.js";
+import ApiError from "api/src/error/ApiError.js";
 import config from "api/src/config/config.js";
 import { TOKENS } from "#di/tokens.js";
 
@@ -68,15 +69,21 @@ export default class UserService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + config.JWTRefreshMaxAgeDays);
 
-    const session = await this.sessionRepository.save(
-      this.sessionRepository.create({
-        user,
+    const session = await this.sessionRepository.manager.transaction(async(manager) => {
+      const current = await manager.findOne(User, {
+        where: { id: user.id }, lock: { mode: "pessimistic_write" },
+      });
+      if (!current || current.email !== user.email) {
+        throw ApiError.fromCode(401, "incorrect_password_or_email");
+      }
+      return manager.save(Session, manager.create(Session, {
+        user: current,
         refreshTokenHash: hash,
         expiresAt,
         userAgent: meta?.userAgent ?? null,
         ip: meta?.ip ?? null,
-      }),
-    );
+      }));
+    });
 
     return { raw, sessionId: session.id };
   }
@@ -233,16 +240,14 @@ export default class UserService {
   }
 
   /**
-   * Updates the name and/or email of a user.
+   * Updates a user's display name. Email changes go through EmailChangeService instead,
+   * since they require a confirmation token and are not a plain field update.
    * @param userId User ID
-   * @param data Object containing optional name and/or email fields to update
+   * @param name New display name
    * @returns Updated user without password, or null if user not found
    */
-  public async updateProfile(
-    userId: number,
-    data: { name?: string; email?: string },
-  ): Promise<User | null> {
-    await this.userRepository.update(userId, { ...data, modifiedOn: new Date() });
+  public async updateName(userId: number, name: string): Promise<User | null> {
+    await this.userRepository.update(userId, { name, modifiedOn: new Date() });
     return this.getUserById(userId);
   }
 

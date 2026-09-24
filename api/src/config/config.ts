@@ -42,6 +42,12 @@ export default {
   },
   baseUrl: process.env.BASE_URL || "http://localhost:5173",
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
+  emailChange: {
+    ttlMs: 30 * 60 * 1000,
+    cooldownMs: 60 * 1000,
+    windowMs: 15 * 60 * 1000,
+    maxSends: 3,
+  },
   emailVerification: {
     codeAlphabet: "23456789abcdefghjkmnpqrstuvwxyz",
     codeLength: 8,

@@ -161,6 +161,65 @@ export default function(app: express.Router) {
     userController.resendVerification.bind(userController),
   );
 
+  app.post(
+    "/api/v1/users/email-change/confirm",
+    emailVerificationRateLimiter,
+    validationRules.confirmEmailChange,
+    validateRequest,
+    /* #swagger.summary = 'Confirm email change' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.requestBody = { required: true, content: { "application/json": {
+      schema: { $ref: '#/definitions/EmailChangeConfirmRequest' }
+    } } } */
+    /* #swagger.responses[200] = { description: 'Email replaced; all sessions revoked. Log in with the new address.', schema: { $ref: '#/definitions/EmptyResponse' } } */
+    /* #swagger.responses[401] = { description: 'email_change_token_invalid: expired, cancelled, used or unknown token', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[409] = { description: 'user_already_exists: address was taken; account unchanged', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[422] = { description: 'Invalid token format', schema: { $ref: '#/definitions/ValidationErrorResponse' } } */
+    /* #swagger.responses[429] = { description: 'IP confirmation limit; Retry-After header' } */
+    userController.confirmEmailChange.bind(userController),
+  );
+
+  app.post(
+    "/api/v1/users/email-change/resend",
+    passport.authenticate("jwt", { session: false }),
+    /* #swagger.summary = 'Resend pending email change confirmation' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = { description: 'Confirmation sent; previous token invalidated', schema: { $ref: '#/definitions/EmptyResponse' } } */
+    /* #swagger.responses[401] = { description: 'Unauthorized', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[409] = { description: 'email_change_not_pending or user_already_exists', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[429] = { description: 'email_change_rate_limited: 60-second cooldown and 3 sends per 15 minutes per user, including address replacements; Retry-After header', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[503] = { description: 'email_change_delivery_failed: pending address retained; retry resend after cooldown', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    userController.resendEmailChange.bind(userController),
+  );
+
+  app.post(
+    "/api/v1/users/email-change/request",
+    passport.authenticate("jwt", { session: false }),
+    validationRules.requestEmailChange,
+    validateRequest,
+    /* #swagger.summary = 'Request an email change' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.description = 'Starts a pending email change; current login and verification remain valid until confirmation. Repeating the pending email sends nothing; submitting the current email cancels the pending change.' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.requestBody = { required: true, content: { "application/json": {
+      schema: { $ref: '#/definitions/EmailChangeRequest' }
+    } } } */
+    /* #swagger.responses[200] = {
+          description: 'Updated user profile (email unchanged until confirmed)',
+          schema: { $ref: '#/definitions/UserResponse' }
+    } */
+    /* #swagger.responses[401] = { description: 'Unauthorized', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[409] = { description: 'user_already_exists', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[429] = { description: 'email_change_rate_limited; Retry-After header', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[503] = { description: 'email_change_delivery_failed: old login preserved, pending change retained for resend', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    /* #swagger.responses[422] = {
+          description: 'Validation error',
+          schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    userController.requestEmailChange.bind(userController),
+  );
+
   // Get a protected resource with current user
   app.get(
     "/api/v1/users/whoami",
@@ -197,13 +256,18 @@ export default function(app: express.Router) {
     userController.refresh.bind(userController),
   );
 
-  // Update current user profile (name and/or email)
+  // Update current user's display name
   app.patch(
     "/api/v1/users/me",
     passport.authenticate("jwt", { session: false }),
-    validationRules.updateProfile,
+    validationRules.updateName,
     validateRequest,
-    /* #swagger.summary = 'Update user profile' */
+    /* #swagger.summary = 'Update user name' */
+    /* #swagger.description = 'Updates the display name. Applies immediately, no confirmation required. Email changes go through /api/v1/users/email-change/request instead.' */
+    /* #swagger.requestBody = { required: true, content: { "application/json": {
+      schema: { $ref: '#/definitions/UserUpdateRequest' }
+    } } } */
+    /* #swagger.responses[401] = { description: 'Unauthorized', schema: { $ref: '#/definitions/ErrorResponse' } } */
     /* #swagger.tags = ['User'] */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.responses[200] = {
@@ -214,7 +278,7 @@ export default function(app: express.Router) {
           description: 'Validation error',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
-    userController.updateProfile.bind(userController),
+    userController.updateName.bind(userController),
   );
 
   // Change current user password
