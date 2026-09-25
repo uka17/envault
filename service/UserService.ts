@@ -2,12 +2,15 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { injectable, inject } from "tsyringe";
-import { EntityManager, IsNull, MoreThan, Not, Repository } from "typeorm";
+import { EntityManager, IsNull, LessThan, MoreThan, Not, Repository } from "typeorm";
 
 import User from "#model/User.js";
+import PasswordResetLimit from "#model/PasswordResetLimit.js";
+import EmailService from "#service/EmailService.js";
+import ApiError from "api/src/error/ApiError.js";
+import { renderResetPassword } from "#common/templates/resetPassword.js";
 import Session from "#model/Session.js";
 import LogService from "#service/LogService.js";
-import ApiError from "api/src/error/ApiError.js";
 import config from "api/src/config/config.js";
 import { TOKENS } from "#di/tokens.js";
 
@@ -18,11 +21,13 @@ export default class UserService {
    * @param userRepository User repository
    * @param sessionRepository Session repository
    * @param logger Logger service
+   * @param emailService Email delivery service
    */
   constructor(
     @inject(TOKENS.UserRepository) private userRepository: Repository<User>,
     @inject(TOKENS.SessionRepository) private sessionRepository: Repository<Session>,
     @inject(TOKENS.LogService) private logger: LogService,
+    @inject(TOKENS.EmailService) private emailService: EmailService,
   ) {}
 
   /**
@@ -73,7 +78,8 @@ export default class UserService {
       const current = await manager.findOne(User, {
         where: { id: user.id }, lock: { mode: "pessimistic_write" },
       });
-      if (!current || current.email !== user.email) {
+      // A login can finish password verification before a reset commits.
+      if (!current || current.password !== user.password || current.email !== user.email) {
         throw ApiError.fromCode(401, "incorrect_password_or_email");
       }
       return manager.save(Session, manager.create(Session, {
@@ -266,19 +272,124 @@ export default class UserService {
     currentPassword: string,
     newPassword: string,
   ): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      return false;
-    }
-    if (!bcrypt.compareSync(currentPassword, user.password)) {
-      return false;
-    }
-    const passwordHash = this.getPasswordHash(newPassword);
-    await this.userRepository.manager.transaction(async(manager) => {
-      await manager.update(User, userId, { password: passwordHash, modifiedOn: new Date() });
+    return this.userRepository.manager.transaction(async(manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId }, lock: { mode: "pessimistic_write" },
+      });
+      if (!user || !bcrypt.compareSync(currentPassword, user.password)) {
+        return false;
+      }
+      await manager.update(User, userId, {
+        password: this.getPasswordHash(newPassword), modifiedOn: new Date(),
+        passwordResetTokenHash: null, passwordResetExpiresAt: null, passwordResetEmail: null,
+      });
       await this.revokeAllSessions(userId, manager);
+      return true;
     });
-    return true;
+  }
+
+  /**
+   * Reserves an address budget and replaces the reset token for a verified account.
+   * Unknown and unverified addresses consume the same persistent budget. Email delivery
+   * starts after commit without being awaited; neither its latency nor its failures reveal
+   * whether the address belongs to an account.
+   * @param email Email address, using the same case-sensitive lookup as login
+   * @returns Retry-After in seconds when throttled, or zero for a neutral success
+   */
+  public async requestPasswordReset(email: string): Promise<number> {
+    const address = email.trim();
+    const emailHash = crypto.createHash("sha256").update(address.toLowerCase()).digest("hex");
+    const result = await this.userRepository.manager.transaction(async(manager) => {
+      const limits = manager.getRepository(PasswordResetLimit);
+      const now = new Date();
+      // Retain at most one day of inactive budgets, including unknown addresses.
+      await limits.delete({ windowStartedAt: LessThan(new Date(now.getTime() - 24 * 60 * 60 * 1000)) });
+      await limits.createQueryBuilder().insert().values({
+        emailHash, windowStartedAt: now, requestCount: 0,
+      }).orIgnore().execute();
+      const budget = await limits.findOneOrFail({
+        where: { emailHash }, lock: { mode: "pessimistic_write" },
+      });
+      const elapsed = Date.now() - budget.windowStartedAt.getTime();
+      if (elapsed >= config.passwordReset.windowMs) {
+        budget.windowStartedAt = new Date();
+        budget.requestCount = 0;
+      } else if (budget.requestCount >= config.passwordReset.maxRequestsPerEmail) {
+        return { retryAfter: Math.max(1, Math.ceil((config.passwordReset.windowMs - elapsed) / 1000)) };
+      }
+      budget.requestCount += 1;
+      await limits.save(budget);
+
+      const user = await manager.findOne(User, {
+        where: { email: address }, lock: { mode: "pessimistic_write" },
+      });
+      if (!user?.emailVerifiedAt) {
+        return { retryAfter: 0 };
+      }
+      const token = crypto.randomBytes(32).toString("hex");
+      await manager.update(User, user.id, {
+        passwordResetTokenHash: crypto.createHash("sha256").update(token).digest("hex"),
+        passwordResetExpiresAt: new Date(Date.now() + config.passwordReset.expiresInMinutes * 60000),
+        passwordResetEmail: user.email,
+      });
+      return { retryAfter: 0, token, email: user.email };
+    });
+    if (result.token && result.email) {
+      // Not awaited on purpose: waiting for SES only on the verified-account path would make
+      // the response measurably slower and let callers enumerate accounts by latency.
+      void this.sendPasswordResetEmail(result.email, result.token);
+    }
+    return result.retryAfter;
+  }
+
+  /**
+   * Delivers the reset link. Never throws, so it is safe to run detached from the request.
+   * @param email Recipient address
+   * @param token Raw reset token to embed in the link
+   * @returns Promise resolved once delivery has been attempted
+   */
+  private async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+    try {
+      const resetUrl = `${config.baseUrl.replace(/\/$/, "")}/reset-password?token=${token}`;
+      const messageId = await this.emailService.send({
+        to: email,
+        from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
+        ...renderResetPassword({ resetUrl }),
+      });
+      if (!messageId) {
+        this.logger.error("Password reset email delivery failed");
+      }
+    } catch {
+      this.logger.error("Password reset email delivery failed");
+    }
+  }
+
+  /**
+   * Consumes a reset token, updates the password and revokes sessions in one transaction.
+   * @param token Raw token from the reset link
+   * @param newPassword Validated new password
+   * @returns Whether the token was valid and the password was changed
+   */
+  public async confirmPasswordReset(token: unknown, newPassword: string): Promise<boolean> {
+    if (typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token)) {
+      return false;
+    }
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    return this.userRepository.manager.transaction(async(manager) => {
+      const user = await manager.findOne(User, {
+        where: { passwordResetTokenHash: tokenHash }, lock: { mode: "pessimistic_write" },
+      });
+      if (!user || !user.emailVerifiedAt || user.passwordResetEmail !== user.email ||
+          !user.passwordResetExpiresAt || user.passwordResetExpiresAt.getTime() <= Date.now()) {
+        return false;
+      }
+      await manager.update(User, user.id, {
+        password: this.getPasswordHash(newPassword), modifiedOn: new Date(),
+        passwordResetTokenHash: null, passwordResetExpiresAt: null, passwordResetEmail: null,
+      });
+      await this.revokeAllSessions(user.id, manager);
+      return true;
+    });
   }
 
   /**

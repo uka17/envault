@@ -43,6 +43,8 @@ const API_ERROR_MESSAGES = {
   email_change_rate_limited: "Too many email change requests",
   email_change_not_pending: "No email change is pending",
   email_change_delivery_failed: "Confirmation email could not be sent; please retry later",
+  password_reset_invalid: "This password reset link is invalid or has expired",
+  password_reset_rate_limited: "Too many password reset attempts. Please try again later",
   verification_code_required: "Verification code is required",
 } as const;
 

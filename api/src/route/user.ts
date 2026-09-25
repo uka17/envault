@@ -4,6 +4,7 @@ import { rateLimit } from "express-rate-limit";
 import { container } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
+import { apiErrorPayload } from "#common/errorCodes.js";
 import config from "api/src/config/config.js";
 
 import UserValidator from "api/src/route/validator/UserValidator.js";
@@ -32,6 +33,74 @@ export default function(app: express.Router) {
     standardHeaders: true,
     legacyHeaders: false,
   });
+
+  // Express trusts only the socket peer until the explicit proxy topology in #48 is configured.
+  const passwordResetRequestLimiter = rateLimit({
+    windowMs: config.passwordReset.windowMs,
+    max: config.passwordReset.maxRequestsPerIp,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: apiErrorPayload("password_reset_rate_limited"),
+  });
+  const passwordResetConfirmLimiter = rateLimit({
+    windowMs: config.passwordReset.windowMs,
+    max: config.passwordReset.maxConfirmationsPerIp,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: apiErrorPayload("password_reset_rate_limited"),
+  });
+
+  app.post(
+    "/api/v1/users/password-reset/request",
+    passwordResetRequestLimiter,
+    validationRules.requestPasswordReset,
+    validateRequest,
+    /* #swagger.summary = 'Request password reset' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.security = [] */
+    /* #swagger.description = 'Sends a reset link only to verified accounts. Unknown and unverified addresses receive the same 200 response. Replaces any previous token. The link expires in 30 minutes. Limits: 3 requests/15 minutes/address and 20/15 minutes/IP.' */
+    /* #swagger.requestBody = {
+          required: true,
+          content: { "application/json": { schema: { $ref: '#/definitions/PasswordResetRequest' } } }
+    } */
+    /* #swagger.responses[200] = { description: 'Request accepted, whether or not an email was sent', schema: {} } */
+    /* #swagger.responses[422] = { description: 'Invalid email', schema: { $ref: '#/definitions/ValidationErrorResponse' } } */
+    /* #swagger.responses[429] = {
+          description: 'password_reset_rate_limited; Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[500] = { description: 'Internal error', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    userController.requestPasswordReset.bind(userController),
+  );
+
+  app.post(
+    "/api/v1/users/password-reset/confirm",
+    passwordResetConfirmLimiter,
+    validationRules.confirmPasswordReset,
+    validateRequest,
+    /* #swagger.summary = 'Confirm password reset' */
+    /* #swagger.tags = ['User'] */
+    /* #swagger.security = [] */
+    /* #swagger.description = 'Consumes a one-time token, changes the password and revokes all sessions atomically. No automatic login. Does not change stashes or recover encryption keys. Limited to 30 attempts/15 minutes/IP.' */
+    /* #swagger.requestBody = {
+          required: true,
+          content: { "application/json": { schema: { $ref: '#/definitions/PasswordResetConfirmRequest' } } }
+    } */
+    /* #swagger.responses[200] = { description: 'Password changed; refresh cookie cleared; log in again', schema: {} } */
+    /* #swagger.responses[400] = {
+          description: 'password_reset_invalid: missing, malformed, unknown, expired or used token',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[422] = { description: 'Invalid password', schema: { $ref: '#/definitions/ValidationErrorResponse' } } */
+    /* #swagger.responses[429] = {
+          description: 'password_reset_rate_limited; Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[500] = { description: 'Internal error', schema: { $ref: '#/definitions/ErrorResponse' } } */
+    userController.confirmPasswordReset.bind(userController),
+  );
 
   // Register a new user
   app.post(

@@ -5,6 +5,7 @@ import User from "#model/User.js";
 import Stash from "#model/Stash.js";
 import SendLog from "#model/SendLog.js";
 import Session from "#model/Session.js";
+import PasswordResetLimit from "#model/PasswordResetLimit.js";
 import EmailVerification from "#model/EmailVerification.js";
 
 /**
@@ -23,7 +24,7 @@ function getAppDataSource(
     type: "postgres",
     url: dbURL,
     database: dbName,
-    entities: [User, Stash, SendLog, Session, EmailVerification],
+    entities: [User, Stash, SendLog, Session, EmailVerification, PasswordResetLimit],
     synchronize: true,
     logging: showLogs,
     connectTimeoutMS: 10000,

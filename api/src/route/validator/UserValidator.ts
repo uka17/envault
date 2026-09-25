@@ -89,6 +89,20 @@ export default class UserValidator {
           .matches(config.emailRegExp)
           .withMessage(apiErrorPayload("email_format_incorrect")),
       ],
+      requestPasswordReset: [
+        body("email")
+          .isString().withMessage(apiErrorPayload("email_format_incorrect")).bail()
+          .trim()
+          .notEmpty().withMessage(apiErrorPayload("email_required")).bail()
+          .isLength({ max: 254 }).withMessage(apiErrorPayload("email_format_incorrect")).bail()
+          .isEmail().withMessage(apiErrorPayload("email_format_incorrect")),
+      ],
+      confirmPasswordReset: [
+        body("newPassword")
+          .isString().withMessage(apiErrorPayload("password_format_incorrect")).bail()
+          .notEmpty().withMessage(apiErrorPayload("new_password_required")).bail()
+          .matches(config.passwordRegExp).withMessage(apiErrorPayload("password_format_incorrect")),
+      ],
       updatePassword: [
         body("currentPassword")
           .notEmpty()

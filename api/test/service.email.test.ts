@@ -21,6 +21,16 @@ describe("Email service", () => {
   });
 
   describe("Errors", () => {
+    it("should not log raw tokens or message content from transport errors", async() => {
+      const secret = "token=private-reset-token";
+      const error = Object.assign(new Error(secret), { messageBody: secret });
+      sinon.stub((emailService as any).transporter, "sendMail").rejects(error);
+      const errorStub = sinon.stub(mockLogger, "error");
+      expect(await emailService.send({ to: "test@test.com", text: secret })).to.be.null;
+      expect(errorStub.calledOnceWithExactly("Email delivery failed")).to.be.true;
+      expect(JSON.stringify(errorStub.args)).not.to.include(secret);
+    });
+
     it("should return null and log error when send fails", async() => {
       sinon.stub((emailService as any).transporter, "sendMail").rejects(new Error("SMTP error"));
       const errorStub = sinon.stub(mockLogger, "error");

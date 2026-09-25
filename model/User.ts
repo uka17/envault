@@ -44,6 +44,19 @@ export default class User extends Base {
   @Column({ type: "timestamptz", nullable: true, default: () => "NOW()" })
     emailVerifiedAt: Date | null;
 
+  @Exclude()
+  @Index({ unique: true })
+  @Column({ type: "text", nullable: true })
+    passwordResetTokenHash: string | null;
+
+  @Exclude()
+  @Column({ type: "timestamptz", nullable: true })
+    passwordResetExpiresAt: Date | null;
+
+  @Exclude()
+  @Column({ type: "text", nullable: true })
+    passwordResetEmail: string | null;
+
   @OneToMany(() => Stash, (stash) => stash.user)
     stashes: Stash[];
 

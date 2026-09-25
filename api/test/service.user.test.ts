@@ -2,6 +2,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import bcrypt from "bcryptjs";
 
+import EmailService from "#service/EmailService.js";
 import UserService from "#service/UserService.js";
 import User from "#model/User.js";
 import Session from "#model/Session.js";
@@ -17,7 +18,9 @@ let loggerStub: { error: sinon.SinonStub };
 describe("User service", () => {
   describe("Errors", () => {
     beforeEach(() => {
-      userService = new UserService(userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService);
+      userService = new UserService(
+        userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService, sinon.createStubInstance(EmailService),
+      );
 
       loggerStub = { error: sinon.stub() };
       (userService as any).logger = loggerStub;
@@ -54,7 +57,9 @@ describe("User service", () => {
     let testUser: User;
 
     before(async() => {
-      userService = new UserService(userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService);
+      userService = new UserService(
+        userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService, sinon.createStubInstance(EmailService),
+      );
 
       const u = new User();
       u.email = `refresh_svc_${Date.now()}@test.com`;
@@ -252,7 +257,9 @@ describe("User service", () => {
     let profileUser: User;
 
     before(async() => {
-      userService = new UserService(userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService);
+      userService = new UserService(
+        userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService, sinon.createStubInstance(EmailService),
+      );
 
       const u = new User();
       u.email = `profile_svc_${Date.now()}@test.com`;
@@ -280,7 +287,9 @@ describe("User service", () => {
     const originalPassword = "OriginalPass1";
 
     before(async() => {
-      userService = new UserService(userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService);
+      userService = new UserService(
+        userRepositoryStub, sessionRepositoryStub, globalThis.mockLogService, sinon.createStubInstance(EmailService),
+      );
 
       const u = new User();
       u.email = `password_svc_${Date.now()}@test.com`;
@@ -318,6 +327,7 @@ describe("User service", () => {
     });
 
     it("should revoke every active session of the user when the password is changed", async() => {
+      passwordUser = await userRepositoryStub.findOneByOrFail({ id: passwordUser.id });
       const { sessionId: first } = await userService.createRefreshToken(passwordUser);
       const { sessionId: second } = await userService.createRefreshToken(passwordUser);
       const currentPassword = "NewPass1";
@@ -330,6 +340,7 @@ describe("User service", () => {
     });
 
     it("should keep sessions active when the current password is wrong", async() => {
+      passwordUser = await userRepositoryStub.findOneByOrFail({ id: passwordUser.id });
       const { sessionId } = await userService.createRefreshToken(passwordUser);
 
       await userService.updatePassword(passwordUser.id, "WrongPassword1", "NewPass3");
@@ -339,6 +350,7 @@ describe("User service", () => {
     });
 
     it("should roll back the password change when the revocation fails", async() => {
+      passwordUser = await userRepositoryStub.findOneByOrFail({ id: passwordUser.id });
       const { sessionId } = await userService.createRefreshToken(passwordUser);
       const revokeStub = sinon.stub(userService, "revokeAllSessions").rejects(new Error("connection lost"));
 
