@@ -148,6 +148,8 @@ export default class StashService {
 
   /**
    * Snoozes a stash with an owner-scoped update that cannot recreate a deleted row.
+   * Snoozing starts a new delivery cycle: failed attempts and the retry delay are reset,
+   * so a stash that exhausted its attempts is sent again at the new time.
    * @param stashId Stash ID
    * @param hours Number of hours to snooze
    * @param modifiedBy Authenticated user who must own the stash
@@ -174,8 +176,12 @@ export default class StashService {
         stash.scheduledAt = new Date(stash.scheduledAt.getTime() + hours * 3_600_000);
         stash.modifiedBy = modifiedBy;
         stash.modifiedOn = new Date();
+        stash.deliveryAttempts = 0;
+        stash.nextAttemptAt = null;
+        stash.lastDeliveryError = null;
         await manager.update(Stash, { id: stashId, user: { id: modifiedBy.id } }, {
           scheduledAt: stash.scheduledAt, modifiedBy, modifiedOn: stash.modifiedOn,
+          deliveryAttempts: 0, nextAttemptAt: null, lastDeliveryError: null,
         });
         return stash;
       });
