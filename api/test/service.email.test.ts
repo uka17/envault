@@ -171,6 +171,9 @@ describe("Email service", () => {
 
         const expectedTo = environment === "DEV" ? TEST_RECIPIENT : "real-user@example.com";
         expect(sendStub.firstCall.args[0].to).to.equal(expectedTo);
+        // The caller logs this address, so it must be the one the email actually went to.
+        expect(await emailService.sendWithResult({ to: "real-user@example.com" }))
+          .to.deep.equal({ messageId: "test-message-id", to: expectedTo });
         expect(warnStub.called).to.equal(environment === "DEV");
       });
     }

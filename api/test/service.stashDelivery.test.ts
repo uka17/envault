@@ -44,7 +44,7 @@ function deliverySuite() {
   beforeEach(/** @returns Nothing */ async() => {
     service = new StashService(repo);
     email = sinon.createStubInstance(EmailService);
-    email.sendWithResult.resolves({ messageId: "test-message-id" });
+    email.sendWithResult.resolves({ messageId: "test-message-id", to: "recipient@example.com" });
     sender = new StashSenderService(repo, email, globalThis.mockLogService);
     stash = await repo.save({ user: owner, to: `${randomUUID()}@example.com`, body: "ciphertext",
       scheduledAt: new Date(0), publicAccessToken: service.generatePublicAccessToken() });
@@ -76,7 +76,7 @@ function deliverySuite() {
       email.sendWithResult.callsFake(/** @returns Accepted message ID */ async() => {
         entered.release();
         await finish.promise;
-        return { messageId: "test-message-id" };
+        return { messageId: "test-message-id", to: "recipient@example.com" };
       });
       const running = sender.processDueStashes();
       try {
@@ -107,12 +107,12 @@ function deliverySuite() {
     const second = await repo.save({ user: owner, to: "second@example.com", body: "ciphertext",
       scheduledAt: new Date(1) });
     const otherEmail = sinon.createStubInstance(EmailService);
-    otherEmail.sendWithResult.resolves({ messageId: "other-message-id" });
+    otherEmail.sendWithResult.resolves({ messageId: "other-message-id", to: "second@example.com" });
     const otherWorker = new StashSenderService(repo, otherEmail, globalThis.mockLogService);
     email.sendWithResult.callsFake(/** @returns Accepted message ID */ async() => {
       entered.release();
       await finish.promise;
-      return { messageId: "first-message-id" };
+      return { messageId: "first-message-id", to: "recipient@example.com" };
     });
     const running = sender.processDueStashes();
     try {

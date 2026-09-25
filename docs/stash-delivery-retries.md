@@ -20,7 +20,7 @@ Outcomes:
 
 | Outcome | What is written | Log |
 | --- | --- | --- |
-| Provider accepted the email | `SendLog` row, `is_sent = true`, `sent_at` (one transaction) | `info Sent stash <id> to <to> (messageId=...)` after commit |
+| Provider accepted the email | `SendLog` row, `is_sent = true`, `sent_at` (one transaction) | `info Sent stash <id> to <recipient> (messageId=...)` after commit; `<recipient>` is where the email actually went (the test recipient in DEV) |
 | Send failed or timed out | `delivery_attempts + 1`, `next_attempt_at`, `last_delivery_error` (committed) | `warn Stash <id> delivery failed (<category>), attempt n/max, next attempt at <time>` |
 | Last allowed attempt failed | same, with `next_attempt_at = NULL` | `error Stash <id> delivery attempts exhausted (max/max), last error: <category>. Automatic sending stopped.` |
 | Provider accepted, but the DB write or commit failed | nothing (rolled back) | `error Stash <id> was accepted by the email provider (messageId=...) but the delivery was not recorded; ...` |

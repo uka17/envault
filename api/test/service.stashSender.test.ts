@@ -56,7 +56,10 @@ function senderSuite() {
   });
   beforeEach(/** @returns Nothing */ async() => {
     email = sinon.createStubInstance(EmailService);
-    email.sendWithResult.resolves({ messageId: "test-message-id" });
+    // Mirrors EmailService outside DEV: the email goes to the address it was given.
+    email.sendWithResult.callsFake(/** @param options Mail options. @returns Accepted send */ async(options) => ({
+      messageId: "test-message-id", to: options.to as string,
+    }));
     logger = sinon.createStubInstance(LogService);
     sender = new StashSenderService(repo, email, logger);
     stash = await createStash();
@@ -82,6 +85,16 @@ function senderSuite() {
       `Sent stash ${stash.id} to ${stash.to} (messageId=test-message-id).`,
     )).to.equal(true);
   });
+
+  it("logs the recipient the email was actually sent to, not the stash address", /** @returns Nothing */
+    async() => {
+      // In DEV EmailService redirects every email to a test recipient; the log must show where it went.
+      email.sendWithResult.resolves({ messageId: "test-message-id", to: "dev-recipient@example.com" });
+      await sender.processDueStashes();
+      expect(logger.info.calledOnceWith(
+        `Sent stash ${stash.id} to dev-recipient@example.com (messageId=test-message-id).`,
+      )).to.equal(true);
+    });
 
   it("records the log and sent state, and does not send the message again", /** @returns Nothing */ async() => {
     const before = Date.now();
@@ -115,7 +128,7 @@ function senderSuite() {
     email.sendWithResult.onSecondCall().callsFake(/** @returns Transport message ID */ async() => {
       expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(true);
       expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(1);
-      return { messageId: "second-message-id" };
+      return { messageId: "second-message-id", to: second.to };
     });
     await sender.processDueStashes();
     expect(email.sendWithResult.calledTwice).to.equal(true);

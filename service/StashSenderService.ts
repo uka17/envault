@@ -94,7 +94,7 @@ export default class StashSenderService {
           if (update.affected !== 1) {
             throw new Error(`Failed to record delivery for stash ${stash.id}`);
           }
-          return { status: "sent", id: stash.id, to: mailOptions.to as string, messageId: result.messageId };
+          return { status: "sent", id: stash.id, to: result.to, messageId: result.messageId };
         });
     } catch (error) {
       const unrecorded = accepted as { id: number; messageId: string } | null;

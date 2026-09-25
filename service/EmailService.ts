@@ -15,8 +15,11 @@ const TIMEOUT_CODES = ["ETIMEDOUT", "ESOCKETTIMEDOUT"];
 /** Safe category of a failed send, stored and logged instead of provider message text. */
 export type EmailErrorCategory = "timeout" | "send_failed";
 
-/** Result of an email submission: provider message ID or a safe failure category. */
-export type EmailSendResult = { messageId: string } | { error: EmailErrorCategory };
+/**
+ * Result of an email submission: provider message ID with the recipient the email was actually
+ * sent to (the test recipient in DEV), or a safe failure category.
+ */
+export type EmailSendResult = { messageId: string; to: string } | { error: EmailErrorCategory };
 
 @injectable()
 export default class EmailService {
@@ -61,7 +64,7 @@ export default class EmailService {
    * Sends email like `send`, but reports a safe failure category instead of `null`.
    * A timeout is an ambiguous result: the provider may still have accepted the email.
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
-   * @returns Message ID received from AWS SES or the failure category
+   * @returns Message ID received from AWS SES with the actual recipient, or the failure category
    */
   public async sendWithResult(mailOptions: nodemailer.SendMailOptions): Promise<EmailSendResult> {
     const isDev = process.env.ENV === "DEV";
@@ -73,7 +76,7 @@ export default class EmailService {
       this.logger.info(`Sending email to ${finalOptions.to}...`);
       const info = await this.transporter.sendMail(finalOptions);
       if (info.messageId) {
-        return { messageId: info.messageId };
+        return { messageId: info.messageId, to: finalOptions.to as string };
       }
       this.logger.error("Email delivery failed: category=send_failed reason=no_message_id");
       return { error: "send_failed" };
