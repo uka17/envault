@@ -361,6 +361,19 @@ describe("Password reset API", () => {
     expect(send.callCount).to.equal(3);
   });
 
+  it("responds without waiting for email delivery, so latency does not reveal verified accounts", async() => {
+    const user = await createUser();
+    let finishDelivery: (value: string) => void = () => undefined;
+    send.returns(new Promise<string>((resolve) => {
+      finishDelivery = resolve;
+    }));
+    const response = await request(app).post(requestPath).send({ email: user.email });
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal({});
+    expect(send.calledOnce).to.be.true;
+    finishDelivery("test-message-id");
+  });
+
   it("returns a safe 500 for a request database failure", async() => {
     sinon.stub(service, "requestPasswordReset").rejects(new Error("sensitive database details"));
     const response = await request(app).post(requestPath).send({ email: "somebody@example.com" });

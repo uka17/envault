@@ -291,7 +291,8 @@ export default class UserService {
   /**
    * Reserves an address budget and replaces the reset token for a verified account.
    * Unknown and unverified addresses consume the same persistent budget. Email delivery
-   * occurs after commit; failures never reveal whether the address belongs to an account.
+   * starts after commit without being awaited; neither its latency nor its failures reveal
+   * whether the address belongs to an account.
    * @param email Email address, using the same case-sensitive lookup as login
    * @returns Retry-After in seconds when throttled, or zero for a neutral success
    */
@@ -333,22 +334,34 @@ export default class UserService {
       });
       return { retryAfter: 0, token, email: user.email };
     });
-    if (result.token) {
-      try {
-        const resetUrl = `${config.baseUrl.replace(/\/$/, "")}/reset-password?token=${result.token}`;
-        const messageId = await this.emailService.send({
-          to: result.email,
-          from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
-          ...renderResetPassword(resetUrl),
-        });
-        if (!messageId) {
-          this.logger.error("Password reset email delivery failed");
-        }
-      } catch {
-        this.logger.error("Password reset email delivery failed");
-      }
+    if (result.token && result.email) {
+      // Not awaited on purpose: waiting for SES only on the verified-account path would make
+      // the response measurably slower and let callers enumerate accounts by latency.
+      void this.sendPasswordResetEmail(result.email, result.token);
     }
     return result.retryAfter;
+  }
+
+  /**
+   * Delivers the reset link. Never throws, so it is safe to run detached from the request.
+   * @param email Recipient address
+   * @param token Raw reset token to embed in the link
+   * @returns Promise resolved once delivery has been attempted
+   */
+  private async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+    try {
+      const resetUrl = `${config.baseUrl.replace(/\/$/, "")}/reset-password?token=${token}`;
+      const messageId = await this.emailService.send({
+        to: email,
+        from: `${config.sendFrom.name} <${config.sendFrom.email}>`,
+        ...renderResetPassword({ resetUrl }),
+      });
+      if (!messageId) {
+        this.logger.error("Password reset email delivery failed");
+      }
+    } catch {
+      this.logger.error("Password reset email delivery failed");
+    }
   }
 
   /**
