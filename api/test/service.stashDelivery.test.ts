@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import sinon from "sinon";
+import { instanceToPlain } from "class-transformer";
 import { randomUUID } from "node:crypto";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
@@ -8,6 +9,7 @@ import StashService from "#service/StashService.js";
 import StashSenderService from "#service/StashSenderService.js";
 import EmailService from "#service/EmailService.js";
 import ApiError from "api/src/error/ApiError.js";
+import config from "worker/src/config/config.js";
 
 /**
  * Creates an explicit barrier for deterministic concurrent delivery tests.
@@ -42,9 +44,9 @@ function deliverySuite() {
   beforeEach(/** @returns Nothing */ async() => {
     service = new StashService(repo);
     email = sinon.createStubInstance(EmailService);
-    email.send.resolves("test-message-id");
+    email.sendWithResult.resolves({ messageId: "test-message-id" });
     sender = new StashSenderService(repo, email, globalThis.mockLogService);
-    stash = await repo.save({ user: owner, to: "recipient@example.com", body: "ciphertext",
+    stash = await repo.save({ user: owner, to: `${randomUUID()}@example.com`, body: "ciphertext",
       scheduledAt: new Date(0), publicAccessToken: service.generatePublicAccessToken() });
   });
   afterEach(/** @returns Nothing */ async() => {
@@ -65,16 +67,16 @@ function deliverySuite() {
         await service.snoozeStash(stash.id, 24, owner);
       }
       await sender.processDueStashes();
-      expect(email.send.called).to.equal(false);
+      expect(email.sendWithResult.called).to.equal(false);
     });
 
     it(`delivery wins before ${operation}, so the mutation returns a conflict`, /** @returns Nothing */ async() => {
       const entered = barrier();
       const finish = barrier();
-      email.send.callsFake(/** @returns Accepted message ID */ async() => {
+      email.sendWithResult.callsFake(/** @returns Accepted message ID */ async() => {
         entered.release();
         await finish.promise;
-        return "test-message-id";
+        return { messageId: "test-message-id" };
       });
       const running = sender.processDueStashes();
       try {
@@ -105,21 +107,21 @@ function deliverySuite() {
     const second = await repo.save({ user: owner, to: "second@example.com", body: "ciphertext",
       scheduledAt: new Date(1) });
     const otherEmail = sinon.createStubInstance(EmailService);
-    otherEmail.send.resolves("other-message-id");
+    otherEmail.sendWithResult.resolves({ messageId: "other-message-id" });
     const otherWorker = new StashSenderService(repo, otherEmail, globalThis.mockLogService);
-    email.send.callsFake(/** @returns Accepted message ID */ async() => {
+    email.sendWithResult.callsFake(/** @returns Accepted message ID */ async() => {
       entered.release();
       await finish.promise;
-      return "first-message-id";
+      return { messageId: "first-message-id" };
     });
     const running = sender.processDueStashes();
     try {
       await entered.promise;
       await sender.processDueStashes();
-      expect(email.send.calledOnce).to.equal(true);
+      expect(email.sendWithResult.calledOnce).to.equal(true);
       expect((await repo.findOneByOrFail({ id: second.id })).isSent).to.equal(false);
       await otherWorker.processDueStashes();
-      expect(otherEmail.send.calledOnce).to.equal(true);
+      expect(otherEmail.sendWithResult.calledOnce).to.equal(true);
       expect((await repo.findOneByOrFail({ id: second.id })).isSent).to.equal(true);
       expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(false);
     } finally {
@@ -128,7 +130,7 @@ function deliverySuite() {
       await logs.delete({ stash: { id: second.id } });
       await repo.delete(second.id);
     }
-    expect(email.send.calledOnce).to.equal(true);
+    expect(email.sendWithResult.calledOnce).to.equal(true);
     expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(1);
   });
 
@@ -140,18 +142,18 @@ function deliverySuite() {
       try {
         await runner.query("SELECT id FROM stash WHERE id = $1 FOR UPDATE", [stash.id]);
         await sender.processDueStashes();
-        expect(email.send.called).to.equal(false);
+        expect(email.sendWithResult.called).to.equal(false);
       } finally {
         await runner.rollbackTransaction();
         await runner.release();
       }
       await sender.processDueStashes();
-      expect(email.send.calledOnce).to.equal(true);
+      expect(email.sendWithResult.calledOnce).to.equal(true);
     });
 
   it("deletes sent content and SendLog together, revoking its public token", /** @returns Nothing */ async() => {
     await sender.processDueStashes();
-    expect(email.send.calledOnce).to.equal(true);
+    expect(email.sendWithResult.calledOnce).to.equal(true);
     expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(1);
     try {
       await service.snoozeStash(stash.id, 1, owner);
@@ -162,6 +164,81 @@ function deliverySuite() {
     expect((await service.deleteStash(stash.id, owner.id)).affected).to.equal(1);
     expect(await logs.countBy({ stash: { id: stash.id } })).to.equal(0);
     expect(await service.getStashByPublicAccessToken(stash.publicAccessToken)).to.equal(null);
+  });
+
+  it("releases the row lock after a failed attempt, so snooze and delete work at once", /** @returns Nothing */
+    async() => {
+      email.sendWithResult.resolves({ error: "send_failed" });
+      await sender.processDueStashes();
+      expect((await repo.findOneByOrFail({ id: stash.id })).deliveryAttempts).to.equal(1);
+      expect(await service.snoozeStash(stash.id, 1, owner)).not.to.equal(null);
+      expect((await service.deleteStash(stash.id, owner.id)).affected).to.equal(1);
+    });
+
+  it("a failing delivery still holds the lock, so a concurrent mutation returns a conflict", /** @returns Nothing */
+    async() => {
+      const entered = barrier();
+      const finish = barrier();
+      email.sendWithResult.callsFake(/** @returns Failure category */ async() => {
+        entered.release();
+        await finish.promise;
+        return { error: "timeout" as const };
+      });
+      const running = sender.processDueStashes();
+      try {
+        await entered.promise;
+        try {
+          await service.snoozeStash(stash.id, 24, owner);
+          expect.fail("Expected conflict while the sender holds the row lock");
+        } catch (error) {
+          expect((error as ApiError).code).to.equal("stash_delivery_in_progress");
+        }
+      } finally {
+        finish.release();
+        await running;
+      }
+      expect((await repo.findOneByOrFail({ id: stash.id })).deliveryAttempts).to.equal(1);
+    });
+
+  it("snooze of an exhausted stash starts a new delivery cycle at the new time", /** @returns Nothing */ async() => {
+    const clock = sinon.useFakeTimers({ now: Date.now(), toFake: ["Date"] });
+    const scheduledAt = new Date(Date.now() - 30 * 60000);
+    await repo.update(stash.id, { scheduledAt, deliveryAttempts: config.delivery.maxAttempts,
+      lastDeliveryError: "send_failed" });
+    await sender.processDueStashes();
+    expect(email.sendWithResult.calledWithMatch({ to: stash.to })).to.equal(false);
+
+    const snoozed = await service.snoozeStash(stash.id, 1, owner);
+    expect(snoozed!.scheduledAt.getTime()).to.equal(scheduledAt.getTime() + 3600000);
+    const reset = await repo.findOneByOrFail({ id: stash.id });
+    expect(reset.deliveryAttempts).to.equal(0);
+    expect(reset.nextAttemptAt).to.equal(null);
+    expect(reset.lastDeliveryError).to.equal(null);
+    // Retry fields stay internal and are not part of the API response.
+    expect(instanceToPlain(snoozed)).not.to.have.any.keys("deliveryAttempts", "nextAttemptAt", "lastDeliveryError");
+
+    await sender.processDueStashes();
+    expect(email.sendWithResult.calledWithMatch({ to: stash.to }), "not before the snoozed time").to.equal(false);
+    clock.tick(30 * 60000);
+    await sender.processDueStashes();
+    expect(email.sendWithResult.calledWithMatch({ to: stash.to })).to.equal(true);
+    expect((await repo.findOneByOrFail({ id: stash.id })).isSent).to.equal(true);
+  });
+
+  it("snooze during a retry delay clears the delay and the attempt count", /** @returns Nothing */ async() => {
+    email.sendWithResult.onFirstCall().resolves({ error: "send_failed" });
+    await sender.processDueStashes();
+    expect((await repo.findOneByOrFail({ id: stash.id })).nextAttemptAt).not.to.equal(null);
+    await service.snoozeStash(stash.id, 1, owner);
+    const reset = await repo.findOneByOrFail({ id: stash.id });
+    expect(reset.deliveryAttempts).to.equal(0);
+    expect(reset.nextAttemptAt).to.equal(null);
+  });
+
+  it("deletes a stash that exhausted its attempts", /** @returns Nothing */ async() => {
+    await repo.update(stash.id, { deliveryAttempts: config.delivery.maxAttempts, lastDeliveryError: "timeout" });
+    expect((await service.deleteStash(stash.id, owner.id)).affected).to.equal(1);
+    expect(await repo.findOneBy({ id: stash.id })).to.equal(null);
   });
 
   it("preserves exactly 24 hours across both Berlin DST transitions", /** @returns Nothing */ async() => {

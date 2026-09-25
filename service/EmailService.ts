@@ -9,6 +9,14 @@ import { TOKENS } from "#di/tokens.js";
 import config from "api/src/config/config.js";
 
 const TEST_RECIPIENT = ["ukaoneseven", "gmail.com"].join("@");
+const SAFE_TOKEN = /^[A-Za-z0-9_.:-]{1,64}$/;
+const TIMEOUT_CODES = ["ETIMEDOUT", "ESOCKETTIMEDOUT"];
+
+/** Safe category of a failed send, stored and logged instead of provider message text. */
+export type EmailErrorCategory = "timeout" | "send_failed";
+
+/** Result of an email submission: provider message ID or a safe failure category. */
+export type EmailSendResult = { messageId: string } | { error: EmailErrorCategory };
 
 @injectable()
 export default class EmailService {
@@ -28,6 +36,10 @@ export default class EmailService {
     this.sesClient = new SESClient({
       region: config.awsRegion,
       credentials: this.credentials,
+      requestHandler: {
+        connectionTimeout: config.emailTimeout.connectionMs,
+        requestTimeout: config.emailTimeout.requestMs,
+      },
     });
     this.transporter = nodemailer.createTransport({
       SES: { ses: this.sesClient, aws: { SendRawEmailCommand } },
@@ -41,6 +53,17 @@ export default class EmailService {
    * @returns Message ID of the email received from AWS SES or `null` if error
    */
   public async send(mailOptions: nodemailer.SendMailOptions): Promise<string | null> {
+    const result = await this.sendWithResult(mailOptions);
+    return "messageId" in result ? result.messageId : null;
+  }
+
+  /**
+   * Sends email like `send`, but reports a safe failure category instead of `null`.
+   * A timeout is an ambiguous result: the provider may still have accepted the email.
+   * @param mailOptions Mail options object which contains to, from, subject, html and text fields
+   * @returns Message ID received from AWS SES or the failure category
+   */
+  public async sendWithResult(mailOptions: nodemailer.SendMailOptions): Promise<EmailSendResult> {
     const isDev = process.env.ENV === "DEV";
     if (isDev) {
       this.logger.warn(`DEV env, replacing ${mailOptions.to} with test recipient ${TEST_RECIPIENT}`);
@@ -49,11 +72,41 @@ export default class EmailService {
     try {
       this.logger.info(`Sending email to ${finalOptions.to}...`);
       const info = await this.transporter.sendMail(finalOptions);
-      return info.messageId || null;
-    } catch {
-      // Transport errors can contain the message body, including authentication links.
-      this.logger.error("Email delivery failed");
-      return null;
+      if (info.messageId) {
+        return { messageId: info.messageId };
+      }
+      this.logger.error("Email delivery failed: category=send_failed reason=no_message_id");
+      return { error: "send_failed" };
+    } catch (error) {
+      const { category, details } = this.describeError(error);
+      this.logger.error(`Email delivery failed: category=${category}${details}`);
+      return { error: category };
     }
+  }
+
+  /**
+   * Extracts safe diagnostic fields from a transport error. The error message is never used:
+   * transport errors can contain the message body, including authentication links.
+   * @param error Error thrown by the transport
+   * @returns Failure category and a log suffix with the safe fields that are present
+   */
+  private describeError(error: unknown): { category: EmailErrorCategory; details: string } {
+    const source = (error ?? {}) as {
+      name?: unknown; code?: unknown; Code?: unknown;
+      $metadata?: { httpStatusCode?: unknown; requestId?: unknown };
+    };
+    const fields: Record<string, unknown> = {
+      name: source.name,
+      code: source.code ?? source.Code,
+      httpStatus: source.$metadata?.httpStatusCode,
+      awsRequestId: source.$metadata?.requestId,
+    };
+    const details = Object.entries(fields)
+      .filter(([, value]) => (typeof value === "string" || typeof value === "number") && SAFE_TOKEN.test(String(value)))
+      .map(([key, value]) => ` ${key}=${value}`)
+      .join("");
+    const isTimeout = source.name === "TimeoutError" ||
+      (typeof fields.code === "string" && TIMEOUT_CODES.includes(fields.code));
+    return { category: isTimeout ? "timeout" : "send_failed", details };
   }
 }
