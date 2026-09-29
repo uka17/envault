@@ -13,7 +13,15 @@ export default class StashValidator {
   public getRules() {
     return {
       create: [
-        body("body").notEmpty().withMessage(apiErrorPayload("is_required")),
+        body("body")
+          .notEmpty()
+          .withMessage(apiErrorPayload("is_required"))
+          .bail()
+          .isString()
+          .withMessage(apiErrorPayload("should_be_string"))
+          .bail()
+          .isLength({ max: config.stashMaxBodyLength })
+          .withMessage(apiErrorPayload("stash_body_too_long")),
         body("to").notEmpty().withMessage(apiErrorPayload("is_required")),
         body("to")
           .matches(config.emailRegExp)

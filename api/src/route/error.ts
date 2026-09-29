@@ -19,6 +19,13 @@ export default function(){
         .status(error.statusCode)
         .json({ code: error.code, message: error.message, errors: error.errors });
     }
+    // Raised by the JSON body parser when the request exceeds config.jsonBodyLimit.
+    if ((error as { type?: string }).type === "entity.too.large") {
+      return res.status(CODES.API_PAYLOAD_TOO_LARGE).json({
+        code: "payload_too_large",
+        message: API_ERROR_MESSAGES.payload_too_large,
+      });
+    }
     logService.error(error);
     return res.status(CODES.SERVER_ERROR).json({
       code: "error_500",
