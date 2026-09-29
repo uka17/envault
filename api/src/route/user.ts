@@ -65,6 +65,13 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
   // Counted before validation, which reports user_already_exists, so it also bounds address probing.
   const registrationIpLimiter = ipRateLimit(rateLimits.registrationPerIp);
 
+  // Unknown and verified addresses use the same budget, so the limit does not reveal account state.
+  const verificationResendAddressLimiter = persistentRateLimit(
+    "verification_resend_address",
+    rateLimits.verificationResendPerAddress,
+    (req) => typeof req.body.email === "string" ? RateLimitService.emailKey(req.body.email) : undefined,
+  );
+
   app.post(
     "/api/v1/users/password-reset/request",
     passwordResetRequestLimiter,
@@ -144,7 +151,7 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
     /* #swagger.responses[429] = {
-          description: 'rate_limited: 5 attempts/hour/IP, including rejected ones. Retry-After specifies seconds until retry',
+          description: 'rate_limited: 10 attempts/hour/IP, including rejected ones. Retry-After specifies seconds until retry',
           headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
@@ -236,6 +243,7 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
     emailVerificationRateLimiter,
     validationRules.resendVerification,
     validateRequest,
+    verificationResendAddressLimiter,
     /* #swagger.summary = 'Resend verification email' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Resends the verification code. Always succeeds, to avoid leaking account existence.' */
@@ -254,6 +262,11 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
     /* #swagger.responses[422] = {
           description: 'Validation error: missing or invalid email',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 3 requests/15 minutes/address, counted for unknown addresses too. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     userController.resendVerification.bind(userController),
   );

@@ -45,6 +45,7 @@ export default {
     loginPerIp: { windowMs: 15 * 60 * 1000, max: 20 },
     loginPerAccount: { windowMs: 15 * 60 * 1000, max: 10 },
     registrationPerIp: { windowMs: 60 * 60 * 1000, max: 10 },
+    verificationResendPerAddress: { windowMs: 15 * 60 * 1000, max: 3 },
   },
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,
