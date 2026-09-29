@@ -248,9 +248,40 @@ examples:
           <root>
             <error>Unauthorized</error>
           </root>
+  - name: 413 Response
+    description: "payload_too_large: JSON request body exceeds 256 KB"
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: POST
+    response:
+      status: 413
+      statusText: Payload Too Large
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"code":"payload_too_large","message":"Request body is too large"}'
+  - name: 429 Response
+    description: "rate_limited: 20 stashes/24 hours/account"
+    request:
+      url: "{{baseUrl}}/api/v1/stashes"
+      method: POST
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Retry-After
+          value: "900"
+      body:
+        type: json
+        data: '{"code":"rate_limited","message":"Too many requests. Please try again later"}'
 
 docs: Creates a new stash (encrypted message) for the authenticated user. The request body must already be encrypted client-side by the sender. The server stores it as an opaque string and never sees the decryption key. The stash will be sent to the recipient email at the scheduled time via AWS SES.
 
 docs: |-
 
   scheduledAt must be a valid future ISO 8601 date. Invalid dates return 422 date_format_incorrect; past dates return 422 scheduled_at_must_be_future. Set the request date to a future instant before running. Public reading before that date is still allowed.
+  body must be a string of at most 200000 characters (422 should_be_string, stash_body_too_long); requests above 256 KB get 413 payload_too_large. Limited to 20 stashes/24 hours/account; 429 rate_limited includes Retry-After in seconds. See docs/rate-limits.md.

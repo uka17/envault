@@ -191,5 +191,23 @@ examples:
           <root>
             <error>Unauthorized</error>
           </root>
+  - name: 429 Response
+    description: "rate_limited: 10 attempts/hour/IP, including rejected ones"
+    request:
+      url: "{{baseUrl}}/api/v1/users"
+      method: POST
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Retry-After
+          value: "900"
+      body:
+        type: json
+        data: '{"code":"rate_limited","message":"Too many requests. Please try again later"}'
 
-docs: Creates a new user account. Returns the created user object (without password). The email must be unique.
+docs: |-
+  Creates a new user account. Returns the created user object (without password). The email must be unique.
+  Limited to 10 attempts/hour/IP, including rejected ones. 429 rate_limited includes Retry-After in seconds. See docs/rate-limits.md.

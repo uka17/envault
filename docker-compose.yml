@@ -24,6 +24,8 @@ services:
   
   api:
     image: uka17/envault-api:latest
+    # Single replica: in-memory rate limits are per process (docs/rate-limits.md).
+    # container_name also prevents scaling this service by accident.
     container_name: envault-api
     restart: unless-stopped
     environment:
