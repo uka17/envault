@@ -9,6 +9,7 @@ import Stash from "#model/Stash.js";
 import User from "#model/User.js";
 import Session from "#model/Session.js";
 import EmailVerification from "#model/EmailVerification.js";
+import RateLimitCounter from "#model/RateLimitCounter.js";
 
 import StashService from "#service/StashService.js";
 import StashSenderService from "#service/StashSenderService.js";
@@ -17,6 +18,7 @@ import UserService from "#service/UserService.js";
 import EmailService from "#service/EmailService.js";
 import EmailChangeService from "#service/EmailChangeService.js";
 import EmailVerificationService from "#service/EmailVerificationService.js";
+import RateLimitService from "#service/RateLimitService.js";
 
 import UserController from "api/src/controller/UserController.js";
 import StashController from "api/src/controller/StashController.js";
@@ -70,6 +72,9 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   const emailVerificationRepository = appDataSource.getRepository(EmailVerification);
   container.registerInstance(TOKENS.EmailVerificationRepository, emailVerificationRepository);
 
+  const rateLimitCounterRepository = appDataSource.getRepository(RateLimitCounter);
+  container.registerInstance(TOKENS.RateLimitCounterRepository, rateLimitCounterRepository);
+
   const emailCredentialsProvider = fromEnv();
   container.registerInstance(TOKENS.EmailCredentialsProvider, emailCredentialsProvider);
 
@@ -80,6 +85,7 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   container.registerSingleton(TOKENS.EmailService, EmailService);
   container.registerSingleton(TOKENS.EmailChangeService, EmailChangeService);
   container.registerSingleton(TOKENS.EmailVerificationService, EmailVerificationService);
+  container.registerSingleton(TOKENS.RateLimitService, RateLimitService);
 
   // Register controllers
   container.registerSingleton(TOKENS.UserController, UserController);
