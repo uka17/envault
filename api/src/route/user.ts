@@ -10,12 +10,16 @@ import config from "api/src/config/config.js";
 import UserValidator from "api/src/route/validator/UserValidator.js";
 import { validateRequest } from "api/src/route/validator/common.js";
 import UserController from "api/src/controller/UserController.js";
+import RateLimitService from "#service/RateLimitService.js";
+import { ipRateLimit, persistentRateLimit } from "api/src/route/rateLimit.js";
 
 /**
  * User routes
  * @param app Express instance
+ * @param rateLimits Budgets of the limits on these routes, `config.rateLimits` by default
+ * @returns Nothing
  */
-export default function(app: express.Router) {
+export default function(app: express.Router, rateLimits = config.rateLimits) {
   const userController =
     container.resolve<UserController>(
       TOKENS.UserController,
@@ -49,6 +53,14 @@ export default function(app: express.Router) {
     legacyHeaders: false,
     message: apiErrorPayload("password_reset_rate_limited"),
   });
+
+  // Counted before the password check, so a limited response never reveals whether the account exists.
+  const loginIpLimiter = ipRateLimit(rateLimits.loginPerIp);
+  const loginAccountLimiter = persistentRateLimit(
+    "login_account",
+    rateLimits.loginPerAccount,
+    (req) => typeof req.body.email === "string" ? RateLimitService.emailKey(req.body.email) : undefined,
+  );
 
   app.post(
     "/api/v1/users/password-reset/request",
@@ -137,8 +149,10 @@ export default function(app: express.Router) {
   // Log in as an existing user
   app.post(
     "/api/v1/users/login",
+    loginIpLimiter,
     validationRules.login,
     validateRequest,
+    loginAccountLimiter,
     /* #swagger.summary = 'Login user' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.' */
@@ -161,6 +175,11 @@ export default function(app: express.Router) {
     } */
     /* #swagger.responses[403] = {
           description: 'Email not verified yet',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 20 attempts/15 minutes/IP or 10/15 minutes/account, counted before the password check. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[500] = {

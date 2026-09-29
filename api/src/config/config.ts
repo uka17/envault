@@ -40,6 +40,11 @@ export default {
     alphabet: "23456789abcdefghjkmnpqrstuvwxyz",
     length: 20,
   },
+  // Budgets of the limits from docs/rate-limits.md
+  rateLimits: {
+    loginPerIp: { windowMs: 15 * 60 * 1000, max: 20 },
+    loginPerAccount: { windowMs: 15 * 60 * 1000, max: 10 },
+  },
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,
     max: 30,

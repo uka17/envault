@@ -47,7 +47,11 @@ async function startApp() {
   globalThis.app.use(express.json());
 
   passportConfig(globalThis.appDataSource, config.jwtSecret);
-  userRoutes(globalThis.app);
+  // Route tests share one client IP and reuse accounts, so the shared app gets unlimited budgets.
+  // Rate limit tests build their own apps with the real budgets from config.
+  const unlimited = Object.fromEntries(Object.entries(config.rateLimits)
+    .map(([name, limit]) => [name, { ...limit, max: Number.MAX_SAFE_INTEGER }])) as typeof config.rateLimits;
+  userRoutes(globalThis.app, unlimited);
   stashRoutes(globalThis.app);
   publicStashRoutes(globalThis.app);
 

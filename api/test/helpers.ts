@@ -10,10 +10,12 @@ import EmailService from "#service/EmailService.js";
  * the verification code from the outgoing email body and submitting it to the
  * verify-email endpoint. Needed because login is blocked for unverified accounts.
  * @param credentials Registration payload (email, password, name)
+ * @param app App to call, the shared test app by default
  * @returns The registration response
  */
 export async function registerAndVerifyUser(
   credentials: { email: string; password: string; name: string },
+  app = globalThis.app,
 ) {
   const emailService = container.resolve<EmailService>(TOKENS.EmailService);
   let capturedText: string | undefined;
@@ -22,9 +24,9 @@ export async function registerAndVerifyUser(
     return "test-message-id";
   });
 
-  const createResponse = await request(globalThis.app).post("/api/v1/users").send(credentials);
+  const createResponse = await request(app).post("/api/v1/users").send(credentials);
   const code = capturedText?.match(/verification page: (\S+)/)?.[1];
-  await request(globalThis.app).post("/api/v1/users/verify-email").send({ code });
+  await request(app).post("/api/v1/users/verify-email").send({ code });
 
   sendStub.restore();
   return createResponse;
