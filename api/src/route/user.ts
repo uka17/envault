@@ -62,6 +62,9 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
     (req) => typeof req.body.email === "string" ? RateLimitService.emailKey(req.body.email) : undefined,
   );
 
+  // Counted before validation, which reports user_already_exists, so it also bounds address probing.
+  const registrationIpLimiter = ipRateLimit(rateLimits.registrationPerIp);
+
   app.post(
     "/api/v1/users/password-reset/request",
     passwordResetRequestLimiter,
@@ -117,6 +120,7 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
   // Register a new user
   app.post(
     "/api/v1/users",
+    registrationIpLimiter,
     validationRules.create,
     validateRequest,
     /* #swagger.summary = 'Register new user' */
@@ -138,6 +142,11 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
     /* #swagger.responses[422] = {
           description: 'Validation error: missing or invalid fields',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 5 attempts/hour/IP, including rejected ones. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[500] = {
           description: 'Server error',

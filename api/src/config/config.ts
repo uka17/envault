@@ -44,6 +44,7 @@ export default {
   rateLimits: {
     loginPerIp: { windowMs: 15 * 60 * 1000, max: 20 },
     loginPerAccount: { windowMs: 15 * 60 * 1000, max: 10 },
+    registrationPerIp: { windowMs: 60 * 60 * 1000, max: 10 },
   },
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,
