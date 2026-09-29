@@ -10,12 +10,16 @@ import config from "api/src/config/config.js";
 import UserValidator from "api/src/route/validator/UserValidator.js";
 import { validateRequest } from "api/src/route/validator/common.js";
 import UserController from "api/src/controller/UserController.js";
+import RateLimitService from "#service/RateLimitService.js";
+import { ipRateLimit, persistentRateLimit } from "api/src/route/rateLimit.js";
 
 /**
  * User routes
  * @param app Express instance
+ * @param rateLimits Budgets of the limits on these routes, `config.rateLimits` by default
+ * @returns Nothing
  */
-export default function(app: express.Router) {
+export default function(app: express.Router, rateLimits = config.rateLimits) {
   const userController =
     container.resolve<UserController>(
       TOKENS.UserController,
@@ -49,6 +53,24 @@ export default function(app: express.Router) {
     legacyHeaders: false,
     message: apiErrorPayload("password_reset_rate_limited"),
   });
+
+  // Counted before the password check, so a limited response never reveals whether the account exists.
+  const loginIpLimiter = ipRateLimit(rateLimits.loginPerIp);
+  const loginAccountLimiter = persistentRateLimit(
+    "login_account",
+    rateLimits.loginPerAccount,
+    (req) => typeof req.body.email === "string" ? RateLimitService.emailKey(req.body.email) : undefined,
+  );
+
+  // Counted before validation, which reports user_already_exists, so it also bounds address probing.
+  const registrationIpLimiter = ipRateLimit(rateLimits.registrationPerIp);
+
+  // Unknown and verified addresses use the same budget, so the limit does not reveal account state.
+  const verificationResendAddressLimiter = persistentRateLimit(
+    "verification_resend_address",
+    rateLimits.verificationResendPerAddress,
+    (req) => typeof req.body.email === "string" ? RateLimitService.emailKey(req.body.email) : undefined,
+  );
 
   app.post(
     "/api/v1/users/password-reset/request",
@@ -105,6 +127,7 @@ export default function(app: express.Router) {
   // Register a new user
   app.post(
     "/api/v1/users",
+    registrationIpLimiter,
     validationRules.create,
     validateRequest,
     /* #swagger.summary = 'Register new user' */
@@ -127,6 +150,11 @@ export default function(app: express.Router) {
           description: 'Validation error: missing or invalid fields',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
     } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 10 attempts/hour/IP, including rejected ones. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     /* #swagger.responses[500] = {
           description: 'Server error',
           schema: { $ref: '#/definitions/ErrorResponse' }
@@ -137,8 +165,10 @@ export default function(app: express.Router) {
   // Log in as an existing user
   app.post(
     "/api/v1/users/login",
+    loginIpLimiter,
     validationRules.login,
     validateRequest,
+    loginAccountLimiter,
     /* #swagger.summary = 'Login user' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.' */
@@ -161,6 +191,11 @@ export default function(app: express.Router) {
     } */
     /* #swagger.responses[403] = {
           description: 'Email not verified yet',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 20 attempts/15 minutes/IP or 10/15 minutes/account, counted before the password check. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[500] = {
@@ -208,6 +243,7 @@ export default function(app: express.Router) {
     emailVerificationRateLimiter,
     validationRules.resendVerification,
     validateRequest,
+    verificationResendAddressLimiter,
     /* #swagger.summary = 'Resend verification email' */
     /* #swagger.tags = ['User'] */
     /* #swagger.description = 'Resends the verification code. Always succeeds, to avoid leaking account existence.' */
@@ -226,6 +262,11 @@ export default function(app: express.Router) {
     /* #swagger.responses[422] = {
           description: 'Validation error: missing or invalid email',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 3 requests/15 minutes/address, counted for unknown addresses too. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     userController.resendVerification.bind(userController),
   );

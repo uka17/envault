@@ -36,9 +36,20 @@ export default {
   passwordRegExp: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
   nameRegExp: /^\p{L}+(?:[ '-]\p{L}+)*$/u,
   emailRegExp: /.+@.+\..+/i,
+  // Encrypted stash body length in characters. Must fit into jsonBodyLimit with the other fields.
+  stashMaxBodyLength: 200000,
+  jsonBodyLimit: "256kb",
   stashPublicAccessToken: {
     alphabet: "23456789abcdefghjkmnpqrstuvwxyz",
     length: 20,
+  },
+  // Budgets of the limits from docs/rate-limits.md
+  rateLimits: {
+    loginPerIp: { windowMs: 15 * 60 * 1000, max: 20 },
+    loginPerAccount: { windowMs: 15 * 60 * 1000, max: 10 },
+    registrationPerIp: { windowMs: 60 * 60 * 1000, max: 10 },
+    verificationResendPerAddress: { windowMs: 15 * 60 * 1000, max: 3 },
+    stashCreatePerUser: { windowMs: 24 * 60 * 60 * 1000, max: 20 },
   },
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,

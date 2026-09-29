@@ -176,5 +176,23 @@ examples:
           <root>
             <error>Unauthorized</error>
           </root>
+  - name: 429 Response
+    description: "rate_limited: 20 attempts/15 minutes/IP or 10/15 minutes/account"
+    request:
+      url: "{{baseUrl}}/api/v1/users/login"
+      method: POST
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Retry-After
+          value: "900"
+      body:
+        type: json
+        data: '{"code":"rate_limited","message":"Too many requests. Please try again later"}'
 
-docs: Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.
+docs: |-
+  Authenticates a user with email and password. Returns a JWT token to use in the Authorization header for protected endpoints.
+  Limited to 20 attempts/15 minutes/IP and 10/15 minutes/account, counted before the password check. 429 rate_limited includes Retry-After in seconds. See docs/rate-limits.md.

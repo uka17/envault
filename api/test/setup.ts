@@ -18,6 +18,7 @@ import initDI from "#di/container.js";
 import userRoutes from "api/src/route/user.js";
 import stashRoutes from "api/src/route/stash.js";
 import publicStashRoutes from "api/src/route/publicStash.js";
+import { unlimitedRateLimits } from "./helpers.js";
 
 const dbURL = config.testDbURL;
 globalThis.appDataSource = getAppDataSource(dbURL, config.testDbName);
@@ -44,11 +45,14 @@ async function startApp() {
 
   globalThis.app = express();
   globalThis.app.use(cookieParser());
-  globalThis.app.use(express.json());
+  globalThis.app.use(express.json({ limit: config.jsonBodyLimit }));
 
   passportConfig(globalThis.appDataSource, config.jwtSecret);
-  userRoutes(globalThis.app);
-  stashRoutes(globalThis.app);
+  // Route tests share one client IP and reuse accounts, so the shared app gets unlimited budgets.
+  // Rate limit tests build their own apps with the real budgets from config.
+  const unlimited = unlimitedRateLimits();
+  userRoutes(globalThis.app, unlimited);
+  stashRoutes(globalThis.app, unlimited);
   publicStashRoutes(globalThis.app);
 
   globalThis.app.use(createErrorHandler());

@@ -4,6 +4,7 @@ export const TOKENS = {
   SessionRepository: Symbol("SessionRepository"),
   SendLogRepository: Symbol("SendLogRepository"),
   EmailVerificationRepository: Symbol("EmailVerificationRepository"),
+  RateLimitCounterRepository: Symbol("RateLimitCounterRepository"),
 
   LogService: Symbol("LogService"),
   StashService: Symbol("StashService"),
@@ -12,6 +13,7 @@ export const TOKENS = {
   EmailService: Symbol("EmailService"),
   EmailChangeService: Symbol("EmailChangeService"),
   EmailVerificationService: Symbol("EmailVerificationService"),
+  RateLimitService: Symbol("RateLimitService"),
 
   UserController: Symbol("UserController"),
   StashController: Symbol("StashController"),

@@ -223,8 +223,23 @@
               }
             }
           },
+          "413": {
+            "description": "payload_too_large: JSON request body exceeds 256 KB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
-            "description": "Invalid fields; dates use date_format_incorrect or scheduled_at_must_be_future",
+            "description": "Invalid fields; body must be a string of at most 200000 characters (should_be_string, stash_body_too_long); dates use date_format_incorrect or scheduled_at_must_be_future",
             "content": {
               "application/json": {
                 "schema": {
@@ -234,6 +249,29 @@
               "application/xml": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited: 20 stashes/24 hours/account. Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -977,6 +1015,29 @@
               }
             }
           },
+          "429": {
+            "description": "rate_limited: 10 attempts/hour/IP, including rejected ones. Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server error",
             "content": {
@@ -1046,6 +1107,29 @@
           },
           "403": {
             "description": "Email not verified yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited: 20 attempts/15 minutes/IP or 10/15 minutes/account, counted before the password check. Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1165,6 +1249,29 @@
               "application/xml": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited: 3 requests/15 minutes/address, counted for unknown addresses too. Retry-After specifies seconds until retry",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

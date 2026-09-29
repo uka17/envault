@@ -1,0 +1,59 @@
+info:
+  name: Resend verification email
+  type: http
+  seq: 22
+  tags:
+    - User
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users/verify-email/resend"
+  body:
+    type: json
+    data: |-
+      { "email": "{{email}}" }
+  auth:
+    type: none
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    request:
+      url: "{{baseUrl}}/api/v1/users/verify-email/resend"
+      method: POST
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: '{}'
+  - name: 422 Response
+    request:
+      url: "{{baseUrl}}/api/v1/users/verify-email/resend"
+      method: POST
+    response:
+      status: 422
+      statusText: Unprocessable Entity
+      body:
+        type: json
+        data: '{"code":"validation_error"}'
+  - name: 429 Response
+    request:
+      url: "{{baseUrl}}/api/v1/users/verify-email/resend"
+      method: POST
+    response:
+      status: 429
+      statusText: Too Many Requests
+      body:
+        type: json
+        data: '{"code":"rate_limited"}'
+
+docs: |-
+  Public endpoint. Sends a new code only to an existing, unverified account, and always returns 200 {} for valid, non-throttled addresses.
+  Limited to 3 requests/15 minutes/address (unknown addresses included) and 100/15 minutes/IP shared with verify-email and email-change confirm.
+  429 includes Retry-After in seconds. See docs/rate-limits.md.

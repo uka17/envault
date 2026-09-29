@@ -53,7 +53,7 @@ app.set("trust proxy", config.trustProxy);
 //app.use(cors(config.cors));
 app.use(session(config.session));
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: config.jsonBodyLimit }));
 
 appDataSource
   .initialize()

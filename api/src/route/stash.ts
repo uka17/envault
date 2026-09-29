@@ -4,26 +4,38 @@ import { container } from "tsyringe";
 
 import { TOKENS } from "#di/tokens.js";
 import { validateRequest } from "api/src/route/validator/common.js";
+import { persistentRateLimit } from "api/src/route/rateLimit.js";
+import config from "api/src/config/config.js";
 
 import StashController from "api/src/controller/StashController.js";
 import StashValidator from "api/src/route/validator/StashValidator.js";
+import User from "#model/User.js";
 
 /**
  * Registers authenticated stash endpoints.
  * @param app Router receiving the stash routes
+ * @param rateLimits Budgets of the limits on these routes, `config.rateLimits` by default
  * @returns Nothing
  */
-export default function(app: express.Router) {
+export default function(app: express.Router, rateLimits = config.rateLimits) {
   const stashController = container.resolve<StashController>(TOKENS.StashController);
   const stashValidator = container.resolve<StashValidator>(TOKENS.StashValidator);
   const validationRules =
     stashValidator.getRules();
+
+  // Counted after validation, so rejected requests do not use the daily quota.
+  const stashCreateLimiter = persistentRateLimit(
+    "stash_create_user",
+    rateLimits.stashCreatePerUser,
+    (req) => String((req.user as User).id),
+  );
 
   app.post(
     "/api/v1/stashes",
     passport.authenticate("jwt", { session: false }),
     validationRules.create,
     validateRequest,
+    stashCreateLimiter,
     /* #swagger.summary = 'Create new stash' */
     /* #swagger.tags = ['Stash'] */
     /* #swagger.description = 'Creates a new stash (encrypted message) for the authenticated user.
@@ -49,9 +61,18 @@ export default function(app: express.Router) {
           description: 'Missing or invalid JWT token',
           schema: { $ref: '#/definitions/ErrorResponse' }
     } */
+    /* #swagger.responses[413] = {
+          description: 'payload_too_large: JSON request body exceeds 256 KB',
+          schema: { $ref: '#/definitions/ErrorResponse' }
+    } */
     /* #swagger.responses[422] = {
-          description: 'Invalid fields; dates use date_format_incorrect or scheduled_at_must_be_future',
+          description: 'Invalid fields; body must be a string of at most 200000 characters (should_be_string, stash_body_too_long); dates use date_format_incorrect or scheduled_at_must_be_future',
           schema: { $ref: '#/definitions/ValidationErrorResponse' }
+    } */
+    /* #swagger.responses[429] = {
+          description: 'rate_limited: 20 stashes/24 hours/account. Retry-After specifies seconds until retry',
+          headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until retry' } },
+          schema: { $ref: '#/definitions/ErrorResponse' }
     } */
     /* #swagger.responses[500] = {
           description: 'Server error',

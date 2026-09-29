@@ -21,6 +21,8 @@ const API_ERROR_MESSAGES = {
   stash_id_invalid: "Stash ID must be a positive integer no greater than 2147483647",
   snooze_hours_invalid: "Hours must be an integer between 1 and 8760",
   stash_not_found: "Stash not found",
+  stash_body_too_long: "Encrypted message is too long",
+  payload_too_large: "Request body is too large",
   stash_unlock_failed: "Invalid link or key",
   session_not_found: "Session not found",
   incorrect_token: "Token is incorrect",
@@ -45,6 +47,7 @@ const API_ERROR_MESSAGES = {
   email_change_delivery_failed: "Confirmation email could not be sent; please retry later",
   password_reset_invalid: "This password reset link is invalid or has expired",
   password_reset_rate_limited: "Too many password reset attempts. Please try again later",
+  rate_limited: "Too many requests. Please try again later",
   verification_code_required: "Verification code is required",
 } as const;
 
