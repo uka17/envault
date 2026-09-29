@@ -20,6 +20,13 @@ export default {
     apiKey: process.env.LOKI_API_KEY || "",
   },
   runInterval: 1000, //ms
+  // Failed stash notifications are retried with a doubling delay, capped at maxDelayMs,
+  // until maxAttempts is reached. See docs/stash-delivery-retries.md.
+  delivery: {
+    maxAttempts: 8,
+    baseDelayMs: 60 * 1000,
+    maxDelayMs: 60 * 60 * 1000,
+  },
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
   readMessageUrl: [baseUrl, "/unlock"].join(""),
   // TODO: replace with the real FAQ page once it exists in envault_fe.

@@ -42,6 +42,12 @@ export default {
   },
   baseUrl: process.env.BASE_URL || "http://localhost:5173",
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
+  // Timeouts of a single SES HTTP request. The SDK retries transient errors (including
+  // timeouts) up to its default of 3 attempts, see docs/stash-delivery-retries.md.
+  emailTimeout: {
+    connectionMs: 3000,
+    requestMs: 10000,
+  },
   emailChange: {
     ttlMs: 30 * 60 * 1000,
     cooldownMs: 60 * 1000,

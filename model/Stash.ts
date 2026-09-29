@@ -40,4 +40,30 @@ export default class Stash extends Base {
     nullable: true,
   })
     sentAt: Date | null;
+
+  @Exclude()
+  @Column({
+    name: "delivery_attempts",
+    type: "integer",
+    default: 0,
+  })
+    deliveryAttempts: number;
+
+  @Exclude()
+  @Column({
+    name: "next_attempt_at",
+    type: "timestamptz",
+    nullable: true,
+  })
+    nextAttemptAt: Date | null;
+
+  // Safe error category only (see EmailErrorCategory), never provider message text.
+  @Exclude()
+  @Column({
+    name: "last_delivery_error",
+    type: "varchar",
+    length: 32,
+    nullable: true,
+  })
+    lastDeliveryError: string | null;
 }
