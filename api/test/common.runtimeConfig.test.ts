@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import { getRuntimeConfigErrors, validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
+import { getRuntimeConfigErrors, parseTrustProxy, validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
 
 const validDev: NodeJS.ProcessEnv = {
   ENV: "DEV",
@@ -20,6 +20,7 @@ const validProd: NodeJS.ProcessEnv = {
   BASE_URL: "https://envault.me",
   AWS_ACCESS_KEY_ID: "key-id",
   AWS_SECRET_ACCESS_KEY: "aws-secret",
+  TRUST_PROXY: "172.20.0.4",
 };
 
 describe("Runtime config validation", () => {
@@ -101,6 +102,37 @@ describe("Runtime config validation", () => {
       for (const secret of secrets) {
         expect(errors).to.not.include(secret);
       }
+    });
+  });
+
+  describe("TRUST_PROXY", () => {
+    it("should require TRUST_PROXY for api in PROD, otherwise IP limits share the nginx address", () => {
+      const env = { ...validProd, TRUST_PROXY: " " };
+      expect(getRuntimeConfigErrors("api", env)).to.deep.equal(["TRUST_PROXY is required when ENV=PROD"]);
+      expect(getRuntimeConfigErrors("worker", env)).to.deep.equal([]);
+      expect(getRuntimeConfigErrors("api", { ...env, ENV: "DEV" })).to.deep.equal([]);
+    });
+
+    it("should accept IP addresses, CIDR subnets and loopback", () => {
+      const env = { ...validProd, TRUST_PROXY: "172.20.0.4, 10.0.0.0/8, ::1, fd00::/8, loopback" };
+      expect(getRuntimeConfigErrors("api", env)).to.deep.equal([]);
+    });
+
+    it("should reject values which would let clients spoof X-Forwarded-For", () => {
+      for (const value of ["true", "1", "*", "nginx", "172.20.0.4/33", "10.0.0.0/8/1"]) {
+        expect(getRuntimeConfigErrors("api", { ...validProd, TRUST_PROXY: value }), value)
+          .to.deep.equal(["TRUST_PROXY must list IP addresses, CIDR subnets or loopback"]);
+      }
+      for (const value of ["0.0.0.0/0", "172.20.0.4, ::/0"]) {
+        expect(getRuntimeConfigErrors("api", { ...validProd, TRUST_PROXY: value }), value)
+          .to.deep.equal(["TRUST_PROXY must not trust every address"]);
+      }
+    });
+
+    it("should parse a comma-separated list and fall back to trusting no proxy", () => {
+      expect(parseTrustProxy(" 172.20.0.4 ,loopback,, ")).to.deep.equal(["172.20.0.4", "loopback"]);
+      expect(parseTrustProxy(undefined)).to.equal(false);
+      expect(parseTrustProxy(" , ")).to.equal(false);
     });
   });
 

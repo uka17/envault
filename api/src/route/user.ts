@@ -34,7 +34,7 @@ export default function(app: express.Router) {
     legacyHeaders: false,
   });
 
-  // Express trusts only the socket peer until the explicit proxy topology in #48 is configured.
+  // Limits use req.ip, which trusts only the proxies from TRUST_PROXY (see docs/rate-limits.md).
   const passwordResetRequestLimiter = rateLimit({
     windowMs: config.passwordReset.windowMs,
     max: config.passwordReset.maxRequestsPerIp,

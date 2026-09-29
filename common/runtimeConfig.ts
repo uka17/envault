@@ -1,3 +1,5 @@
+import { isIP } from "net";
+
 export type RuntimeService = "api" | "worker";
 
 const PROD = "PROD";
@@ -17,6 +19,35 @@ function isValidUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Checks whether a TRUST_PROXY entry is an IP address, a CIDR subnet or the `loopback` keyword.
+ * @param entry Single trimmed entry of TRUST_PROXY
+ * @returns `true` if Express can use the entry as a trusted proxy address
+ */
+function isValidProxyEntry(entry: string): boolean {
+  if (entry === "loopback") {
+    return true;
+  }
+  const [address, prefix, ...rest] = entry.split("/");
+  const version = isIP(address);
+  if (!version || rest.length > 0) {
+    return false;
+  }
+  return prefix === undefined || (/^\d+$/.test(prefix) && Number(prefix) <= (version === 4 ? 32 : 128));
+}
+
+/**
+ * Parses TRUST_PROXY into the Express `trust proxy` setting. Only the listed proxies are trusted,
+ * so `req.ip` becomes the nearest untrusted address of X-Forwarded-For and a client cannot
+ * spoof it by sending its own header. Without the variable only the socket peer is used.
+ * @param value Comma-separated IP addresses, CIDR subnets or `loopback`
+ * @returns List of trusted proxies, or `false` to ignore X-Forwarded-For
+ */
+export function parseTrustProxy(value: string | undefined): string[] | false {
+  const entries = (value ?? "").split(",").map((entry) => entry.trim()).filter(Boolean);
+  return entries.length > 0 ? entries : false;
 }
 
 /**
@@ -55,6 +86,19 @@ export function getRuntimeConfigErrors(
     errors.push("BASE_URL must be a valid URL");
   } else if (isProd && baseUrl && !baseUrl.startsWith("https://")) {
     errors.push("BASE_URL must use https:// when ENV=PROD");
+  }
+
+  if (service === "api") {
+    const trustedProxies = parseTrustProxy(env.TRUST_PROXY);
+    if (!trustedProxies) {
+      if (isProd) {
+        errors.push("TRUST_PROXY is required when ENV=PROD");
+      }
+    } else if (!trustedProxies.every(isValidProxyEntry)) {
+      errors.push("TRUST_PROXY must list IP addresses, CIDR subnets or loopback");
+    } else if (trustedProxies.some((entry) => entry.endsWith("/0"))) {
+      errors.push("TRUST_PROXY must not trust every address");
+    }
   }
 
   return errors;

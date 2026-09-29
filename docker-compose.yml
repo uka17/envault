@@ -43,6 +43,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
       BASE_URL: ${BASE_URL}
+      TRUST_PROXY: ${TRUST_PROXY}
     depends_on:
       postgres:
         condition: service_healthy

@@ -50,6 +50,8 @@ DB_PORT=
 API_HOST=
 API_PORT=
 API_JWT_SECRET=
+# Address of the nginx container (WEB_HOST of envault_fe), required when ENV=PROD
+TRUST_PROXY=
 
 # Service
 WORKER_HOST=

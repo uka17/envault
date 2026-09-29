@@ -1,5 +1,7 @@
 import * as os from "os";
 
+import { parseTrustProxy } from "#common/runtimeConfig.js";
+
 /* istanbul ignore next */
 export default {
   environment: process.env.ENV,
@@ -13,6 +15,8 @@ export default {
   testDbName: process.env.TEST_DB_NAME || "",
   jwtSecret: process.env.API_JWT_SECRET || "",
   port: 9000,
+  // Proxies allowed to set X-Forwarded-For, see docs/rate-limits.md
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
   logLevel: process.env.LOG_LEVEL == "INFO" ? "info" : "warn",
   showSQLLogs: process.env.SHOW_SQL_LOGS == "TRUE",
   showLogs: process.env.SHOW_LOGS == "TRUE",
