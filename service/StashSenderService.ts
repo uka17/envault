@@ -37,17 +37,23 @@ export default class StashSenderService {
    * Sends due messages sequentially, committing each one before selecting the next.
    * Overlapping ticks are skipped. A failed send is recorded and the pass continues with
    * the next message; a database failure ends the pass and is retried on a later tick.
+   * @param onProgress Called after every completed database round trip: each processed message
+   * and the final empty selection. Not called for a skipped overlapping tick or a database
+   * failure, so a stuck or disconnected worker stops reporting progress.
    * @returns Nothing; failures are logged
    */
-  public async processDueStashes(): Promise<void> {
+  public async processDueStashes(onProgress?: () => void): Promise<void> {
     if (this.processing) {
       return;
     }
     this.processing = true;
     try {
-      while (await this.sendNextStash()) {
+      let processed: boolean;
+      do {
         // Each completed transaction releases its lock before the next selection.
-      }
+        processed = await this.sendNextStash();
+        onProgress?.();
+      } while (processed);
     } catch (error) {
       this.logger.error(error);
     } finally {

@@ -1,3 +1,6 @@
+import os from "os";
+import path from "path";
+
 /* istanbul ignore next */
 const baseUrl = process.env.BASE_URL || "http://localhost:5173";
 
@@ -20,6 +23,12 @@ export default {
     apiKey: process.env.LOKI_API_KEY || "",
   },
   runInterval: 1000, //ms
+  // Progress signal read by the container health check, see worker/src/heartbeat.ts.
+  // staleAfterMs must exceed the longest single send: 3 SES attempts of about 13 s each.
+  heartbeat: {
+    file: path.join(os.tmpdir(), "envault-worker-heartbeat"),
+    staleAfterMs: 2 * 60 * 1000,
+  },
   // Failed stash notifications are retried with a doubling delay, capped at maxDelayMs,
   // until maxAttempts is reached. See docs/stash-delivery-retries.md.
   delivery: {

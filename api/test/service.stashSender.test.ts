@@ -263,6 +263,66 @@ function senderSuite() {
     expect(email.sendWithResult.calledOnce).to.equal(true);
   });
 
+  it("reports progress after each committed message, so a long pass does not look stuck", /** @returns Nothing */
+    async() => {
+      const second = await createStash({ scheduledAt: new Date(1) });
+      const onProgress = sinon.spy();
+      let progressBeforeSecondSend = 0;
+      email.sendWithResult.onSecondCall().callsFake(/** @returns Accepted send */ async() => {
+        progressBeforeSecondSend = onProgress.callCount;
+        return { messageId: "second-message-id", to: second.to };
+      });
+      await sender.processDueStashes(onProgress);
+      expect(progressBeforeSecondSend, "progress is reported before the pass ends").to.equal(1);
+      // Two processed messages plus the final empty selection, which proves the database answers.
+      expect(onProgress.callCount).to.equal(3);
+    });
+
+  it("reports progress for an idle pass, as the empty selection proves the database answers",
+    /** @returns Nothing */ async() => {
+      await repo.update(stash.id, { scheduledAt: new Date(Date.now() + 86400000) });
+      const onProgress = sinon.spy();
+      await sender.processDueStashes(onProgress);
+      expect(email.sendWithResult.called).to.equal(false);
+      expect(onProgress.calledOnce).to.equal(true);
+    });
+
+  it("does not report progress when the database fails, so a disconnected worker turns unhealthy",
+    /** @returns Nothing */ async() => {
+      const transaction = sinon.stub(repo.manager, "transaction").rejects(new Error("Database unavailable"));
+      const onProgress = sinon.spy();
+      await sender.processDueStashes(onProgress);
+      expect(onProgress.called).to.equal(false);
+      transaction.restore();
+    });
+
+  it("does not report progress for a skipped overlapping tick, so a stuck pass is not hidden",
+    /** @returns Nothing */ async() => {
+      let entered: () => void = () => {};
+      let finish: () => void = () => {};
+      const sending = new Promise<void>((resolve) => {
+        entered = resolve;
+      });
+      const released = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      email.sendWithResult.onFirstCall().callsFake(/** @returns Accepted send */ async() => {
+        entered();
+        await released;
+        return { messageId: "test-message-id", to: stash.to };
+      });
+      const running = sender.processDueStashes();
+      try {
+        await sending;
+        const onProgress = sinon.spy();
+        await sender.processDueStashes(onProgress);
+        expect(onProgress.called).to.equal(false);
+      } finally {
+        finish();
+        await running;
+      }
+    });
+
   it("renders the sender name and unlock link", /** @returns Nothing */ async() => {
     await sender.processDueStashes();
     const options = email.sendWithResult.firstCall.args[0];
