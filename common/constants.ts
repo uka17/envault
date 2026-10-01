@@ -20,3 +20,5 @@ const CODES = {
 };
 
 export { MESSAGES, CODES };
+
+export const GATE_CHECK = 'single quotes and a missing semicolon break the lint rules'
