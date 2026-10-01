@@ -51,6 +51,8 @@ export default {
     verificationResendPerAddress: { windowMs: 15 * 60 * 1000, max: 3 },
     stashCreatePerUser: { windowMs: 24 * 60 * 60 * 1000, max: 20 },
   },
+  // Time the readiness probe waits for the database, see GET /ready
+  readinessDbTimeoutMs: 3000,
   publicStashRateLimit: {
     windowMs: 15 * 60 * 1000,
     max: 30,

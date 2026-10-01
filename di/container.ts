@@ -19,6 +19,7 @@ import EmailService from "#service/EmailService.js";
 import EmailChangeService from "#service/EmailChangeService.js";
 import EmailVerificationService from "#service/EmailVerificationService.js";
 import RateLimitService from "#service/RateLimitService.js";
+import HealthService from "#service/HealthService.js";
 
 import UserController from "api/src/controller/UserController.js";
 import StashController from "api/src/controller/StashController.js";
@@ -56,6 +57,8 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   );
   container.registerInstance(TOKENS.LogService, logger);
 
+  container.registerInstance(TOKENS.DataSource, appDataSource);
+
   // Register repositories
   const stashRepository = appDataSource.getRepository(Stash);
   container.registerInstance(TOKENS.StashRepository, stashRepository);
@@ -86,6 +89,7 @@ export default function initDI(appDataSource: DataSource, loggerOptions: LoggerO
   container.registerSingleton(TOKENS.EmailChangeService, EmailChangeService);
   container.registerSingleton(TOKENS.EmailVerificationService, EmailVerificationService);
   container.registerSingleton(TOKENS.RateLimitService, RateLimitService);
+  container.registerSingleton(TOKENS.HealthService, HealthService);
 
   // Register controllers
   container.registerSingleton(TOKENS.UserController, UserController);

@@ -1,0 +1,51 @@
+info:
+  name: Readiness check
+  type: http
+  seq: 3
+  tags:
+    - Health
+
+http:
+  method: GET
+  url: "{{baseUrl}}/ready"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: API is ready, the database answered
+    request:
+      url: "{{baseUrl}}/ready"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: json
+        data: |-
+          {
+            "status": "ok",
+            "version": "2f07867c0a1b"
+          }
+  - name: 503 Response
+    description: Database is unavailable or did not answer in time
+    request:
+      url: "{{baseUrl}}/ready"
+      method: GET
+    response:
+      status: 503
+      statusText: Service Unavailable
+      body:
+        type: json
+        data: |-
+          {
+            "status": "unavailable",
+            "version": "2f07867c0a1b"
+          }
+
+docs: Checks that the API can serve requests by running a trivial query against the database with a timeout. Used by the container health check and the deploy. Unlike /health, it fails when the database is unavailable.

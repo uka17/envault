@@ -2,7 +2,12 @@ import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { SwaggerTheme, SwaggerThemeNameEnum } from "swagger-themes";
 
+import { container } from "tsyringe";
+
 import { CODES } from "#common/constants.js";
+import { TOKENS } from "#di/tokens.js";
+import HealthService from "#service/HealthService.js";
+import config from "api/src/config/config.js";
 
 import swaggerDocument from "api/src/swagger/swagger.json" with { type: "json" };;
 
@@ -11,6 +16,8 @@ import swaggerDocument from "api/src/swagger/swagger.json" with { type: "json" }
  * @param app Express instance
  */
 export default function(app: express.Router) {
+  const healthService = container.resolve<HealthService>(TOKENS.HealthService);
+
   app.get(
     "/",
     async(
@@ -43,6 +50,25 @@ export default function(app: express.Router) {
     // #swagger.description = 'Returns HTTP 200 with an empty body. Used by load balancers and monitoring tools to verify the API is alive.'
     /* #swagger.responses[200] = { description: 'Service is healthy' } */
     return res.status(CODES.API_OK).send();
+  });
+  //Readiness endpoint
+  app.get("/ready", async(req: express.Request, res: express.Response) => {
+    // #swagger.summary = 'Readiness check'
+    // #swagger.tags = ['Health']
+    // #swagger.description = 'Checks that the API can serve requests: runs a trivial query against the database with a timeout. Used by the container health check and the deploy to verify a started version. Unlike /health, it fails when the database is unavailable.'
+    /* #swagger.responses[200] = {
+          description: 'API is ready, the database answered',
+          schema: { $ref: '#/definitions/ReadinessResponse' }
+    } */
+    /* #swagger.responses[503] = {
+          description: 'Database is unavailable or did not answer in time',
+          schema: { status: 'unavailable', version: '2f07867c0a1b' }
+    } */
+    const ready = await healthService.isDatabaseReady(config.readinessDbTimeoutMs);
+    return res.status(ready ? CODES.API_OK : CODES.API_SERVICE_UNAVAILABLE).json({
+      status: ready ? "ok" : "unavailable",
+      version: process.env.GIT_COMMIT_SHA || "DEV",
+    });
   });
   //OpenAPI spec endpoint
   app.get("/swagger/openapi.json", (req: express.Request, res: express.Response) => {

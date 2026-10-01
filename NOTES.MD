@@ -23,7 +23,7 @@ RUN apk add --no-cache bash curl
   
 ## How to configure EC2
 
-1. Install docker and docker compose to EC2
+1. Install docker and docker compose to EC2. Compose v2 (`docker compose`) is required: the deploy uses `docker compose up --wait`
 2. Add to GitHub secrets:
    1. DOCKER_HUB_TOKEN
    2. DOCKER_HUB_USERNAME
@@ -34,6 +34,8 @@ RUN apk add --no-cache bash curl
 4. Generate new ssh key on EC2 and add public key to GitHub Deploy Keys. This is required for EC2 to clone the repo
 5. Clone repo
 6. Copy `.env` file to repo root
+
+Deploys are done by `scripts/deploy.sh`, which is started by the `deploy` job on every push to `master`. It keeps its state in `.deploy/` in the repo root on the server. See [docs/deploy-runbook.md](docs/deploy-runbook.md) for the deploy flow, rollback limits, manual operations and recovery.
 
 
 ## Example of `.env` file content
@@ -83,8 +85,10 @@ docker run -d \
   --ip 172.19.0.20 \
   -p 9000:9000 \
   --env-file .env \
-  uka17/envault-api:latest
+  uka17/envault-api:<commit sha>
 ```
+
+Images are tagged only with the full commit SHA, there is no `latest` tag.
 
 # To Have
 

@@ -65,4 +65,7 @@ typings/
 
 dist/*
 
+# State of scripts/deploy.sh on the server
+.deploy/
+
 node_modules

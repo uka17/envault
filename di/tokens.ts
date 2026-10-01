@@ -1,4 +1,6 @@
 export const TOKENS = {
+  DataSource: Symbol("DataSource"),
+
   StashRepository: Symbol("StashRepository"),
   UserRepository: Symbol("UserRepository"),
   SessionRepository: Symbol("SessionRepository"),
@@ -14,6 +16,7 @@ export const TOKENS = {
   EmailChangeService: Symbol("EmailChangeService"),
   EmailVerificationService: Symbol("EmailVerificationService"),
   RateLimitService: Symbol("RateLimitService"),
+  HealthService: Symbol("HealthService"),
 
   UserController: Symbol("UserController"),
   StashController: Symbol("StashController"),
