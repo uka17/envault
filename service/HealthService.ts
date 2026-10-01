@@ -6,6 +6,9 @@ import LogService from "#service/LogService.js";
 
 @injectable()
 export default class HealthService {
+  // Probe query which has not been answered yet, shared by all readiness checks
+  private pendingProbe: Promise<unknown> | null = null;
+
   /**
    * Creates instance of `HealthService`
    * @param dataSource Data source of the process, used to probe the database
@@ -20,6 +23,9 @@ export default class HealthService {
   /**
    * Checks that the database answers a trivial query in time. A slow database counts as
    * unavailable, so a hanging connection cannot keep the readiness probe waiting.
+   * The timeout only stops the waiting, it cannot cancel the query. Therefore a new query is
+   * not started while the previous one is unanswered: repeated checks during a database stall
+   * hold one pool connection instead of exhausting the pool.
    * @param timeoutMs Maximum time to wait for the database answer
    * @returns `true` if the database answered within the timeout
    */
@@ -28,8 +34,11 @@ export default class HealthService {
     const timeout = new Promise<never>((resolve, reject) => {
       timer = setTimeout(() => reject(new Error(`Database did not answer in ${timeoutMs} ms`)), timeoutMs);
     });
+    this.pendingProbe ??= this.dataSource.query("SELECT 1").finally(() => {
+      this.pendingProbe = null;
+    });
     try {
-      await Promise.race([this.dataSource.query("SELECT 1"), timeout]);
+      await Promise.race([this.pendingProbe, timeout]);
       return true;
     } catch (error) {
       this.logger.error(error);

@@ -253,7 +253,7 @@ Do not mark a check as done without such evidence.
 | Unhealthy version makes the deploy red, compatible previous version returns | Done, 2026-10-01 | `scripts/deploy-drill.sh`, all five scenarios passed locally |
 | Backup and restore commands | Partly, 2026-10-01 | Command form checked on a local PostgreSQL 16 test database. Not run against production (PostgreSQL 18) |
 | HTTPS redirect and certificate | Done, 2026-10-01 | `http://envault.me` answers 301 to `https://envault.me/`, `https://envault.me` answers 200, certificate `CN = envault.me` valid until 2026-11-04 |
-| Failing lint, build or test blocks image publishing | Not done | Needs a throwaway PR with an intentional failure |
+| Failing lint, build or test blocks image publishing | Done, 2026-10-01 | Throwaway pull requests with one intentional failure each, closed without merge. The image build job was skipped in every run: lint [#79](https://github.com/uka17/envault/actions/runs/36917251778), build [#80](https://github.com/uka17/envault/actions/runs/36917259518), tests [#81](https://github.com/uka17/envault/actions/runs/36917262042). Checked on pull requests; `build_and_push` on `master` has the same `needs` |
 | `deploy` job on GitHub with the real server | Not done | Runs for the first time when this change is merged to `master` |
 | SES smoke: registration confirmation | Not done | |
 | SES smoke: scheduled stash | Not done | |
