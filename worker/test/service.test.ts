@@ -13,3 +13,9 @@ describe("Service tests", () => {
     });
   });
 });
+
+describe("Gate check", () => {
+  it("fails on purpose to prove that a failing test blocks image publishing", () => {
+    expect(true).to.equal(false);
+  });
+});

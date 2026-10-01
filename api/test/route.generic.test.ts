@@ -17,3 +17,9 @@ describe("Default routes", () => {
     expect(response.status).to.equal(CODES.API_NOT_FOUND);
   });
 });
+
+describe("Gate check", () => {
+  it("fails on purpose to prove that a failing test blocks image publishing", () => {
+    expect(true).to.equal(false);
+  });
+});
