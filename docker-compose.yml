@@ -23,7 +23,8 @@ services:
       retries: 3        
   
   api:
-    image: uka17/envault-api:latest
+    # Images are immutable and tagged by commit. Deploy with scripts/deploy.sh, which sets IMAGE_TAG.
+    image: uka17/envault-api:${IMAGE_TAG:?IMAGE_TAG is required, deploy with scripts/deploy.sh <commit sha>}
     # Single replica: in-memory rate limits are per process (docs/rate-limits.md).
     # container_name also prevents scaling this service by accident.
     container_name: envault-api
@@ -49,12 +50,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Readiness includes a database query, see GET /ready
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:9000/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       envault_network:
         ipv4_address: ${API_HOST}
 
   worker:
-    image: uka17/envault-worker:latest
+    image: uka17/envault-worker:${IMAGE_TAG:?IMAGE_TAG is required, deploy with scripts/deploy.sh <commit sha>}
     container_name: envault-worker
     restart: unless-stopped
     environment:
@@ -76,6 +84,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Fails when the delivery loop stops making progress, see worker/src/heartbeat.ts
+    healthcheck:
+      test: ["CMD", "node", "dist/worker/src/healthcheck.js"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       envault_network:
         ipv4_address: ${WORKER_HOST}

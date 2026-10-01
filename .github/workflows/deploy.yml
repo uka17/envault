@@ -10,7 +10,8 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  # A deploy to master is never cancelled halfway through a rollout or a rollback
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   TEST_DB_HOST: localhost
@@ -224,19 +225,15 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-api:${{ github.sha }} -t uka17/envault-api:latest -f Dockerfiles/api .
-          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-worker:${{ github.sha }} -t uka17/envault-worker:latest -f Dockerfiles/worker .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-api:${{ github.sha }} -f Dockerfiles/api .
+          docker build --build-arg GIT_COMMIT_SHA=${{ github.sha }} -t uka17/envault-worker:${{ github.sha }} -f Dockerfiles/worker .
           docker push uka17/envault-api:${{ github.sha }}
           docker push uka17/envault-worker:${{ github.sha }}
-          # TODO(#51 SP6): remove latest, deploy will use SHA tags
-          docker push uka17/envault-api:latest
-          docker push uka17/envault-worker:latest
 
   deploy:
     name: 🚀 Deploy containers to EC2
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'    
-    continue-on-error: true
     needs: build_and_push
     #environment:
     #  name: PROD
@@ -249,15 +246,15 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          # Covers a rollout and a rollback, each waiting for the health checks
+          command_timeout: 15m
           script: |
             set -e
             cd /home/ubuntu/envault
-            git pull origin master
 
-            # Refresh images
-            docker pull uka17/envault-api:latest
-            docker pull uka17/envault-worker:latest
+            # docker-compose.yml and the deploy script are taken from the deployed commit
+            git fetch --quiet origin master
+            git checkout --quiet --detach ${{ github.sha }}
 
-            # Restart services
-            docker-compose down
-            docker-compose up -d --remove-orphans          
+            # Health-gated rollout with a rollback to the previous version, see scripts/deploy.sh
+            ./scripts/deploy.sh ${{ github.sha }}
