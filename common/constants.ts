@@ -20,3 +20,5 @@ const CODES = {
 };
 
 export { MESSAGES, CODES };
+
+export const GATE_CHECK: number = "a string is not a number, so tsc fails";
