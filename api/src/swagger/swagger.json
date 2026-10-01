@@ -77,6 +77,73 @@
         }
       }
     },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Readiness check",
+        "description": "Checks that the API can serve requests: runs a trivial query against the database with a timeout. Used by the container health check and the deploy to verify a started version. Unlike /health, it fails when the database is unavailable.",
+        "responses": {
+          "200": {
+            "description": "API is ready, the database answered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database is unavailable or did not answer in time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "unavailable"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "2f07867c0a1b"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "unavailable"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "2f07867c0a1b"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/swagger/openapi.json": {
       "get": {
         "description": "",
@@ -2254,6 +2321,26 @@
         },
         "xml": {
           "name": "PublicStashResponse"
+        }
+      },
+      "ReadinessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "version": {
+            "type": "string",
+            "example": "2f07867c0a1b"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "xml": {
+          "name": "ReadinessResponse"
         }
       },
       "SessionResponse": {

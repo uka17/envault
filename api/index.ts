@@ -22,6 +22,7 @@ import LogService from "#service/LogService.js";
 import initDI from "#di/container.js";
 import { TOKENS } from "#di/tokens.js";
 import { validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
+import { exitOnStartupError } from "#common/startup.js";
 
 validateRuntimeConfigOrExit("api");
 
@@ -85,6 +86,7 @@ appDataSource
   })
   .catch((error) => {
     logger.error(error);
+    exitOnStartupError("api", error);
   });
 
 /**

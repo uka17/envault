@@ -88,6 +88,10 @@ const doc = {
       scheduledAt: "2025-12-31T23:59:59Z",
       body: "v1.<base64 salt>.<base64 iv>.<base64 ciphertext>",
     },
+    ReadinessResponse: {
+      $status: "ok",
+      $version: "2f07867c0a1b",
+    },
     SessionResponse: {
       id: 7,
       expiresAt: "2025-12-31T23:59:59Z",

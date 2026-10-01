@@ -8,6 +8,7 @@ import LogService from "#service/LogService.js";
 import { TOKENS } from "#di/tokens.js";
 import initDI from "#di/container.js";
 import { validateRuntimeConfigOrExit } from "#common/runtimeConfig.js";
+import { exitOnStartupError } from "#common/startup.js";
 
 import StashSenderService from "#service/StashSenderService.js";
 
@@ -55,4 +56,4 @@ async function init() {
   setInterval(tick, config.runInterval);
 }
 
-init();
+init().catch((error) => exitOnStartupError("worker", error));
