@@ -1,0 +1,47 @@
+name: PR Docker build
+
+# Runs only when a pull request touches what the image build depends on
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'Dockerfiles/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/pr-docker.yml'
+
+# GITHUB_TOKEN is read-only for every job
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker_build:
+    name: 📦 Docker build (${{ matrix.component }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [api, worker]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image without pushing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfiles/${{ matrix.component }}
+          push: false
+          build-args: GIT_COMMIT_SHA=${{ github.sha }}
+          tags: uka17/envault-${{ matrix.component }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.component }}

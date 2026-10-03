@@ -1,0 +1,35 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+# GITHUB_TOKEN is read-only for every job
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: 🔎 Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js and dependencies
+        uses: ./.github/actions/setup
+
+      - name: Lint
+        run: npm run lint
+
+  tests:
+    name: 🧪 Tests
+    uses: ./.github/workflows/tests.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

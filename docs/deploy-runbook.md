@@ -8,19 +8,28 @@ Paths are relative to the repository root. On the server the repository lives in
 
 ## Pipeline
 
-`.github/workflows/deploy.yml` runs on every pull request to `master` and on every push to `master`.
+Pull requests and pushes to `master` have separate workflows in `.github/workflows/`. A pull
+request runs only what is needed to accept the change, a push runs the same checks and then
+releases.
 
-| Job | Runs on | What it does |
+| Workflow | Runs on | Jobs |
 | --- | --- | --- |
-| `lint_build` | PR, push | `npm ci`, `npm run lint`, `npm run build` |
-| `test_api`, `test_worker` | PR, push | Mocha tests with coverage on a fresh PostgreSQL |
-| `build` | PR | Builds both images without pushing them |
-| `build_and_push` | push | Builds both images and pushes them tagged with the commit SHA |
-| `deploy` | push | Checks out the commit on the server and runs `scripts/deploy.sh <sha>` |
+| `pr.yml` | PR | `lint`, `tests` |
+| `pr-docker.yml` | PR that touches `Dockerfiles/`, `package.json`, `package-lock.json` or `tsconfig.json` | `docker_build` |
+| `release.yml` | push | `lint`, `tests`, `publish`, `deploy` |
 
-`build`, `build_and_push` need `lint_build`, `test_api` and `test_worker`, so a failing lint,
-build or test blocks image publishing and the deploy. Images are immutable: there is no
-`latest` tag, a version is always a full commit SHA.
+| Job | What it does |
+| --- | --- |
+| `lint` | `npm ci`, `npm run lint` |
+| `tests` | Calls `tests.yml`: for `api` and `worker` builds the project, runs the Mocha tests once with coverage on a fresh PostgreSQL and uploads the report to Codecov |
+| `docker_build` | Builds both images without pushing them |
+| `publish` | Builds both images and pushes them tagged with the commit SHA |
+| `deploy` | Checks out the commit on the server and runs `scripts/deploy.sh <sha>` |
+
+`publish` needs `lint` and `tests`, and `deploy` needs `publish`, so a failing lint, build or
+test blocks image publishing and the deploy. The build has no job of its own: `tests` compiles
+the project before running. Coverage thresholds are enforced by Codecov only (`codecov.yml`).
+Images are immutable: there is no `latest` tag, a version is always a full commit SHA.
 
 A push to `master` deploys to production automatically. A running deploy is never cancelled
 by a newer push to `master`: the newer run waits until it finishes.
@@ -154,7 +163,7 @@ job (container states at the moment of the failure), fix it in a new commit.
 
 ### `FAILED_NO_IMAGE`
 
-The service works on the previous version. Check the `build_and_push` job and Docker Hub.
+The service works on the previous version. Check the `publish` job and Docker Hub.
 
 ### `FAILED_NO_ROLLBACK` and `FAILED_ROLLBACK_FAILED`
 
@@ -253,7 +262,7 @@ Do not mark a check as done without such evidence.
 | Unhealthy version makes the deploy red, compatible previous version returns | Done, 2026-10-01 | `scripts/deploy-drill.sh`, all five scenarios passed locally |
 | Backup and restore commands | Partly, 2026-10-01 | Command form checked on a local PostgreSQL 16 test database. Not run against production (PostgreSQL 18) |
 | HTTPS redirect and certificate | Done, 2026-10-01 | `http://envault.me` answers 301 to `https://envault.me/`, `https://envault.me` answers 200, certificate `CN = envault.me` valid until 2026-11-04 |
-| Failing lint, build or test blocks image publishing | Done, 2026-10-01 | Throwaway pull requests with one intentional failure each, closed without merge. The image build job was skipped in every run: lint [#79](https://github.com/uka17/envault/actions/runs/36917251778), build [#80](https://github.com/uka17/envault/actions/runs/36917259518), tests [#81](https://github.com/uka17/envault/actions/runs/36917262042). Checked on pull requests; `build_and_push` on `master` has the same `needs` |
+| Failing lint, build or test blocks image publishing | Done, 2026-10-01 | Throwaway pull requests with one intentional failure each, closed without merge. The image build job was skipped in every run: lint [#79](https://github.com/uka17/envault/actions/runs/36917251778), build [#80](https://github.com/uka17/envault/actions/runs/36917259518), tests [#81](https://github.com/uka17/envault/actions/runs/36917262042). Checked on pull requests in the former single workflow `deploy.yml`; `publish` in `release.yml` needs `lint` and `tests` the same way |
 | `deploy` job on GitHub with the real server | Not done | Runs for the first time when this change is merged to `master` |
 | SES smoke: registration confirmation | Not done | |
 | SES smoke: scheduled stash | Not done | |

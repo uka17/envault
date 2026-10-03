@@ -1,0 +1,15 @@
+name: Set up Node.js and dependencies
+description: Installs Node.js with the npm cache and the project dependencies. Needs a checked out repository.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: 'npm'
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
