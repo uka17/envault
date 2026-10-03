@@ -26,12 +26,6 @@ export default {
     apiKey: process.env.LOKI_API_KEY || "",
   },
   cors: { origin: "http://localhost:8080" },
-  session: {
-    secret: "biteme",
-    cookie: { maxAge: 60000 }, //milliseconds
-    resave: false,
-    saveUninitialized: false,
-  },
   version: "v1",
   passwordRegExp: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
   nameRegExp: /^\p{L}+(?:[ '-]\p{L}+)*$/u,
