@@ -2,7 +2,6 @@ import "dotenv/config";
 import "reflect-metadata";
 import { container } from "tsyringe";
 import express, { Express } from "express";
-import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import chalk from "chalk";
@@ -52,7 +51,6 @@ app.set("trust proxy", config.trustProxy);
 // Since nginx will expose BE as /api, everything will be under the same domain and we don't need CORS
 // Also in local dev we use vite proxy to avoid CORS issues
 //app.use(cors(config.cors));
-app.use(session(config.session));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: config.jsonBodyLimit }));
 

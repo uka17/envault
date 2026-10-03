@@ -8,6 +8,10 @@ on:
     branches:
       - master
 
+# GITHUB_TOKEN is read-only for every job, jobs opt out or in explicitly
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-${{ github.ref }}
   # A deploy to master is never cancelled halfway through a rollout or a rollback
@@ -239,6 +243,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'    
     needs: build_and_push
+    # No checkout here, the job talks to EC2 over SSH only
+    permissions: {}
     #environment:
     #  name: PROD
     #  url: http://ec2-13-60-105-210.eu-north-1.compute.amazonaws.com:9000 
