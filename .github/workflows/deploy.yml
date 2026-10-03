@@ -103,6 +103,8 @@ jobs:
           retention-days: 7
 
       - name: Upload coverage to Codecov
+        # Dependabot runs have no access to repository secrets, so the token is empty there
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -170,6 +172,8 @@ jobs:
           retention-days: 7
 
       - name: Upload coverage to Codecov
+        # Dependabot runs have no access to repository secrets, so the token is empty there
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
