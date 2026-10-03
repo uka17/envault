@@ -54,6 +54,9 @@ examples:
             "to": "journalist@fakemail.com",
             "body": "<encrypted>",
             "isSent": false,
+            "deliveryStatus": "scheduled",
+            "deliveryAttempts": 0,
+            "nextAttemptAt": null,
             "scheduledAt": "2030-12-31T23:59:59Z",
             "createdOn": "2025-01-01T00:00:00Z",
             "modifiedOn": "2025-01-01T00:00:00Z"
@@ -86,6 +89,9 @@ examples:
             <to>journalist@fakemail.com</to>
             <body><encrypted></body>
             <isSent>false</isSent>
+            <deliveryStatus>scheduled</deliveryStatus>
+            <deliveryAttempts>0</deliveryAttempts>
+            <nextAttemptAt/>
             <scheduledAt>2025-12-31T23:59:59Z</scheduledAt>
             <createdOn>2025-01-01T00:00:00Z</createdOn>
             <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>

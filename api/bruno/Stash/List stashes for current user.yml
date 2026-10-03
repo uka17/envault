@@ -40,6 +40,9 @@ examples:
               "to": "journalist@fakemail.com",
               "body": "<encrypted>",
               "isSent": false,
+              "deliveryStatus": "scheduled",
+              "deliveryAttempts": 0,
+              "nextAttemptAt": null,
               "scheduledAt": "2025-12-31T23:59:59Z",
               "createdOn": "2025-01-01T00:00:00Z",
               "modifiedOn": "2025-01-01T00:00:00Z"
@@ -67,6 +70,9 @@ examples:
               <to>journalist@fakemail.com</to>
               <body><encrypted></body>
               <isSent>false</isSent>
+              <deliveryStatus>scheduled</deliveryStatus>
+              <deliveryAttempts>0</deliveryAttempts>
+              <nextAttemptAt/>
               <scheduledAt>2025-12-31T23:59:59Z</scheduledAt>
               <createdOn>2025-01-01T00:00:00Z</createdOn>
               <modifiedOn>2025-01-01T00:00:00Z</modifiedOn>
@@ -108,4 +114,10 @@ examples:
             <error>Unauthorized</error>
           </root>
 
-docs: Returns all stashes belonging to the authenticated user, ordered by creation date.
+docs: |-
+  Returns all stashes belonging to the authenticated user, ordered by creation date.
+
+  Every private stash response (create, get, list, snooze) includes the derived delivery
+  state: deliveryStatus (scheduled, retrying, failed or sent), deliveryAttempts (failed
+  attempts of the current delivery cycle) and nextAttemptAt (set only while retrying).
+  See docs/stash-delivery-retries.md.

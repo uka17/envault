@@ -83,6 +83,10 @@ const doc = {
       sentAt: null,
       createdOn: "2025-01-01T00:00:00Z",
       modifiedOn: "2025-01-01T00:00:00Z",
+      // Derived, read-only delivery state, see docs/stash-delivery-retries.md.
+      deliveryStatus: { "@enum": ["scheduled", "retrying", "failed", "sent"] },
+      deliveryAttempts: 0,
+      nextAttemptAt: null,
     },
     PublicStashResponse: {
       scheduledAt: "2025-12-31T23:59:59Z",
