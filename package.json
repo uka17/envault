@@ -75,7 +75,7 @@
     "tsc-alias": "^1.8.14",
     "tsconfig-paths": "^4.2.0",
     "tsyringe": "^4.10.0",
-    "typeorm": "^0.3.14",
+    "typeorm": "^1.1.1",
     "typescript": "^5.9.3",
     "winston": "^3.8.2",
     "winston-transport": "^4.5.0"
