@@ -58,6 +58,15 @@ jobs:
       - name: Generate lcov report
         run: npm run coverage:${{ matrix.component }}
 
+      # Fails the job below the thresholds, Codecov statuses alone do not block the release
+      - name: Check coverage
+        run: npm run check-coverage:${{ matrix.component }}
+
+      # The api image runs the same script, a broken Swagger spec is caught before the merge
+      - name: Generate Swagger spec
+        if: matrix.component == 'api'
+        run: npm run swagger
+
       - name: Upload coverage to Codecov
         # Dependabot runs have no access to repository secrets, so the token is empty there
         if: github.actor != 'dependabot[bot]'
