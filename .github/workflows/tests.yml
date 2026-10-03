@@ -1,0 +1,72 @@
+name: Tests
+
+# Shared by the pull request and the release workflows, never runs on its own
+on:
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  TEST_DB_HOST: localhost
+  TEST_DB_USER: testuser
+  TEST_DB_PASSWORD: testpassword
+  TEST_DB_NAME: envault_qa
+  TEST_DB_PORT: 5432
+  API_JWT_SECRET: test_secret
+  AWS_REGION: eu-north-1
+
+jobs:
+  tests:
+    name: ${{ matrix.component }}
+    runs-on: ubuntu-latest
+    strategy:
+      # A failure in one process does not hide the result of the other
+      fail-fast: false
+      matrix:
+        component: [api, worker]
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: envault_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d envault_qa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js and dependencies
+        uses: ./.github/actions/setup
+
+      # Builds the project and runs the tests once, under c8
+      - name: Build and test with coverage
+        run: npm run test:${{ matrix.component }}
+
+      # Converts the collected coverage to lcov.info, the tests are not run again
+      - name: Generate lcov report
+        run: npm run coverage:${{ matrix.component }}
+
+      - name: Upload coverage to Codecov
+        # Dependabot runs have no access to repository secrets, so the token is empty there
+        if: github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./${{ matrix.component }}/coverage/lcov.info
+          disable_search: true
+          flags: ${{ matrix.component }}
+          name: ${{ matrix.component }}-coverage
+          fail_ci_if_error: true
+          verbose: true
