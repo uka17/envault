@@ -381,7 +381,7 @@
           "Stash"
         ],
         "summary": "List stashes for current user",
-        "description": "Returns all stashes belonging to the authenticated user, ordered by creation date.",
+        "description": "Returns all stashes belonging to the authenticated user, ordered by creation date.  Every private stash response carries the derived delivery state: deliveryStatus is scheduled  (no failed attempts), retrying (failed attempts below the limit), failed (limit reached,  automatic sending stopped) or sent. deliveryAttempts counts the failed attempts of the current  delivery cycle. nextAttemptAt is set only while the status is retrying.",
         "responses": {
           "200": {
             "description": "List of stashes",
@@ -707,7 +707,7 @@
           "Stash"
         ],
         "summary": "Snooze stash for N hours",
-        "description": "Postpones a stash belonging to the authenticated user by the given number of hours.  Owner and state are checked under a PostgreSQL row lock.  Only unsent stashes without an active delivery can be postponed.  Active delivery or a concurrent mutation returns 409 stash_delivery_in_progress.  Already sent stashes return 409 stash_already_sent. Adds exactly N times 3600000 milliseconds to  the existing schedule, independent of DST; a still-overdue result remains eligible for delivery.  Missing and foreign stashes return 404 stash_not_found.",
+        "description": "Postpones a stash belonging to the authenticated user by the given number of hours.  Owner and state are checked under a PostgreSQL row lock.  Only unsent stashes without an active delivery can be postponed.  Active delivery or a concurrent mutation returns 409 stash_delivery_in_progress.  Already sent stashes return 409 stash_already_sent. Adds exactly N times 3600000 milliseconds to  the existing schedule, independent of DST; a still-overdue result remains eligible for delivery.  Starts a new delivery cycle: the failed attempts are reset and deliveryStatus  becomes scheduled again, also for a failed stash.  Missing and foreign stashes return 404 stash_not_found.",
         "parameters": [
           {
             "name": "id",
@@ -2301,7 +2301,21 @@
           "modifiedOn": {
             "type": "string",
             "example": "2025-01-01T00:00:00Z"
-          }
+          },
+          "deliveryStatus": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "retrying",
+              "failed",
+              "sent"
+            ]
+          },
+          "deliveryAttempts": {
+            "type": "number",
+            "example": 0
+          },
+          "nextAttemptAt": {}
         },
         "xml": {
           "name": "StashResponse"

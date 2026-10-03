@@ -6,6 +6,7 @@ import { container } from "tsyringe";
 import { CODES } from "#common/constants.js";
 import { API_ERROR_MESSAGES } from "#common/errorCodes.js";
 import { TOKENS } from "#di/tokens.js";
+import delivery from "#common/deliveryConfig.js";
 import Stash from "#model/Stash.js";
 import Session from "#model/Session.js";
 import StashService from "#service/StashService.js";
@@ -165,6 +166,9 @@ describe("Stash Routes", () => {
 
       expect(response.status).to.equal(CODES.API_CREATED);
       expect(response.body.key).to.be.undefined;
+      expect(response.body).to.include({
+        isSent: false, sentAt: null, deliveryStatus: "scheduled", deliveryAttempts: 0, nextAttemptAt: null,
+      });
     });
   });
   describe("GET /api/v1/stashes", () => {
@@ -400,6 +404,78 @@ describe("Stash Routes", () => {
 
       expect(response.status).to.equal(CODES.API_NOT_FOUND);
       expect(response.body.code).to.equal("stash_not_found");
+    });
+  });
+
+  describe("Delivery status in owner responses", () => {
+    const repo = globalThis.appDataSource.getRepository(Stash);
+    let id: number;
+
+    /**
+     * Requests an owner endpoint with the test user's token.
+     * @param method HTTP method
+     * @param url Endpoint path
+     * @returns Supertest response
+     */
+    function call(method: "get" | "post", url: string) {
+      return request(globalThis.app)[method](url).set("Authorization", `Bearer ${token}`).send();
+    }
+
+    beforeEach(async() => {
+      const created = await request(globalThis.app).post("/api/v1/stashes")
+        .set("Authorization", `Bearer ${token}`).send(testStash);
+      id = created.body.id;
+    });
+
+    afterEach(async() => {
+      await repo.delete(id);
+    });
+
+    it("shows a retrying stash with its attempts and next attempt time in get and list", async() => {
+      const nextAttemptAt = new Date(Date.now() + 60000);
+      await repo.update(id, { deliveryAttempts: 2, nextAttemptAt, lastDeliveryError: "timeout" });
+      const expected = { deliveryStatus: "retrying", deliveryAttempts: 2, nextAttemptAt: nextAttemptAt.toISOString() };
+
+      const single = await call("get", `/api/v1/stashes/${id}`);
+      const list = await call("get", "/api/v1/stashes");
+      const listed = list.body.find((item: { id: number }) => item.id === id);
+
+      for (const body of [single.body, listed]) {
+        expect(body).to.include({ ...expected, isSent: false, sentAt: null });
+        // The owner sees the state, not the diagnostics.
+        expect(body).not.to.have.any.keys("lastDeliveryError", "publicAccessToken");
+      }
+    });
+
+    it("shows a stash that exhausted its attempts as failed, so it does not look planned forever", async() => {
+      await repo.update(id, { deliveryAttempts: delivery.maxAttempts, lastDeliveryError: "send_failed" });
+
+      const response = await call("get", `/api/v1/stashes/${id}`);
+
+      expect(response.body).to.include({
+        deliveryStatus: "failed", deliveryAttempts: delivery.maxAttempts, nextAttemptAt: null, isSent: false,
+      });
+    });
+
+    it("shows a delivered stash as sent and keeps isSent and sentAt", async() => {
+      const sentAt = new Date();
+      await repo.update(id, { isSent: true, sentAt, deliveryAttempts: 1, nextAttemptAt: new Date() });
+
+      const response = await call("get", `/api/v1/stashes/${id}`);
+
+      expect(response.body).to.include({
+        deliveryStatus: "sent", isSent: true, sentAt: sentAt.toISOString(), nextAttemptAt: null,
+      });
+    });
+
+    it("returns a failed stash as scheduled again after snooze", async() => {
+      await repo.update(id, { deliveryAttempts: delivery.maxAttempts, lastDeliveryError: "send_failed" });
+
+      const response = await call("post", `/api/v1/stashes/${id}/snooze/1`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body).to.include({ deliveryStatus: "scheduled", deliveryAttempts: 0, nextAttemptAt: null });
+      expect(response.body).not.to.have.any.keys("lastDeliveryError");
     });
   });
 });

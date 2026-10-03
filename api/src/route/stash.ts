@@ -86,7 +86,11 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
     passport.authenticate("jwt", { session: false }),
     /* #swagger.summary = 'List stashes for current user' */
     /* #swagger.tags = ['Stash'] */
-    /* #swagger.description = 'Returns all stashes belonging to the authenticated user, ordered by creation date.' */
+    /* #swagger.description = 'Returns all stashes belonging to the authenticated user, ordered by creation date.
+          Every private stash response carries the derived delivery state: deliveryStatus is scheduled
+          (no failed attempts), retrying (failed attempts below the limit), failed (limit reached,
+          automatic sending stopped) or sent. deliveryAttempts counts the failed attempts of the current
+          delivery cycle. nextAttemptAt is set only while the status is retrying.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.responses[200] = {
           description: 'List of stashes',
@@ -204,6 +208,8 @@ export default function(app: express.Router, rateLimits = config.rateLimits) {
           Active delivery or a concurrent mutation returns 409 stash_delivery_in_progress.
           Already sent stashes return 409 stash_already_sent. Adds exactly N times 3600000 milliseconds to
           the existing schedule, independent of DST; a still-overdue result remains eligible for delivery.
+          Starts a new delivery cycle: the failed attempts are reset and deliveryStatus
+          becomes scheduled again, also for a failed stash.
           Missing and foreign stashes return 404 stash_not_found.' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     /* #swagger.parameters['id'] = {

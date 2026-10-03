@@ -1,7 +1,8 @@
 # Stash delivery retries
 
-Only the backend worker is changed (`uka17/envault#46`). The API contract is unchanged:
-the retry fields below are internal and are excluded from API responses.
+The worker retries failed stash notifications (`uka17/envault#46`). The private stash API
+reports the resulting state to the owner (`uka17/envault#84`), see
+[Delivery status in the API](#delivery-status-in-the-api).
 
 ## How delivery works
 
@@ -38,7 +39,8 @@ can be used to look the request up on the AWS side.
 
 ## Settings
 
-Worker, `worker/src/config/config.ts` (constants, not ENV):
+Delivery, `common/deliveryConfig.ts` (constants, not ENV). The file is shared by the worker
+and the API; the worker reads it as `delivery` in `worker/src/config/config.ts`:
 
 | Setting | Value | Meaning |
 | --- | --- | --- |
@@ -93,6 +95,34 @@ eligible again, lowering it stops stashes that already reached the new limit.
 - Both actions take the same row lock with `NOWAIT`. While the worker is sending the
   stash (successfully or not), they return `409 stash_delivery_in_progress`. After the
   attempt is recorded the lock is released and they work immediately.
+
+## Delivery status in the API
+
+The private stash responses (create, list, get by id, snooze) include three derived,
+read-only fields built by `StashService.toResponse`:
+
+| Field | Meaning |
+| --- | --- |
+| `deliveryStatus` | `scheduled`, `retrying`, `failed` or `sent`, see below |
+| `deliveryAttempts` | Failed attempts of the current delivery cycle; snooze resets it to 0 |
+| `nextAttemptAt` | Time of the next automatic attempt; `null` unless the status is `retrying` |
+
+| Status | Condition |
+| --- | --- |
+| `sent` | `is_sent` is true |
+| `failed` | not sent and `delivery_attempts >= maxAttempts`; automatic sending stopped |
+| `retrying` | not sent and `0 < delivery_attempts < maxAttempts` |
+| `scheduled` | not sent and no failed attempts, including a stash that is due but not sent yet |
+
+- `isSent` and `sentAt` are unchanged.
+- `last_delivery_error` is not exposed, and the public unlock response
+  (`scheduledAt`, `body`) contains none of these fields.
+- A send that is in progress is not a status. It is visible only as
+  `409 stash_delivery_in_progress` on cancel and snooze.
+- `failed` uses the same `maxAttempts` constant as the worker selection, so changing the
+  limit changes the reported status of existing rows together with their eligibility.
+  The API and the worker are deployed separately: while they run different values of
+  `maxAttempts`, the status can briefly disagree with what the worker selects.
 
 ## Finding and resuming exhausted stashes
 

@@ -99,6 +99,18 @@ describe("Public Stash Routes", () => {
       expect(response.body.publicAccessToken).to.be.undefined;
       expect(response.body.to).to.be.undefined;
     });
+
+    it("should not reveal delivery diagnostics to the recipient", async() => {
+      await globalThis.appDataSource.getRepository(Stash).update(stashId, {
+        deliveryAttempts: 2, nextAttemptAt: new Date(), lastDeliveryError: "timeout",
+      });
+
+      const response = await request(globalThis.app)
+        .get(`/api/public/stashes/${publicAccessToken}`);
+
+      expect(response.status).to.equal(CODES.API_OK);
+      expect(response.body).to.have.all.keys("scheduledAt", "body");
+    });
   });
 
   describe("Rate limiting", () => {

@@ -1,6 +1,8 @@
 import os from "os";
 import path from "path";
 
+import delivery from "#common/deliveryConfig.js";
+
 /* istanbul ignore next */
 const baseUrl = process.env.BASE_URL || "http://localhost:5173";
 
@@ -31,11 +33,7 @@ export default {
   },
   // Failed stash notifications are retried with a doubling delay, capped at maxDelayMs,
   // until maxAttempts is reached. See docs/stash-delivery-retries.md.
-  delivery: {
-    maxAttempts: 8,
-    baseDelayMs: 60 * 1000,
-    maxDelayMs: 60 * 60 * 1000,
-  },
+  delivery,
   sendFrom: { name: "envault.me", email: ["noreply", "envault.me"].join("@") },
   readMessageUrl: [baseUrl, "/unlock"].join(""),
   // TODO: replace with the real FAQ page once it exists in envault_fe.

@@ -2,6 +2,7 @@ import { DeleteResult, EntityManager, Repository } from "typeorm";
 import ApiError from "api/src/error/ApiError.js";
 import { customAlphabet } from "nanoid";
 import { injectable, inject } from "tsyringe";
+import { instanceToPlain } from "class-transformer";
 
 import Stash from "#model/Stash.js";
 import SendLog from "#model/SendLog.js";
@@ -9,6 +10,16 @@ import User from "#model/User.js";
 import { TOKENS } from "#di/tokens.js";
 
 import config from "api/src/config/config.js";
+import delivery from "#common/deliveryConfig.js";
+
+export type DeliveryStatus = "scheduled" | "retrying" | "failed" | "sent";
+
+/** Stash as returned to its owner: the serialized entity plus the derived delivery state. */
+export type StashResponse = Record<string, unknown> & {
+  deliveryStatus: DeliveryStatus;
+  deliveryAttempts: number;
+  nextAttemptAt: Date | null;
+};
 
 @injectable()
 export default class StashService {
@@ -185,6 +196,40 @@ export default class StashService {
         });
         return stash;
       });
+  }
+
+  /**
+   * Derives the delivery status shown to the owner. `failed` mirrors the worker selection
+   * in `StashSenderService`: a stash at the attempt limit is no longer sent automatically.
+   * @param stash Stash entity
+   * @returns Delivery status
+   */
+  private getDeliveryStatus(stash: Stash): DeliveryStatus {
+    if (stash.isSent === true) {
+      return "sent";
+    }
+    if (stash.deliveryAttempts >= delivery.maxAttempts) {
+      return "failed";
+    }
+    return stash.deliveryAttempts > 0 ? "retrying" : "scheduled";
+  }
+
+  /**
+   * Builds the private API response for the stash owner. The retry fields stay excluded
+   * from the entity serialization, so they are added here explicitly and never reach
+   * the public unlock response. The error category is not exposed.
+   * @param stash Stash entity
+   * @returns Serialized stash with `deliveryStatus`, `deliveryAttempts` (failed attempts of the
+   * current delivery cycle) and `nextAttemptAt` (null unless the status is `retrying`)
+   */
+  public toResponse(stash: Stash): StashResponse {
+    const deliveryStatus = this.getDeliveryStatus(stash);
+    return {
+      ...instanceToPlain(stash),
+      deliveryStatus,
+      deliveryAttempts: stash.deliveryAttempts,
+      nextAttemptAt: deliveryStatus === "retrying" ? stash.nextAttemptAt : null,
+    };
   }
 
   /**

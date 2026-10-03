@@ -5,6 +5,7 @@ import { SelectQueryBuilder } from "typeorm";
 import StashService from "#service/StashService.js";
 import Stash from "#model/Stash.js";
 import User from "#model/User.js";
+import delivery from "#common/deliveryConfig.js";
 
 let stashService: StashService;
 let stashRepositoryStub = globalThis.appDataSource.getRepository(Stash);
@@ -210,5 +211,73 @@ describe("Stash service", () => {
       }
     });
 
+  });
+
+  describe("Owner response", () => {
+    const service = new StashService(stashRepositoryStub);
+    const nextAttemptAt = new Date("2030-01-01T00:00:00Z");
+
+    /**
+     * Builds a stash entity with the given delivery state.
+     * @param state Delivery fields to override
+     * @returns Stash entity
+     */
+    function stashWith(state: Partial<Stash>): Stash {
+      return Object.assign(new Stash(), {
+        id: 1, to: "recipient@example.com", body: "ciphertext", isSent: false, sentAt: null,
+        scheduledAt: new Date("2029-12-31T00:00:00Z"), publicAccessToken: "secret-token",
+        deliveryAttempts: 0, nextAttemptAt: null, lastDeliveryError: null,
+      }, state);
+    }
+
+    it("reports scheduled while no attempt has failed", () => {
+      const response = service.toResponse(stashWith({}));
+
+      expect(response).to.include({ deliveryStatus: "scheduled", deliveryAttempts: 0, nextAttemptAt: null });
+    });
+
+    it("treats a legacy null isSent as not sent", () => {
+      expect(service.toResponse(stashWith({ isSent: null as unknown as boolean })).deliveryStatus)
+        .to.equal("scheduled");
+    });
+
+    it("reports retrying with the next attempt time after a failed attempt", () => {
+      const response = service.toResponse(stashWith({ deliveryAttempts: 1, nextAttemptAt }));
+
+      expect(response).to.include({ deliveryStatus: "retrying", deliveryAttempts: 1, nextAttemptAt });
+    });
+
+    it("stays retrying on the last attempt below the limit and fails exactly at the limit", () => {
+      const below = service.toResponse(stashWith({ deliveryAttempts: delivery.maxAttempts - 1, nextAttemptAt }));
+      const atLimit = service.toResponse(stashWith({ deliveryAttempts: delivery.maxAttempts }));
+
+      expect(below.deliveryStatus).to.equal("retrying");
+      expect(atLimit).to.include({ deliveryStatus: "failed", deliveryAttempts: delivery.maxAttempts });
+    });
+
+    it("hides a stale next attempt time once automatic sending has stopped", () => {
+      // A lowered maxAttempts leaves next_attempt_at set on rows the worker no longer selects.
+      const response = service.toResponse(stashWith({ deliveryAttempts: delivery.maxAttempts + 1, nextAttemptAt }));
+
+      expect(response).to.include({ deliveryStatus: "failed", nextAttemptAt: null });
+    });
+
+    it("reports sent only from isSent, even when earlier attempts failed or reached the limit", () => {
+      // next_attempt_at is not cleared by a successful send, so it must not leak as a pending retry.
+      const afterRetry = service.toResponse(stashWith({ isSent: true, deliveryAttempts: 2, nextAttemptAt }));
+      const atLimit = service.toResponse(stashWith({ isSent: true, deliveryAttempts: delivery.maxAttempts }));
+
+      expect(afterRetry).to.include({ deliveryStatus: "sent", deliveryAttempts: 2, nextAttemptAt: null });
+      expect(atLimit.deliveryStatus).to.equal("sent");
+    });
+
+    it("keeps the existing fields and never exposes the error category or the access token", () => {
+      const stash = stashWith({ deliveryAttempts: 1, nextAttemptAt, lastDeliveryError: "timeout" });
+      const response = service.toResponse(stash);
+
+      expect(response).to.include({ id: 1, to: stash.to, body: stash.body, isSent: false, sentAt: null });
+      expect(response.scheduledAt).to.deep.equal(stash.scheduledAt);
+      expect(response).not.to.have.any.keys("lastDeliveryError", "publicAccessToken");
+    });
   });
 });

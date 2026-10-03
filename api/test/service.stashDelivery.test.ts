@@ -235,6 +235,28 @@ function deliverySuite() {
     expect(reset.nextAttemptAt).to.equal(null);
   });
 
+  it("reports failed exactly for the stashes the worker no longer selects", /** @returns Nothing */ async() => {
+    const { maxAttempts } = config.delivery;
+    await repo.update(stash.id, { scheduledAt: new Date(Date.now() - 1000), deliveryAttempts: maxAttempts });
+    expect(service.toResponse(await repo.findOneByOrFail({ id: stash.id })).deliveryStatus).to.equal("failed");
+    await sender.processDueStashes();
+    expect(email.sendWithResult.calledWithMatch({ to: stash.to }), "not selected at the limit").to.equal(false);
+
+    await repo.update(stash.id, { deliveryAttempts: maxAttempts - 1 });
+    expect(service.toResponse(await repo.findOneByOrFail({ id: stash.id })).deliveryStatus).to.equal("retrying");
+    await sender.processDueStashes();
+    expect(email.sendWithResult.calledWithMatch({ to: stash.to }), "selected below the limit").to.equal(true);
+    expect(service.toResponse(await repo.findOneByOrFail({ id: stash.id })).deliveryStatus).to.equal("sent");
+  });
+
+  it("reports scheduled again after a snooze resets the attempts", /** @returns Nothing */ async() => {
+    await repo.update(stash.id, { deliveryAttempts: config.delivery.maxAttempts, lastDeliveryError: "timeout" });
+    const snoozed = await service.snoozeStash(stash.id, 1, owner);
+    expect(service.toResponse(snoozed!)).to.include({
+      deliveryStatus: "scheduled", deliveryAttempts: 0, nextAttemptAt: null,
+    });
+  });
+
   it("deletes a stash that exhausted its attempts", /** @returns Nothing */ async() => {
     await repo.update(stash.id, { deliveryAttempts: config.delivery.maxAttempts, lastDeliveryError: "timeout" });
     expect((await service.deleteStash(stash.id, owner.id)).affected).to.equal(1);
