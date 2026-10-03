@@ -21,14 +21,17 @@ releases.
 | Job | What it does |
 | --- | --- |
 | `lint` | `npm ci`, `npm run lint` |
-| `tests` | Calls `tests.yml`: for `api` and `worker` builds the project, runs the Mocha tests once with coverage on a fresh PostgreSQL and uploads the report to Codecov |
+| `tests` | Calls `tests.yml`: for `api` and `worker` builds the project, runs the Mocha tests once with coverage on a fresh PostgreSQL, checks the coverage thresholds, generates the Swagger spec (`api` only) and uploads the report to Codecov |
 | `docker_build` | Builds both images without pushing them |
 | `publish` | Builds both images and pushes them tagged with the commit SHA |
 | `deploy` | Checks out the commit on the server and runs `scripts/deploy.sh <sha>` |
 
 `publish` needs `lint` and `tests`, and `deploy` needs `publish`, so a failing lint, build or
 test blocks image publishing and the deploy. The build has no job of its own: `tests` compiles
-the project before running. Coverage thresholds are enforced by Codecov only (`codecov.yml`).
+the project before running. Coverage below the `check-coverage:*` thresholds in `package.json`
+fails `tests` as well, the Codecov statuses (`codecov.yml`) are informational. The `api` job also
+runs `npm run swagger`, the same script the `api` image runs, so a broken Swagger spec fails
+the pull request and not the release.
 Images are immutable: there is no `latest` tag, a version is always a full commit SHA.
 
 A push to `master` deploys to production automatically. A running deploy is never cancelled
