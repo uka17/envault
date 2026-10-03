@@ -1,6 +1,5 @@
 import { injectable, inject } from "tsyringe";
 import { Request, Response, NextFunction } from "express";
-import { instanceToPlain } from "class-transformer";
 
 import { TOKENS } from "#di/tokens.js";
 import { CODES } from "#common/constants.js";
@@ -40,7 +39,7 @@ export default class StashController {
       newStash.modifiedBy = user;
 
       const createdStash = await this.stashService.createStash(newStash);
-      return res.status(CODES.API_CREATED).json(instanceToPlain(createdStash));
+      return res.status(CODES.API_CREATED).json(this.stashService.toResponse(createdStash));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);
@@ -63,7 +62,7 @@ export default class StashController {
         throw ApiError.fromCode(CODES.API_UNAUTHORIZED, "incorrect_token");
       } else {
         stashes = await this.stashService.getUserStashes(userId);
-        return res.status(CODES.API_OK).json(instanceToPlain(stashes));
+        return res.status(CODES.API_OK).json(stashes.map((stash) => this.stashService.toResponse(stash)));
       }
     } catch (e: unknown) {
       /* istanbul ignore next */
@@ -88,7 +87,7 @@ export default class StashController {
       if (!stash) {
         throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }
-      return res.status(200).json(instanceToPlain(stash));
+      return res.status(200).json(this.stashService.toResponse(stash));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);
@@ -135,7 +134,7 @@ export default class StashController {
       if (result === null) {
         throw ApiError.fromCode(CODES.API_NOT_FOUND, "stash_not_found");
       }
-      return res.status(CODES.API_OK).json(instanceToPlain(result));
+      return res.status(CODES.API_OK).json(this.stashService.toResponse(result));
     } catch (e: unknown) {
       /* istanbul ignore next */
       next(e);
