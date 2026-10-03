@@ -38,7 +38,8 @@ can be used to look the request up on the AWS side.
 
 ## Settings
 
-Worker, `worker/src/config/config.ts` (constants, not ENV):
+Delivery, `common/deliveryConfig.ts` (constants, not ENV). The file is shared by the worker
+and the API; the worker reads it as `delivery` in `worker/src/config/config.ts`:
 
 | Setting | Value | Meaning |
 | --- | --- | --- |
