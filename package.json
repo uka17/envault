@@ -81,15 +81,14 @@
     "winston-transport": "^4.5.0"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.750.0",
+    "@aws-sdk/client-sesv2": "^3.1146.0",
     "@aws-sdk/credential-providers": "^3.750.0",
-    "@types/nodemailer": "^6.4.17",
     "class-transformer": "^0.5.1",
     "cookie-parser": "^1.4.7",
     "express-rate-limit": "^7.5.1",
     "express-validator": "^7.2.1",
     "mjml": "^5.4.0",
-    "nodemailer": "^6.10.0",
+    "nodemailer": "^10.0.13",
     "swagger-themes": "^1.4.3",
     "winston-loki": "^6.1.5"
   }

@@ -1,7 +1,7 @@
-import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import nodemailer from "nodemailer";
 import { injectable, inject } from "tsyringe";
-import { Transporter } from "nodemailer";
+import type { SendMailOptions, Transporter } from "nodemailer";
 import { AwsCredentialIdentityProvider } from "@smithy/types";
 
 import LogService from "#service/LogService.js";
@@ -23,7 +23,7 @@ export type EmailSendResult = { messageId: string; to: string } | { error: Email
 
 @injectable()
 export default class EmailService {
-  private sesClient: SESClient;
+  private sesClient: SESv2Client;
   private transporter: Transporter;
 
   /**
@@ -36,16 +36,18 @@ export default class EmailService {
     @inject(TOKENS.EmailCredentialsProvider) private credentials: AwsCredentialIdentityProvider,
   ) {
     this.logger = logger;
-    this.sesClient = new SESClient({
+    this.sesClient = new SESv2Client({
       region: config.awsRegion,
       credentials: this.credentials,
       requestHandler: {
         connectionTimeout: config.emailTimeout.connectionMs,
         requestTimeout: config.emailTimeout.requestMs,
+        // Without this flag the handler only logs a warning and the request keeps hanging.
+        throwOnRequestTimeout: true,
       },
     });
     this.transporter = nodemailer.createTransport({
-      SES: { ses: this.sesClient, aws: { SendRawEmailCommand } },
+      SES: { sesClient: this.sesClient, SendEmailCommand },
     });
   }
   /**
@@ -55,7 +57,7 @@ export default class EmailService {
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
    * @returns Message ID of the email received from AWS SES or `null` if error
    */
-  public async send(mailOptions: nodemailer.SendMailOptions): Promise<string | null> {
+  public async send(mailOptions: SendMailOptions): Promise<string | null> {
     const result = await this.sendWithResult(mailOptions);
     return "messageId" in result ? result.messageId : null;
   }
@@ -66,7 +68,7 @@ export default class EmailService {
    * @param mailOptions Mail options object which contains to, from, subject, html and text fields
    * @returns Message ID received from AWS SES with the actual recipient, or the failure category
    */
-  public async sendWithResult(mailOptions: nodemailer.SendMailOptions): Promise<EmailSendResult> {
+  public async sendWithResult(mailOptions: SendMailOptions): Promise<EmailSendResult> {
     const isDev = process.env.ENV === "DEV";
     if (isDev) {
       this.logger.warn(`DEV env, replacing ${mailOptions.to} with test recipient ${TEST_RECIPIENT}`);

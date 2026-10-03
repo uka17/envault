@@ -85,7 +85,7 @@ describe("Email service", () => {
   describe("Timeout", () => {
     let server: http.Server;
     let requests = 0;
-    const originalEndpoint = process.env.AWS_ENDPOINT_URL_SES;
+    const originalEndpoint = process.env.AWS_ENDPOINT_URL_SESV2;
 
     before(async() => {
       // Accepts requests but never answers, like a hanging SES endpoint.
@@ -93,14 +93,14 @@ describe("Email service", () => {
         requests++;
       });
       await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-      process.env.AWS_ENDPOINT_URL_SES = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      process.env.AWS_ENDPOINT_URL_SESV2 = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     });
 
     after(async() => {
       if (originalEndpoint === undefined) {
-        delete process.env.AWS_ENDPOINT_URL_SES;
+        delete process.env.AWS_ENDPOINT_URL_SESV2;
       } else {
-        process.env.AWS_ENDPOINT_URL_SES = originalEndpoint;
+        process.env.AWS_ENDPOINT_URL_SESV2 = originalEndpoint;
       }
       server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));

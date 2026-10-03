@@ -81,7 +81,7 @@ Because aliases point at `dist/`, a source-only edit is invisible to anything im
 
 **Config.** `api/src/config/config.ts` and `worker/src/config/config.ts` each build a typed config object from `process.env` (loaded via `dotenv/config`) for their own process; there's no shared config module, so an env var used by both processes is read independently in each.
 
-**Email.** `service/EmailService.ts` sends via AWS SES (`@aws-sdk/client-ses`) using MJML-rendered templates in `common/templates/*.ts` (password reset, email verification, email change confirmation) and `worker/src/templates/stashReady.ts`. Outside `ENV=PROD`, mail is redirected to `DEV_EMAIL_RECIPIENT` when set.
+**Email.** `service/EmailService.ts` sends via AWS SES (`@aws-sdk/client-sesv2`) using MJML-rendered templates in `common/templates/*.ts` (password reset, email verification, email change confirmation) and `worker/src/templates/stashReady.ts`. Outside `ENV=PROD`, mail is redirected to `DEV_EMAIL_RECIPIENT` when set.
 
 **Core domain flow (stashes).** A `Stash` is an encrypted message a user schedules for future delivery: the body is opaque ciphertext the server never decrypts. `StashService` (api-side CRUD, ownership/row-lock checks) and `StashSenderService` (worker-side, `processDueStashes`) are separate services sharing the same `Stash`/`SendLog` entities. Mutating an in-flight stash (delete/snooze) is guarded by a PostgreSQL row lock and returns `stash_delivery_in_progress` (409) on conflict; sent stashes return `stash_already_sent` where relevant. See `docs/password-reset.md` and `docs/email-change.md` for the auth-adjacent flows (password recovery with durable per-request rate limits, and timing-attack-resistant response handling; email change with verification tokens).
 

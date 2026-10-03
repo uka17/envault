@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import type { SendMailOptions } from "nodemailer";
 import { injectable, inject } from "tsyringe";
 import { EntityManager, Repository } from "typeorm";
 
@@ -180,7 +180,7 @@ export default class StashSenderService {
    * @param stash Stash entity that is due to be sent, with its `user` relation loaded
    * @returns Mail options object suitable for `EmailService.send`
    */
-  private buildMailOptions(stash: Stash): nodemailer.SendMailOptions {
+  private buildMailOptions(stash: Stash): SendMailOptions {
     const unlockUrl = `${config.readMessageUrl}/${stash.publicAccessToken}`;
     const { subject, html, text } = renderStashReadyEmail({
       senderName: stash.user.name,
