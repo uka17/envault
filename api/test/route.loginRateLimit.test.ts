@@ -101,6 +101,8 @@ describe("Login rate limits", () => {
     const credentials = { email: uniqueEmail(), password: "Password123", name: "Limited" };
     await registerAndVerifyUser(credentials, app);
     const unknown = uniqueEmail();
+    // Frozen clock keeps Retry-After of both accounts identical regardless of how long the requests take
+    sinon.useFakeTimers({ now: Date.now(), toFake: ["Date"] });
     for (let i = 0; i < loginPerAccount.max; i++) {
       await login(app, `198.51.100.${i}`, credentials.email);
       await login(app, `198.51.100.${i}`, unknown);
